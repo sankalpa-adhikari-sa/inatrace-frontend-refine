@@ -1,0 +1,165 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-strong: var(--secondary-strong);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-light: var(--primary-light);
+  --color-primary-lighter: var(--primary-lighter);
+  --color-heading: var(--heading);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 5px);
+  --shadow-card: 0 3px 9px 0 rgb(37 38 94 / 0.04);
+}
+
+
+:root {
+  --radius: 0.25rem;
+  --background: #ffffff;
+  --foreground: #333333;
+  --card: #ffffff;
+  --card-foreground: #333333;
+  --popover: #ffffff;
+  --popover-foreground: #333333;
+  --primary: #999933;
+  --primary-foreground: #ffffff;
+  --primary-strong: #7a7a24;
+  --primary-light: #e7e8ba;
+  --primary-lighter: #f8f8ec;
+  --secondary: #c87711;
+  --secondary-foreground: #ffffff;
+  --secondary-strong: #b06508;
+  --heading: #999933;
+  --muted: #f1f2f5;
+  --muted-foreground: #6f7282;
+  --accent: #f8f8ec;
+  --accent-foreground: #7a7a24;
+  --destructive: #df1642;
+  --success: #26ae60;
+  --warning: #ffbb38;
+  --info: #1e90ff;
+  --border: #e6e6e6;
+  --input: #d9d9d9;
+  --ring: #999933;
+  --chart-1: #999933;
+  --chart-2: #c87711;
+  --chart-3: #5dbccf;
+  --chart-4: #6286ed;
+  --chart-5: #2dc76d;
+  --sidebar: #f7f7f8;
+  --sidebar-foreground: #333333;
+  --sidebar-primary: #c87711;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebebed;
+  --sidebar-accent-foreground: #1f1f1f;
+  --sidebar-border: #e6e6e6;
+  --sidebar-ring: #999933;
+}
+
+.dark {
+  --background: #161613;
+  --foreground: #ecece4;
+  --card: #1f1f1b;
+  --card-foreground: #ecece4;
+  --popover: #1f1f1b;
+  --popover-foreground: #ecece4;
+  --primary: #b5b54a;
+  --primary-foreground: #1c1b17;
+  --primary-strong: #c9c96a;
+  --primary-light: #4a4a24;
+  --primary-lighter: #2a2a1d;
+  --secondary: #e0902f;
+  --secondary-foreground: #1c1b17;
+  --secondary-strong: #e9a24c;
+  --heading: #c4c45a;
+  --muted: #2a2a25;
+  --muted-foreground: #a3a396;
+  --accent: #2a2a1d;
+  --accent-foreground: #c9c96a;
+  --destructive: #f0476b;
+  --success: #3ccb7a;
+  --warning: #ffc75a;
+  --info: #4ba6ff;
+  --border: rgb(255 255 255 / 10%);
+  --input: rgb(255 255 255 / 15%);
+  --ring: #b5b54a;
+  --chart-1: #b5b54a;
+  --chart-2: #e0902f;
+  --chart-3: #5dbccf;
+  --chart-4: #7d9cf2;
+  --chart-5: #3ccb7a;
+  --sidebar: #1a1a17;
+  --sidebar-foreground: #ecece4;
+  --sidebar-primary: #e0902f;
+  --sidebar-primary-foreground: #1c1b17;
+  --sidebar-accent: #26261f;
+  --sidebar-accent-foreground: #f5f5ef;
+  --sidebar-border: rgb(255 255 255 / 8%);
+  --sidebar-ring: #b5b54a;
+}
+
+/* Print only the farmer / collector card (see components/app/user-customer-card). */
+@media print {
+  body.printing-card * {
+    visibility: hidden;
+  }
+  body.printing-card [data-print-card],
+  body.printing-card [data-print-card] * {
+    visibility: visible;
+    print-color-adjust: exact;
+  }
+  body.printing-card [data-print-card] {
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50 antialiased;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+}

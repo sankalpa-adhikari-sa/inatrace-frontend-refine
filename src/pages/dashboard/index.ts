@@ -1,0 +1,1 @@
+export { CompanyDashboard } from "./page";
