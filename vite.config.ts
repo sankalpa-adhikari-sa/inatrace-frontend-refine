@@ -16,6 +16,14 @@ export default defineConfig({
     },
   },
   server: {
+    // Playwright writes traces / reports while tests run; watching them makes Vite reload the page under test.
+    watch: { ignored: ["**/.playwright/**", "**/coverage/**"] },
+    proxy: {
+      "/api": { target: process.env.API_PROXY_TARGET ?? "http://localhost:8080", changeOrigin: true },
+    },
+  },
+  // `vite preview` (the built app, used by the CI end-to-end run) proxies /api the same way.
+  preview: {
     proxy: {
       "/api": { target: process.env.API_PROXY_TARGET ?? "http://localhost:8080", changeOrigin: true },
     },

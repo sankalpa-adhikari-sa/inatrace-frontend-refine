@@ -93,6 +93,7 @@ export const ep = {
   getDisabledCurrencyTypes: endpoint<T.GetDisabledCurrencyTypesData, T.GetDisabledCurrencyTypesResponse>("get", "/api/chain/currency-type/list/disabled"),
   getEnabledCurrencyTypes: endpoint<T.GetEnabledCurrencyTypesData, T.GetEnabledCurrencyTypesResponse>("get", "/api/chain/currency-type/list/enabled"),
   getFacility: endpoint<T.GetFacilityData, T.GetFacilityResponse>("get", "/api/chain/facility/{id}"),
+  getFacilityDetail: endpoint<T.GetFacilityDetailData, T.GetFacilityDetailResponse>("get", "/api/chain/facility/{id}/detail"),
   getFacilityType: endpoint<T.GetFacilityTypeData, T.GetFacilityTypeResponse>("get", "/api/chain/facility-type/{id}"),
   getFacilityTypeList: endpoint<T.GetFacilityTypeListData, T.GetFacilityTypeListResponse>("get", "/api/chain/facility-type/list"),
   getFinalProduct: endpoint<T.GetFinalProductData, T.GetFinalProductResponse>("get", "/api/product/{productId}/finalProduct/{finalProductId}"),

@@ -29,3 +29,7 @@ _.ntvs_
 _.njsproj
 _.sln
 \*.sw?
+
+# Tests
+coverage
+.playwright

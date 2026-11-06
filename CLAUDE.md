@@ -15,14 +15,23 @@ change behaviour.
 ```bash
 bun install
 bun run dev            # refine dev → Vite on :5173, proxies /api to $API_PROXY_TARGET (default http://localhost:8080)
-bun run build          # i18n:check + tsc typecheck + refine build (the only typecheck/CI gate)
+bun run build          # i18n:check + tsc typecheck (src, test, e2e) + refine build
 bun run i18n:check     # translation keys used in src/ vs public/locales/*/common.json (--verbose for gaps)
 bunx tsc               # typecheck only
 bun run openapi-ts     # regenerate src/client/types.gen.ts by hand
 OPENAPI_INPUT=http://localhost:8080/v3/api-docs bun run openapi-ts   # from the live backend
+bun run test:run       # Vitest once (bun run test = watch, test:cov = coverage)
+bun run e2e:stack      # Playwright end-to-end against a disposable seeded backend (Docker, published backend image)
+bun run e2e            # the same suite against a running backend (needs E2E_* accounts, see README "Testing")
+bun run test:ui        # Playwright UI tests, API mocked, no backend
 ```
 
-There is no test suite. Verify changes with `bun run build` and by running the app against the local backend.
+Tests: Vitest files sit next to the code (`src/**/*.test.ts(x)`). `e2e/` is end-to-end against the real backend
+(no mocking); `test/ui/` is Playwright with the API mocked; page objects shared by both are in `test/pages/`.
+Mocks use `on(ep.x, …)` handlers keyed on `src/lib/endpoints.ts` and fail on any request nobody mocked; find
+elements with `tr(key)` / `trLabel(key)` from `test/tr.ts`, not hard-coded English. See "Testing" in `README.MD`.
+Verify changes with `bun run build`, `bun run test:run`, `bun run test:ui`, and `bun run e2e:stack`.
+
 ESLint currently can't run: `typescript-eslint` 8 refuses TypeScript 7 (`typescript@^7` in package.json).
 
 Env vars: only `VITE_*` reach the app (read through `src/lib/env.ts`); see `.env.example` for all of them.

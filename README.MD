@@ -12,10 +12,13 @@ bun run dev          # http://localhost:5173, proxies /api to $API_PROXY_TARGET 
 bun run build        # i18n check + typecheck + production build (into dist/)
 bun run i18n:check   # translation keys used in src/ vs public/locales/*/common.json (--verbose for gaps)
 bun run openapi-ts   # regenerate the API types by hand
+bun run test         # Vitest in watch mode (test:run once, test:cov with coverage)
+bun run e2e:stack    # Playwright end-to-end against a disposable, seeded backend (Docker); see Testing
+bun run e2e          # the same suite against an already running backend
+bun run test:ui      # Playwright UI tests with the API mocked (no backend)
 ```
 
-There is no test suite; `bun run build` is the only check. ESLint can't run at the moment
-(`typescript-eslint` 8 doesn't accept TypeScript 7).
+ESLint can't run at the moment (`typescript-eslint` 8 doesn't accept TypeScript 7).
 
 The `Dockerfile` builds with npm from `package-lock.json` and serves `dist/` with `serve`.
 
@@ -166,6 +169,60 @@ Each chart has its own toolbar: a date range picker, period buttons, facility an
 | --- | --- |
 | ![Angular dashboard](docs/screenshots/angular-dashboard.png) | ![Refine dashboard](docs/screenshots/refine-dashboard.png) |
 | *No dark mode* | ![Refine dashboard, dark mode](docs/screenshots/refine-dashboard-dark.png) |
+
+## Testing
+
+Three suites, all typechecked by `bun run build`. CI (`.github/workflows/test.yml`) runs all three:
+
+**Vitest** (`bun run test`) for logic and components: tests sit next to the code (`src/**/foo.test.ts`).
+Pure modules run in Node; anything that touches the DOM, i18n or the providers runs in jsdom
+(`vitest.config.ts` lists the Node ones). `test/` holds the shared harness:
+
+| File | Purpose |
+| --- | --- |
+| `test/setup.ts` | jest-dom, MSW, real translations without HTTP, Base UI's jsdom gaps, a MapLibre stub, and a reset of the app's module singletons (query cache, cached profile, company store, storage, language) after each test |
+| `test/msw.ts` | `server.use(on(ep.x, handler))`: MSW handlers built from `src/lib/endpoints.ts`, typed by the generated response types; `requestsTo(ep.x)` for asserting what was sent. A request no handler answers fails the test |
+| `test/render.tsx` | `renderWithRefine(ui, { route, path, profile, companyId })`: the real Refine providers around a page |
+| `test/factories.ts` | Profiles per role, countries, company customers (shared with Playwright) |
+| `test/tr.ts` | `tr("customers.buttons.addCustomer")` / `trLabel(…)`: find elements by their English text through the i18n key (shared with Playwright) |
+
+**End-to-end** (in `e2e/`): Playwright against the real backend and database, for the critical journeys:
+login and logout, route guards for every role, company customers, facilities. Each spec creates its own
+uniquely named data and removes it afterwards. Two ways to run it:
+
+- **Disposable seeded backend** (`bun run e2e:stack`, what CI runs). Needs Docker. It starts MySQL (in
+  memory), Mailpit and the published backend image (`ghcr.io/agstack/inatrace-backend`, pinned in
+  `e2e/stack/compose.yaml`; override with `E2E_BACKEND_IMAGE`) on their own ports (backend :18080), seeds
+  them through the API (`e2e/stack/seed.ts`: a system admin, a company, a value chain, and a company admin,
+  company user, regional admin and not-yet-activated user), runs the suite against a separate Vite on :5174,
+  and removes everything. `bun run e2e:stack --keep` leaves the stack up; then `bun run e2e:stack:test [spec]`
+  reruns specs against it and `bun run e2e:stack:down` stops it. To test unreleased backend changes, build
+  your checkout instead: `E2E_BACKEND_BUILD=1 bun run e2e:stack` (`../inatrace-backend`, or `BACKEND_DIR=…`).
+  When moving to a newer backend image, update `openapi/inatrace-api.json` from the same backend version.
+- **An existing backend** (`bun run e2e`), e.g. your dev database behind `bun run dev`:
+
+  ```bash
+  E2E_COADMIN_USER=… E2E_COADMIN_PASS=… E2E_COMPANY_ID=… \
+  E2E_SYSADMIN_USER=… E2E_SYSADMIN_PASS=… bun run e2e      # system admin optional
+  ```
+
+  Roles without an account are skipped. The facilities spec picks the facility type and value chain
+  named by `E2E_FACILITY_TYPE` / `E2E_VALUE_CHAIN` (default "Washing station" / "Coffee Value Chain").
+
+An empty INATrace database has no administrator and only administrators can activate users, so the seed
+script promotes its first system admin with one SQL statement in the stack's MySQL; everything else goes
+through the API.
+
+**UI tests** (`bun run test:ui`, in `test/ui/`): Playwright with every `/api` call mocked, for what a real
+backend can't produce on demand: server errors, validation responses, roles there's no account for.
+They need no backend and run in CI. The mock (`test/ui/api-mock.ts`) is built from `src/lib/endpoints.ts`
+like Vitest's and fails on any request nobody mocked; `test/ui/fixtures.ts` sets the user
+(`test.use({ profile })`) and the selected company.
+
+Both Playwright suites share the page objects in `test/pages/`. Playwright starts Vite itself (or reuses
+one already on :5173); `E2E_BASE_URL` points it at a running deployment instead. Reports, traces and
+saved sessions go to `.playwright/` (`bunx playwright show-report .playwright/report`). First run:
+`bunx playwright install chromium`.
 
 ## Behaviour changes from Angular
 

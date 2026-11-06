@@ -1,0 +1,79 @@
+# name: test
+
+# on:
+#   pull_request:
+#   push:
+#     branches: [main]
+
+# concurrency:
+#   group: test-${{ github.ref }}
+#   cancel-in-progress: true
+
+# jobs:
+#   unit:
+#     name: build + vitest
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: oven-sh/setup-bun@v2
+#       - run: bun install --frozen-lockfile
+#       # i18n:check + tsc (also typechecks test/ and e2e/) + production build
+#       - run: bun run build
+#       - run: bunx vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=coverage/junit.xml
+#       - uses: actions/upload-artifact@v4
+#         if: ${{ !cancelled() }}
+#         with:
+#           name: vitest
+#           path: coverage
+#           retention-days: 7
+
+#   # Browser UI tests with the API mocked. The end-to-end suite (bun run e2e) needs a backend and
+#   # isn't run here yet.
+#   ui:
+#     name: playwright ui (mocked API)
+#     needs: unit
+#     runs-on: ubuntu-latest
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         shard: [1, 2]
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: oven-sh/setup-bun@v2
+#       - run: bun install --frozen-lockfile
+#       - run: bun run build # the webServer serves dist/ with `vite preview` on CI
+#       - run: bunx playwright install --with-deps chromium
+#       - run: bunx playwright test --project=ui --shard=${{ matrix.shard }}/2
+#         env:
+#           CI: "1"
+#       - uses: actions/upload-artifact@v4
+#         if: ${{ !cancelled() }}
+#         with:
+#           name: playwright-ui-${{ matrix.shard }}
+#           path: .playwright
+#           retention-days: 7
+
+#   # End-to-end against a disposable backend: MySQL + Mailpit + the published INATrace backend image
+#   # (ghcr.io/agstack/inatrace-backend, version pinned in e2e/stack/compose.yaml), seeded through its
+#   # API (e2e/stack/seed.ts).
+#   e2e:
+#     name: playwright e2e (real backend)
+#     needs: unit
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 30
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: oven-sh/setup-bun@v2
+#       - run: bun install --frozen-lockfile
+#       - run: bun run build # Playwright serves dist/ with `vite preview` on CI
+#       - run: bunx playwright install --with-deps chromium
+#       # up (pulls the images) → seed → playwright --project=e2e → down -v; prints backend logs on failure
+#       - run: bun run e2e:stack
+#         env:
+#           CI: "1"
+#       - uses: actions/upload-artifact@v4
+#         if: ${{ !cancelled() }}
+#         with:
+#           name: playwright-e2e
+#           path: .playwright
+#           retention-days: 7

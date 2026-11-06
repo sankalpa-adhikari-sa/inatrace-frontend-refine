@@ -49,7 +49,8 @@ export const resources: Record<string, ResourceDef> = {
 
   facilities: {
     list: (meta) => req(ep.listAllFacilitiesByCompany, { path: { id: num(meta.companyId) } }),
-    one: (id) => req(ep.getFacility, withId(id)),
+    // The plain getFacility leaves out translations, which the edit form needs.
+    one: (id) => req(ep.getFacilityDetail, withId(id)),
     create: (variables) => req(ep.createOrUpdateFacility, { body: variables }),
     update: (id, variables) => req(ep.createOrUpdateFacility, { body: { ...variables, id: num(id) } }),
     remove: (id) => req(ep.deleteFacility, withId(id)),

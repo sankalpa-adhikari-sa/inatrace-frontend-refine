@@ -144,8 +144,9 @@ export function SelectField<T extends FieldValues, V extends string | number>({
   const { field, fieldState } = useController({ control, name, rules, disabled });
   return (
     <Field className={className} data-invalid={!!fieldState.error || undefined}>
-      {label && <FormFieldLabel required={required ?? rules?.required}>{label}</FormFieldLabel>}
+      {label && <FormFieldLabel htmlFor={name} required={required ?? rules?.required}>{label}</FormFieldLabel>}
       <SimpleSelect
+        id={name}
         options={options}
         value={field.value}
         onChange={field.onChange}
@@ -236,8 +237,14 @@ function EntityField<T extends FieldValues, E extends { id?: number }>({
   const Control = searchable ? SimpleCombobox : SimpleSelect;
   return (
     <Field className={className} data-invalid={!!fieldState.error || undefined}>
-      {label && <FormFieldLabel required={required ?? rules?.required}>{label}</FormFieldLabel>}
+      {label && (
+        <FormFieldLabel htmlFor={name} required={required ?? rules?.required}>
+          {label}
+        </FormFieldLabel>
+      )}
       <Control
+        // Ties the label to the control, so it has an accessible name.
+        id={name}
         options={options}
         value={current?.id ?? null}
         onChange={(id) => field.onChange(all.find((i) => i.id === id) ?? null)}
@@ -320,9 +327,10 @@ export function EntityListField<T extends FieldValues, E extends { id?: number }
 
   return (
     <Field className={className} data-invalid={!!fieldState.error || undefined}>
-      {label && <FormFieldLabel required={required ?? rules?.required}>{label}</FormFieldLabel>}
+      {label && <FormFieldLabel htmlFor={name} required={required ?? rules?.required}>{label}</FormFieldLabel>}
       {!field.disabled && (
         <Picker
+          id={name}
           // Remount after each add so the combobox input clears.
           key={selected.length}
           options={options}

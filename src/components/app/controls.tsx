@@ -36,6 +36,7 @@ export function SimpleSelect<V extends string | number>({
   disabled,
   invalid,
   prefix,
+  id,
 }: {
   options: Option<V>[];
   value: V | null | undefined;
@@ -46,6 +47,8 @@ export function SimpleSelect<V extends string | number>({
   invalid?: boolean;
   /** Inline label shown inside the trigger, for label-less toolbars. */
   prefix?: ReactNode;
+  /** Id of the trigger, so a <label htmlFor> names it. */
+  id?: string;
 }) {
   // Base UI treats "" as "nothing selected"; map it to a sentinel so an
   // explicit "All …" option with value "" still shows as selected.
@@ -62,6 +65,7 @@ export function SimpleSelect<V extends string | number>({
       disabled={disabled}
     >
       <SelectTrigger
+        id={id}
         className={cn("w-full", prefix && "justify-start [&>svg:last-child]:ml-auto", className)}
         aria-invalid={invalid || undefined}
       >

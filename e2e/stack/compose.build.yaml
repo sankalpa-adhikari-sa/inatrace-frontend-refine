@@ -1,0 +1,8 @@
+# Override for compose.yaml: build the backend from a local checkout instead of pulling the published
+# image, e.g. to test unreleased backend changes. Used by `E2E_BACKEND_BUILD=1 bun run e2e:stack`.
+# BACKEND_DIR points at the checkout (default: a sibling of this repository).
+services:
+  backend:
+    image: inatrace-e2e-backend:local
+    build:
+      context: ${BACKEND_DIR:-../../../inatrace-backend}

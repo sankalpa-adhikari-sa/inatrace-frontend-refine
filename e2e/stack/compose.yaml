@@ -1,0 +1,49 @@
+# Disposable backend for the end-to-end suite: MySQL (in memory, empty on every start), Mailpit and
+# the published INATrace backend image. Separate project name and ports from the dev stack
+# (compose-dev.yaml in the backend repo), so it never touches your development database.
+#
+#   bun run e2e:stack      up → seed → test → down (see e2e/stack/run.ts)
+#
+# By hand:
+#   docker compose -p inatrace-e2e -f e2e/stack/compose.yaml up -d --wait
+#   docker compose -p inatrace-e2e -f e2e/stack/compose.yaml down -v
+#
+# Backend version: E2E_BACKEND_IMAGE (default below). Keep it in step with openapi/inatrace-api.json.
+# To test against a local backend checkout instead, set E2E_BACKEND_BUILD=1 (adds compose.build.yaml).
+name: inatrace-e2e
+
+services:
+  mysql:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: inatrace
+      MYSQL_USER: inatrace
+      MYSQL_PASSWORD: inatrace
+    # No volume: the data lives in memory and is gone after `down`.
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uinatrace", "-pinatrace"]
+      interval: 3s
+      retries: 40
+
+  mail:
+    image: axllent/mailpit:v1.31.3
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "127.0.0.1:${E2E_MAIL_PORT:-18025}:8025"
+
+  backend:
+    # Published by agstack/inatrace-backend's release workflow (public, linux/amd64).
+    # 3.0.0-rc.1 = backend commit 22ed1574, the API openapi/inatrace-api.json was generated from.
+    image: ${E2E_BACKEND_IMAGE:-ghcr.io/agstack/inatrace-backend:3.0.0-rc.1}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./application.properties:/app/config/application.properties:ro
+    ports:
+      - "127.0.0.1:${E2E_BACKEND_PORT:-18080}:8080"
