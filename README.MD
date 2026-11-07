@@ -248,6 +248,8 @@ Deliberate differences from the original Angular frontend:
 - Plot sizes are real hectares (m² / 10 000). Angular divided square metres by 1 000 and labelled the result "ha",
   so its sizes were 10× too large. Plots already saved keep their stored size.
 - A single-point plot has one pin: clicking the map again moves it (Angular kept adding points).
+- While drawing a plot boundary, the shape follows a corner as it is dragged, and a small handle between each two
+  corners adds a corner there (drag or click it). Angular could only append corners at the end.
 - Editing an existing company member only changes the role; Angular also let you swap the user, which then set
   the role of someone who wasn't a member.
 - Label fields have no drag-reordering: Angular's reorder mode could never be switched on. Saving keeps the

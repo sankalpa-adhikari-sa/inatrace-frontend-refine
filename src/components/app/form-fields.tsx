@@ -5,6 +5,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CharCountTextarea } from "./char-count-textarea";
+import { DatePicker } from "./date-picker";
 import { type Option, SimpleCombobox, SimpleSelect } from "./controls";
 import { useTranslate } from "@refinedev/core";
 import { t } from "@/lib/i18n";
@@ -55,7 +56,7 @@ export function TextField<T extends FieldValues>({
   autoComplete,
   readOnly,
 }: BaseProps<T> & {
-  type?: "text" | "email" | "password" | "number" | "url" | "tel" | "date";
+  type?: "text" | "email" | "password" | "number" | "url" | "tel";
   placeholder?: string;
   autoComplete?: string;
   /** Shown but not editable; unlike `disabled` the value is still submitted. */
@@ -77,6 +78,53 @@ export function TextField<T extends FieldValues>({
         onChange={(e) =>
           field.onChange(type === "number" ? (e.target.value === "" ? null : Number(e.target.value)) : e.target.value)
         }
+      />
+      {description && <FieldDescription>{description}</FieldDescription>}
+      <FieldError errors={[fieldState.error]} />
+    </Field>
+  );
+}
+
+/** Calendar date picker over an ISO `yyyy-MM-dd` string ("" when empty). */
+export function DateField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  description,
+  rules,
+  required,
+  disabled,
+  className,
+  min,
+  max,
+  placeholder,
+  readOnly,
+}: BaseProps<T> & {
+  /** Earliest selectable day (ISO). */
+  min?: string;
+  /** Latest selectable day (ISO). */
+  max?: string;
+  placeholder?: string;
+  readOnly?: boolean;
+}) {
+  const { field, fieldState } = useController({ control, name, rules, disabled });
+  const isRequired = required ?? !!rules?.required;
+  return (
+    <Field className={className} data-invalid={!!fieldState.error || undefined}>
+      {label && <FormFieldLabel htmlFor={name} required={isRequired}>{label}</FormFieldLabel>}
+      <DatePicker
+        id={name}
+        ref={field.ref}
+        value={field.value}
+        onChange={field.onChange}
+        onBlur={field.onBlur}
+        disabled={field.disabled}
+        readOnly={readOnly}
+        invalid={!!fieldState.error}
+        clearable={!isRequired}
+        min={min}
+        max={max}
+        placeholder={placeholder}
       />
       {description && <FieldDescription>{description}</FieldDescription>}
       <FieldError errors={[fieldState.error]} />

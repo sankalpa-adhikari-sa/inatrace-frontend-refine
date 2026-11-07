@@ -9,7 +9,7 @@ import {
   useFieldArray,
 } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { SelectField, TextField, TextareaField } from "./form-fields";
+import { DateField, SelectField, TextareaField } from "./form-fields";
 import { UploadField } from "./upload-field";
 
 const CERTIFICATION_TYPES = ["EU_ORGANIC", "RAINFOREST_ALLIANCE", "CARBON_NEUTRAL", "FAIRTRADE"] as const;
@@ -46,10 +46,9 @@ export function CertificationsField<T extends FieldValues>({
             label={translate("common.fields.type")}
             options={types}
           />
-          <TextField
+          <DateField
             control={control}
             name={p(i, "validity")}
-            type="date"
             label={translate("common.fields.validityDate")}
           />
           <TextareaField

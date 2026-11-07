@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import type { ApiFacility, ApiProcessingAction, ApiProcessingOrder, ApiStockOrder, ApiTransaction } from "@/client/types.gen";
-import { TextField, TextareaField } from "@/components/app/form-fields";
+import { DateField, TextareaField } from "@/components/app/form-fields";
 import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { FieldDescription, FieldError, FieldGroup } from "@/components/ui/field";
@@ -433,10 +433,9 @@ function Form({
               </p>
             )}
             <Lockable locked={outputLocked}>
-              <TextField
+              <DateField
                 control={control}
                 name="processingDate"
-                type="date"
                 label={
                   shipment
                     ? translate("stock.processingOrder.fields.orderDate")

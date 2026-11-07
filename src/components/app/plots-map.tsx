@@ -1,9 +1,10 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import type { ApiPlot } from "@/client/types.gen";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { type MapMarker, type MapPoint, MapView } from "./map-view";
+import { edgeMidpoints, insertOnEdge, moveCorner } from "./plot-geometry";
 import { useTranslate } from "@refinedev/core";
 
 const PLOT_COLOR = "#f59e0b";
@@ -50,6 +51,7 @@ export function PlotsMap({
   showDraftArea = true,
   onMapClick,
   onDraftMove,
+  onDraftInsert,
   selectedDraftIndex,
   onDraftSelect,
   hideOthers,
@@ -71,6 +73,11 @@ export function PlotsMap({
   onMapClick?: (p: MapPoint) => void;
   /** Makes the draft points draggable; called with the moved point's index. */
   onDraftMove?: (index: number, p: MapPoint) => void;
+  /**
+   * Shows a handle between each two corners of a drawn boundary: dragging or clicking it adds a
+   * corner on that edge (at `edge + 1`).
+   */
+  onDraftInsert?: (edge: number, p: MapPoint) => void;
   /** The draft corner chosen (e.g. to remove it), and the handler that chooses one. */
   selectedDraftIndex?: number | null;
   onDraftSelect?: (index: number) => void;
@@ -89,6 +96,15 @@ export function PlotsMap({
   children?: ReactNode;
 }) {
   const translate = useTranslate();
+  // A corner or edge handle being dragged: the shape follows it live, and the draft itself is
+  // only changed when it's dropped.
+  const [dragging, setDragging] = useState<{ kind: "corner" | "edge"; index: number; point: MapPoint } | null>(null);
+  const live =
+    draft && dragging
+      ? dragging.kind === "corner"
+        ? moveCorner(draft, dragging.index, dragging.point)
+        : insertOnEdge(draft, dragging.index, dragging.point)
+      : draft;
   const markers: MapMarker[] = [];
   const shown = (i: number) => i !== hideIndex && !hideOthers;
   plots.forEach((plot, i) => {
@@ -150,18 +166,47 @@ export function PlotsMap({
       selected: i === selectedDraftIndex,
       onClick: onDraftSelect ? () => onDraftSelect(i) : undefined,
       draggable: !!onDraftMove,
-      onDragEnd: onDraftMove ? (to) => onDraftMove(i, to) : undefined,
+      onDrag: onDraftMove ? (to) => setDragging({ kind: "corner", index: i, point: to }) : undefined,
+      onDragEnd: onDraftMove
+        ? (to) => {
+            setDragging(null);
+            onDraftMove(i, to);
+          }
+        : undefined,
     })
   );
+  if (showDraftArea && live && onDraftInsert) {
+    // While an edge handle is dragged, only that one stays (the others would sit on old edges).
+    const edges =
+      dragging?.kind === "edge" && draft
+        ? edgeMidpoints(draft).filter((m) => m.index === dragging.index)
+        : edgeMidpoints(live);
+    for (const { index, point } of edges) {
+      markers.push({
+        id: `draft-edge-${index}`,
+        ...point,
+        color: DRAFT_COLOR,
+        shape: "midpoint",
+        label: translate("common.map.addCornerHere"),
+        draggable: true,
+        onClick: () => onDraftInsert(index, point),
+        onDrag: (to) => setDragging({ kind: "edge", index, point: to }),
+        onDragEnd: (to) => {
+          setDragging(null);
+          onDraftInsert(index, to);
+        },
+      });
+    }
+  }
 
   const polygons = [
     ...plots
       .map((plot, i) => ({ id: `plot-${plot.id ?? i}`, points: pointsOf(plot), color: PLOT_COLOR }))
       .filter((_, i) => shown(i)),
-    ...(showDraftArea && draft && draft.length > 2 ? [{ id: "draft", points: draft, color: DRAFT_COLOR }] : []),
+    ...(showDraftArea && live && live.length > 2 ? [{ id: "draft", points: live, color: DRAFT_COLOR }] : []),
   ];
   const lines =
-    showDraftArea && draft && draft.length === 2 ? [{ id: "draft-line", points: draft, color: DRAFT_COLOR }] : [];
+    showDraftArea && live && live.length === 2 ? [{ id: "draft-line", points: live, color: DRAFT_COLOR }] : [];
 
   return (
     <MapView

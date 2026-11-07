@@ -5,7 +5,7 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router";
 import type { ApiBulkPayment, ApiPayment, ApiStockOrder, ApiUserCustomer } from "@/client/types.gen";
 import { LastChange } from "@/components/app/last-change";
-import { SelectField, TextField, TextareaField } from "@/components/app/form-fields";
+import { DateField, SelectField, TextareaField, TextField } from "@/components/app/form-fields";
 import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
 import { TableEmptyRow } from "@/components/app/table-empty-row";
 import { Badge } from "@/components/ui/badge";
@@ -128,10 +128,9 @@ function BulkPaymentEditor({ orders, purchaseOrders }: { orders: ApiStockOrder[]
       <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
         <Section title={translate("common.titles.basicInformation")}>
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <TextField
+            <DateField
               control={control}
               name="formalCreationTime"
-              type="date"
               label={translate("stock.payments.fields.paymentDate")}
               rules={{
                 required: translate("stock.payments.errors.paymentDateIsRequired"),

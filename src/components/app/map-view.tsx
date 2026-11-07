@@ -9,11 +9,16 @@ export type MapMarker = MapPoint & {
   label?: string;
   color?: string;
   draggable?: boolean;
+  /** Called while the marker is dragged (at most once per frame), then `onDragEnd` when it's dropped. */
+  onDrag?: (p: MapPoint) => void;
   onDragEnd?: (p: MapPoint) => void;
   /** Content of the popup opened by clicking the marker. */
   popup?: ReactNode;
-  /** "pin" (default): a labelled pin; "dot": a small round handle centred on the point (shape corners). */
-  shape?: "pin" | "dot";
+  /**
+   * "pin" (default): a labelled pin; "dot": a small round handle centred on the point (shape corners);
+   * "midpoint": a fainter handle between two corners, dragged or clicked to add a corner there.
+   */
+  shape?: "pin" | "dot" | "midpoint";
   /** Called when the marker is clicked (not after dragging it). */
   onClick?: () => void;
   /** Emphasised, e.g. the corner chosen for removal. */

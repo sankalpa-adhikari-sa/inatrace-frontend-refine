@@ -338,6 +338,7 @@
     },
     "placeholders": {
       "nothingLeftToAdd": "Nta kindi gisigaye cyo kongeraho",
+      "pickADate": "Hitamo itariki",
       "searchByName": "Shakisha ukoresheje izina",
       "searchCompanies": "Shakisha muri kompanyi {{companiesCount}}…"
     },

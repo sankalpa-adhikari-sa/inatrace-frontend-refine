@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ApiBeycoOrderFields } from "@/client/types.gen";
-import { TextField } from "@/components/app/form-fields";
+import { DateField, TextField } from "@/components/app/form-fields";
 import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
@@ -80,10 +80,9 @@ function OfferEditor({
                 maxLength: { value: 70, message: translate("stock.beyco.errors.atMost70Characters") },
               }}
             />
-            <TextField
+            <DateField
               control={control}
               name="availableAt"
-              type="date"
               label={translate("stock.beyco.fields.availableAt")}
               rules={{ required: translate("common.errors.required") }}
             />

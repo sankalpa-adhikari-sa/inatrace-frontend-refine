@@ -2,7 +2,7 @@ import { useTranslate } from "@refinedev/core";
 import { Plus, Trash2 } from "lucide-react";
 import { type Control, type FieldPath, useFieldArray } from "react-hook-form";
 import type { ApiProcessingEvidenceField } from "@/client/types.gen";
-import { EntityComboboxField, TextField, TextareaField } from "@/components/app/form-fields";
+import { DateField, EntityComboboxField, TextareaField, TextField } from "@/components/app/form-fields";
 import { UploadField } from "@/components/app/upload-field";
 import { Button } from "@/components/ui/button";
 import { FieldLabel } from "@/components/ui/field";
@@ -35,18 +35,15 @@ export function EvidenceField({
   if (field.type === "TEXT") {
     return <TextareaField control={control} name={name} label={field.label} rules={rules} rows={2} />;
   }
+  if (field.type === "DATE" || field.type === "TIMESTAMP") {
+    return <DateField control={control} name={name} label={field.label} rules={rules} />;
+  }
   return (
     <TextField
       control={control}
       name={name}
       label={field.label}
-      type={
-        NUMERIC_FIELDS.includes(field.type ?? "")
-          ? "number"
-          : field.type === "DATE" || field.type === "TIMESTAMP"
-          ? "date"
-          : "text"
-      }
+      type={NUMERIC_FIELDS.includes(field.type ?? "") ? "number" : "text"}
       rules={rules}
     />
   );
@@ -64,10 +61,9 @@ export function RequiredDocs({ control }: { control: Control<FormValues> }) {
             label={translate("common.fields.type")}
             value={`${f.label ?? ""}${f.mandatory ? " *" : ""}`}
           />
-          <TextField
+          <DateField
             control={control}
             name={`requiredDocs.${i}.date`}
-            type="date"
             label={translate("common.fields.date")}
             rules={
               f.mandatory
@@ -118,10 +114,9 @@ export function OtherDocs({ control }: { control: Control<FormValues> }) {
             getLabel={(t) => t.label ?? ""}
             rules={{ required: translate("common.errors.typeIsRequired") }}
           />
-          <TextField
+          <DateField
             control={control}
             name={`otherDocs.${i}.formalCreationDate`}
-            type="date"
             label={translate("common.fields.date")}
             rules={{ required: translate("stock.processingOrder.errors.dateIsRequired") }}
           />

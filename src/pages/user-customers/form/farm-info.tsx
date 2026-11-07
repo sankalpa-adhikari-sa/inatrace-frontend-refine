@@ -1,6 +1,6 @@
 import { useTranslate } from "@refinedev/core";
 import { type Control, useFieldArray } from "react-hook-form";
-import { CheckboxField, TextField } from "@/components/app/form-fields";
+import { CheckboxField, DateField, TextField } from "@/components/app/form-fields";
 import { Section } from "@/components/app/page";
 import { FieldGroup } from "@/components/ui/field";
 import { type FormValues, useWatchFarm, withAreaUnit } from "./model";
@@ -63,10 +63,9 @@ export function FarmInfoSection({ control }: { control: Control<FormValues> }) {
             farm.areaUnit
           )}
         />
-        <TextField
+        <DateField
           control={control}
           name="farm.startTransitionToOrganic"
-          type="date"
           label={translate("userCustomers.fields.startedTransitionToOrganic")}
         />
       </FieldGroup>

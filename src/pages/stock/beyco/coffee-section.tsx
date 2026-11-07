@@ -1,7 +1,7 @@
 import { useTranslate } from "@refinedev/core";
 import { useEffect } from "react";
 import { type Control, type FieldPath, useController, useWatch } from "react-hook-form";
-import { SelectField, TextField } from "@/components/app/form-fields";
+import { DateField, SelectField, TextField } from "@/components/app/form-fields";
 import { Section } from "@/components/app/page";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
@@ -75,10 +75,9 @@ export function CoffeeSection({ index: i, control }: { index: number; control: C
           label={translate("common.fields.country")}
           rules={req}
         />
-        <TextField
+        <DateField
           control={control}
           name={p("harvestAt")}
-          type="date"
           label={translate("stock.beyco.fields.harvestPeriod")}
           rules={req}
         />

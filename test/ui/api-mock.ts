@@ -58,7 +58,10 @@ export class ApiMock {
     const origin = new URL(this.appOrigin).origin;
     await this.page.route("**/*", (route) => {
       const url = new URL(route.request().url());
-      if (url.pathname.startsWith("/api/")) return this.dispatch(route);
+      // Only the app's own /api is InaTrace; other local /api calls (Refine Devtools' server) are dropped.
+      if (url.pathname.startsWith("/api/")) {
+        return url.origin === origin ? this.dispatch(route) : route.abort("blockedbyclient");
+      }
       // App assets come from the dev server; anything else (tiles, analytics, fonts CDN) is blocked.
       if (url.origin === origin || url.hostname === "localhost" || url.hostname === "127.0.0.1") return route.fallback();
       return route.abort("blockedbyclient");

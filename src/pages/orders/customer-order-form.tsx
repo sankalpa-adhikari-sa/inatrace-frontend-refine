@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import type { ApiProcessingAction, ApiProductOrder } from "@/client/types.gen";
-import { CheckboxField, ComboboxField, EntitySelectField, TextField } from "@/components/app/form-fields";
+import { CheckboxField, ComboboxField, DateField, EntitySelectField, TextField } from "@/components/app/form-fields";
 import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -152,10 +152,9 @@ export function CustomerOrderForm() {
                 required: translate("orders.errors.outputFacilityIsRequired"),
               }}
             />
-            <TextField
+            <DateField
               control={control}
               name="deliveryDeadline"
-              type="date"
               label={translate("orders.fields.latestDateOfDelivery")}
               rules={{
                 required: translate("orders.errors.latestDeliveryDateIsRequired"),

@@ -334,10 +334,12 @@
       "toggleAttribution": "Toggle attribution",
       "twoFingersToMove": "Use two fingers to move the map",
       "zoomIn": "Zoom in",
-      "zoomOut": "Zoom out"
+      "zoomOut": "Zoom out",
+      "addCornerHere": "Add a corner here"
     },
     "placeholders": {
       "nothingLeftToAdd": "Nothing left to add",
+      "pickADate": "Pick a date",
       "searchByName": "Search by name",
       "searchCompanies": "Search {{companiesCount}} companies…"
     },
@@ -1938,7 +1940,7 @@
         "uploadGeoData": "Upload geo-data"
       },
       "descriptions": {
-        "addMoreCornersDragA": "Add more corners. Drag a corner to move it, or click it to remove it.",
+        "addMoreCornersDragA": "Add more corners. Drag a corner to move it, or click it to remove it. Drag or click a small dot between two corners to add a corner there.",
         "clickTheMapToAdd": "Click the map to add the corners in order ({{value}} of at least 3).",
         "clickTheMapToPlace": "Click the map to place the plot's pin.",
         "deleteThePlot": "Delete the plot \"{{name}}\"?",

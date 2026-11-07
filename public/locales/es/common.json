@@ -334,10 +334,12 @@
       "toggleAttribution": "Mostrar u ocultar atribución",
       "twoFingersToMove": "Use dos dedos para mover el mapa",
       "zoomIn": "Acercar",
-      "zoomOut": "Alejar"
+      "zoomOut": "Alejar",
+      "addCornerHere": "Agregar una esquina aquí"
     },
     "placeholders": {
       "nothingLeftToAdd": "No queda nada por agregar",
+      "pickADate": "Elige una fecha",
       "searchByName": "Buscar por nombre",
       "searchCompanies": "Buscar entre {{companiesCount}} empresas…"
     },
@@ -1938,7 +1940,7 @@
         "uploadGeoData": "Subir geodatos"
       },
       "descriptions": {
-        "addMoreCornersDragA": "Agregue más esquinas. Arrastre una esquina para moverla o haga clic en ella para quitarla.",
+        "addMoreCornersDragA": "Agregue más esquinas. Arrastre una esquina para moverla o haga clic en ella para quitarla. Arrastre o haga clic en un punto pequeño entre dos esquinas para agregar una esquina allí.",
         "clickTheMapToAdd": "Haga clic en el mapa para agregar las esquinas en orden ({{value}} de al menos 3).",
         "clickTheMapToPlace": "Haga clic en el mapa para colocar el marcador de la parcela.",
         "deleteThePlot": "¿Eliminar la parcela \"{{name}}\"?",

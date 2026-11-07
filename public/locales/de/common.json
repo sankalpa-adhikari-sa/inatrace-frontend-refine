@@ -334,10 +334,12 @@
       "toggleAttribution": "Quellenangabe ein-/ausblenden",
       "twoFingersToMove": "Verwenden Sie zwei Finger, um die Karte zu bewegen",
       "zoomIn": "Vergrößern",
-      "zoomOut": "Verkleinern"
+      "zoomOut": "Verkleinern",
+      "addCornerHere": "Hier eine Ecke hinzufügen"
     },
     "placeholders": {
       "nothingLeftToAdd": "Nichts mehr hinzuzufügen",
+      "pickADate": "Datum wählen",
       "searchByName": "Nach Name suchen",
       "searchCompanies": "{{companiesCount}} Unternehmen durchsuchen…"
     },
@@ -1938,7 +1940,7 @@
         "uploadGeoData": "Upload geo-data"
       },
       "descriptions": {
-        "addMoreCornersDragA": "Fügen Sie weitere Ecken hinzu. Ziehen Sie eine Ecke, um sie zu verschieben, oder klicken Sie darauf, um sie zu entfernen.",
+        "addMoreCornersDragA": "Fügen Sie weitere Ecken hinzu. Ziehen Sie eine Ecke, um sie zu verschieben, oder klicken Sie darauf, um sie zu entfernen. Ziehen oder klicken Sie einen kleinen Punkt zwischen zwei Ecken, um dort eine Ecke hinzuzufügen.",
         "clickTheMapToAdd": "Klicken Sie auf die Karte, um die Ecken der Reihe nach hinzuzufügen ({{value}} von mindestens 3).",
         "clickTheMapToPlace": "Klicken Sie auf die Karte, um die Markierung der Parzelle zu setzen.",
         "deleteThePlot": "Die Parzelle „{{name}}“ löschen?",

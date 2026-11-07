@@ -8,7 +8,7 @@ import { useFieldArray } from "react-hook-form";
 import { Navigate, useNavigate, useParams } from "react-router";
 import type { ApiDocument, ApiKnowledgeBlog, ApiKnowledgeBlogBase } from "@/client/types.gen";
 import { RowActions, SimpleSelect, Toolbar, humanize } from "@/components/app/controls";
-import { TextField } from "@/components/app/form-fields";
+import { DateField, TextField } from "@/components/app/form-fields";
 import { FormActions, PageLoader, Section } from "@/components/app/page";
 import { RichTextField } from "@/components/app/rich-text-field";
 import { UploadField } from "@/components/app/upload-field";
@@ -232,10 +232,9 @@ export function KnowledgeBlogForm() {
               label={translate("products.fields.content")}
             />
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
+              <DateField
                 control={control}
                 name="date"
-                type="date"
                 label={translate("common.fields.date")}
               />
               <TextField

@@ -2,7 +2,7 @@ import { useTranslate } from "@refinedev/core";
 import { Plus, Trash2 } from "lucide-react";
 import { type Control, useFieldArray, useWatch } from "react-hook-form";
 import type { ApiFacility, ApiProcessingAction } from "@/client/types.gen";
-import { EntitySelectField, TextField } from "@/components/app/form-fields";
+import { DateField, EntitySelectField, TextField } from "@/components/app/form-fields";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { fmt } from "../shared";
@@ -134,10 +134,9 @@ export function OutputFields({
           />
         )}
         {type === "SHIPMENT" && (
-          <TextField
+          <DateField
             control={control}
             name={`targets.${i}.deliveryTime`}
-            type="date"
             label={translate("stock.processingOrder.fields.preferredDeliveryDate")}
             rules={{
               required: translate("stock.processingOrder.errors.preferredDeliveryDateIsRequired"),

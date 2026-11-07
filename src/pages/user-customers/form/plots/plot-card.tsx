@@ -2,7 +2,7 @@ import { useTranslate } from "@refinedev/core";
 import { Copy, Hexagon, LocateFixed, MapPin, PenLine, Trash2 } from "lucide-react";
 import type { Control } from "react-hook-form";
 import type { ApiPlot, ApiProductType } from "@/client/types.gen";
-import { EntitySelectField, TextField } from "@/components/app/form-fields";
+import { DateField, EntitySelectField, TextField } from "@/components/app/form-fields";
 import type { MapPoint } from "@/components/app/map-view";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -131,10 +131,9 @@ export function PlotCard({
             />
           </>
         )}
-        <TextField
+        <DateField
           control={control}
           name={`plots.${i}.organicStartOfTransition`}
-          type="date"
           label={translate("userCustomers.plots.fields.startedTransitionToOrganic")}
         />
       </div>

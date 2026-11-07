@@ -6,7 +6,7 @@ import { useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import type { ApiProductLabelBatch } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
-import { CheckboxField, TextField } from "@/components/app/form-fields";
+import { CheckboxField, DateField, TextField } from "@/components/app/form-fields";
 import { LocationPinsField } from "@/components/app/location-pins-field";
 import { FormActions, PageLoader, Section } from "@/components/app/page";
 import { IMAGE_TYPES, UploadField } from "@/components/app/upload-field";
@@ -102,17 +102,15 @@ export function BatchForm() {
             />
             {checkAuthenticity && (
               <div className="grid gap-4 sm:grid-cols-2">
-                <TextField
+                <DateField
                   control={control}
                   name="productionDate"
-                  type="date"
                   label={translate("products.labelPages.fields.productionDate")}
                   rules={{ validate: atLeastOneDate }}
                 />
-                <TextField
+                <DateField
                   control={control}
                   name="expiryDate"
-                  type="date"
                   label={translate("products.labelPages.fields.expiryDate")}
                   rules={{
                     validate: {

@@ -8,7 +8,7 @@ import type {
   ApiSemiProduct,
   ApiUserCustomer,
 } from "@/client/types.gen";
-import { ComboboxField, EntityComboboxField, SelectField, TextField } from "@/components/app/form-fields";
+import { ComboboxField, DateField, EntityComboboxField, SelectField, TextField } from "@/components/app/form-fields";
 import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
 import { SearchSelectField } from "@/components/app/search-select-field";
 import { Button } from "@/components/ui/button";
@@ -124,10 +124,9 @@ function Form({ facility, currency }: { facility: ApiFacility; currency: string 
       <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
         <Section title={translate("common.titles.basicInformation")}>
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <TextField
+            <DateField
               control={control}
               name="productionDate"
-              type="date"
               label={translate("common.fields.deliveryDate")}
               rules={{
                 required: translate("stock.errors.deliveryDateIsRequired"),

@@ -5,6 +5,7 @@ import { type Control, useFieldArray, useWatch } from "react-hook-form";
 import type { ApiPlot, ApiProductType } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
 import type { MapPoint } from "@/components/app/map-view";
+import { insertOnEdge } from "@/components/app/plot-geometry";
 import { PlotsMap, WhispDialog, plotAreaHa } from "@/components/app/plots-map";
 import { Button } from "@/components/ui/button";
 import { ep } from "@/lib/endpoints";
@@ -105,6 +106,12 @@ export function Plots({
     if (!draft) return;
     // Moving a corner keeps it selected.
     setDraftState({ ...draft, points: draft.points.map((x, i) => (i === index ? p : x)) });
+  }
+
+  // A corner added between two others (dragged or clicked from the edge handle).
+  function insertPoint(edge: number, p: MapPoint) {
+    if (!draft) return;
+    setDraft({ ...draft, points: insertOnEdge(draft.points, edge, p) });
   }
 
   function removePoint(index: number) {
@@ -208,6 +215,7 @@ export function Plots({
           showDraftArea={isPolygon}
           onMapClick={draft ? addPoint : undefined}
           onDraftMove={draft ? movePoint : undefined}
+          onDraftInsert={isPolygon ? insertPoint : undefined}
           selectedDraftIndex={selectedPoint}
           onDraftSelect={isPolygon ? (i) => setSelectedPoint((cur) => (cur === i ? null : i)) : undefined}
           hideOthers={!!draft && !showOthers}

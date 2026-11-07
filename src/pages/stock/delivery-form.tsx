@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { type Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import type { ApiFacility, ApiStockOrder, ApiUserCustomer } from "@/client/types.gen";
-import { CheckboxField, ComboboxField, EntityComboboxField, SelectField, TextField } from "@/components/app/form-fields";
+import { CheckboxField, ComboboxField, DateField, EntityComboboxField, SelectField, TextField } from "@/components/app/form-fields";
 import { LastChange } from "@/components/app/last-change";
 import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
 import { SearchSelectField } from "@/components/app/search-select-field";
@@ -233,10 +233,9 @@ function Form({ facility, order, currency }: { facility: ApiFacility; order?: Ap
       <form onSubmit={submit(true)} className="flex flex-col gap-6">
         <Section title={translate("common.titles.basicInformation")}>
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <TextField
+            <DateField
               control={control}
               name="productionDate"
-              type="date"
               label={translate("common.fields.deliveryDate")}
               rules={{
                 required: translate("stock.errors.deliveryDateIsRequired"),
@@ -489,10 +488,9 @@ export function ActivityProofs<T extends { activityProofs?: ApiStockOrder["activ
       {fields.length === 0 && <p className="text-xs text-muted-foreground">{translate("stock.texts.noAdditionalProofs")}</p>}
       {fields.map((f, i) => (
         <div key={f.key} className="grid gap-4 border-b pb-4 last:border-b-0 last:pb-0 sm:grid-cols-[1fr_1fr_2fr_auto] sm:items-end">
-          <TextField
+          <DateField
             control={c}
             name={`activityProofs.${i}.formalCreationDate`}
-            type="date"
             label={translate("common.fields.date")}
             rules={{ required: translate("stock.errors.dateIsRequired") }}
           />

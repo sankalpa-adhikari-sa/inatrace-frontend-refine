@@ -208,7 +208,9 @@ export default function MapView({
         });
       }
     };
-    if (map.isStyleLoaded()) apply();
+    // Once the layers exist they can be updated straight away, even while tiles are still
+    // loading (isStyleLoaded is false then), so shapes follow a dragged corner live.
+    if (map.getSource("polygons") || map.isStyleLoaded()) apply();
     else map.once("idle", apply);
   }, [map, loaded, lines, polygons, styleVersion]);
 
@@ -265,21 +267,36 @@ function Marker({ map, marker }: { map: MlMap; marker: MapMarker }) {
   const [popupEl] = useState(() => document.createElement("div"));
   const latest = useRef(marker);
   latest.current = marker;
+  const instance = useRef<maplibregl.Marker | null>(null);
 
   useEffect(() => {
     const m = new maplibregl.Marker({
       element: el,
       draggable: !!marker.draggable,
-      anchor: marker.shape === "dot" ? "center" : "bottom",
+      anchor: marker.shape === "dot" || marker.shape === "midpoint" ? "center" : "bottom",
     })
-      .setLngLat(lngLat(marker) as LngLatLike)
+      .setLngLat(lngLat(latest.current) as LngLatLike)
       .addTo(map);
+    instance.current = m;
     // A drag ends with a click on the element; only a click without dragging counts.
     let dragged = false;
+    // Live drag positions are reported at most once per animation frame.
+    let frame = 0;
     m.on("dragstart", () => {
       dragged = true;
     });
+    m.on("drag", () => {
+      if (!latest.current.onDrag || frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const p = m.getLngLat();
+        latest.current.onDrag?.({ lat: p.lat, lng: p.lng });
+      });
+    });
     m.on("dragend", () => {
+      // A pending live update must not land after the drop.
+      cancelAnimationFrame(frame);
+      frame = 0;
       const p = m.getLngLat();
       latest.current.onDragEnd?.({ lat: p.lat, lng: p.lng });
     });
@@ -296,17 +313,32 @@ function Marker({ map, marker }: { map: MlMap; marker: MapMarker }) {
     el.addEventListener("click", onClick);
     if (marker.popup) m.setPopup(new maplibregl.Popup({ offset: 28, maxWidth: "280px" }).setDOMContent(popupEl));
     return () => {
+      cancelAnimationFrame(frame);
       el.removeEventListener("click", onClick);
       m.remove();
+      instance.current = null;
     };
-    // Recreated only when position / draggability / popup presence change.
+    // Recreated only when draggability / popup presence / shape change; moving it doesn't
+    // recreate it, so a drag in progress isn't interrupted.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, marker.lat, marker.lng, marker.draggable, !!marker.popup, marker.shape]);
+  }, [map, marker.draggable, !!marker.popup, marker.shape]);
+
+  useEffect(() => {
+    instance.current?.setLngLat([marker.lng, marker.lat]);
+  }, [marker.lat, marker.lng]);
 
   return (
     <>
       {createPortal(
-        marker.shape === "dot" ? (
+        marker.shape === "midpoint" ? (
+          // Between two corners: fainter and smaller than a corner, with the same touch area.
+          <div className="group flex size-6 cursor-grab items-center justify-center active:cursor-grabbing" title={marker.label}>
+            <div
+              className="size-2.5 rounded-full border-2 bg-white/90 opacity-80 shadow-[0_0_0_1px_rgb(0_0_0/0.2)] transition-transform group-hover:scale-125 group-hover:opacity-100"
+              style={{ borderColor: marker.color ?? "#25265E" }}
+            />
+          </div>
+        ) : marker.shape === "dot" ? (
           // A shape corner: a round handle on the point, with a larger touch area around it.
           <div
             className={cn("flex size-6 items-center justify-center", marker.draggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer")}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Control } from "react-hook-form";
 import type { ApiFacility, ApiStockOrder, ApiTransaction } from "@/client/types.gen";
 import { SimpleSelect } from "@/components/app/controls";
+import { DatePicker } from "@/components/app/date-picker";
 import { EntitySelectField } from "@/components/app/form-fields";
 import { QrCodeDialog } from "@/components/app/qr-code-dialog";
 import { Button } from "@/components/ui/button";
@@ -179,26 +180,26 @@ function AvailableStock({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-end gap-2">
-        <Field className="w-36">
+        <Field className="w-40">
           <FieldLabel className="text-xs">
             {translate("stock.processingOrder.fields.from")}
           </FieldLabel>
-          <Input
-            type="date"
+          <DatePicker
             value={filters.from}
             max={filters.to || undefined}
-            onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+            clearable
+            onChange={(from) => setFilters({ ...filters, from })}
           />
         </Field>
-        <Field className="w-36">
+        <Field className="w-40">
           <FieldLabel className="text-xs">
             {translate("stock.processingOrder.fields.to")}
           </FieldLabel>
-          <Input
-            type="date"
+          <DatePicker
             value={filters.to}
             min={filters.from || undefined}
-            onChange={(e) => setFilters({ ...filters, to: e.target.value })}
+            clearable
+            onChange={(to) => setFilters({ ...filters, to })}
           />
         </Field>
         <SimpleSelect
