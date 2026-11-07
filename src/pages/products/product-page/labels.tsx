@@ -1,23 +1,23 @@
 import { useNotification, useTranslate } from "@refinedev/core";
-import { BarChart3, Eye, FileDown, Layers, MessageSquare, Plus, Trash2 } from "lucide-react";
+import { BarChart3, Check, Eye, EyeOff, FileDown, Layers, MessageSquare, Plus, QrCode, Send, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { ApiProduct, ApiProductLabel, ApiProductLabelBase, ApiProductLabelField } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
-import { SimpleSelect } from "@/components/app/controls";
+import { SimpleSelect, StatusBadge } from "@/components/app/controls";
 import { Section } from "@/components/app/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ep } from "@/lib/endpoints";
 import { call, download, useApiMutation } from "@/lib/http";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
 import { QRCodeSVG } from "qrcode.react";
-import { t } from "@/lib/i18n";
 import { LANGUAGES, visibilityOf, labelFields, useIsOwner, type Language } from "./model";
 
 // ---------------------------------------------------------------------------
@@ -92,89 +92,145 @@ export function LabelBar({
     onDeleted?.();
   }
 
+  const newLabel = async () => {
+    if (await discardOk()) setCreating(true);
+  };
+
   return (
-    <Section plain title={translate("products.productPage.titles.qrLabels")}>
-      <div className="flex items-stretch gap-3 overflow-x-auto pb-1">
-        {labels.map((l) => (
-          <LabelCard
-            key={l.id}
-            label={l}
-            selected={l.id === current?.id}
-            onSelect={async () => {
-              if (l.id !== current?.id && (await discardOk())) onSelect?.(l.id!);
-            }}
-          />
-        ))}
-        {isOwner && (
-          <button
-            type="button"
-            onClick={async () => {
-              if (await discardOk()) setCreating(true);
-            }}
-            className="flex w-40 shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed text-xs text-muted-foreground hover:border-primary hover:text-foreground"
-          >
-            <Plus className="size-5" />
+    <Section
+      plain
+      title={translate("products.productPage.titles.qrLabels")}
+      description={labels.length > 0 ? translate("products.productPage.descriptions.qrLabelsIntro") : undefined}
+      actions={
+        isOwner &&
+        labels.length > 0 && (
+          <Button size="sm" variant="outline" onClick={newLabel}>
+            <Plus />
             {translate("products.productPage.buttons.newLabel")}
-          </button>
-        )}
-      </div>
+          </Button>
+        )
+      }
+    >
+      {labels.length === 0 ? (
+        <Empty className="border border-dashed bg-card">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <QrCode />
+            </EmptyMedia>
+            <EmptyTitle>{translate("products.productPage.titles.noQrLabelsYet")}</EmptyTitle>
+            <EmptyDescription>{translate("products.productPage.fields.thisProductHasNoQr")}</EmptyDescription>
+          </EmptyHeader>
+          {isOwner && (
+            <EmptyContent>
+              <Button onClick={newLabel}>
+                <Plus />
+                {translate("products.productPage.buttons.newLabel")}
+              </Button>
+            </EmptyContent>
+          )}
+        </Empty>
+      ) : (
+        <div
+          role="group"
+          aria-label={translate("products.productPage.titles.qrLabels")}
+          className="-m-1 flex items-stretch gap-3 overflow-x-auto p-1"
+        >
+          {labels.map((l) => (
+            <LabelCard
+              key={l.id}
+              label={l}
+              selected={l.id === current?.id}
+              onSelect={async () => {
+                if (l.id !== current?.id && (await discardOk())) onSelect?.(l.id!);
+              }}
+            />
+          ))}
+        </div>
+      )}
       {current && (
-        <div className="flex flex-wrap gap-2 border-t pt-3">
-          {isOwner && (
-            <Button size="sm" variant={published ? "outline" : "default"} disabled={dirty} onClick={togglePublish}>
-              {published
-                ? translate("products.productPage.buttons.unpublish")
-                : translate("products.productPage.buttons.publish")}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={dirty}
-            onClick={() => window.open(`/p-cd/${current.uuid}/EMPTY`, "_blank")}
-          >
-            <Eye />
-            {translate("products.productPage.buttons.viewLabel")}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={dirty}
-            onClick={() =>
-              download(
-                ep.getProductLabelInstructions,
-                { path: { id: current.id! } },
-                `${current.title || "label"}-instructions.pdf`
-              )
-            }
-          >
-            <FileDown />
-            {translate("products.productPage.buttons.instructions")}
-          </Button>
-          {isOwner && (
-            <>
-              <Button size="sm" variant="outline" disabled={dirty} onClick={() => navigate(`${base}/batches`)}>
-                <Layers />
-                {translate("products.productPage.buttons.batches")}
+        // Which label the actions below (and the form under them) apply to.
+        <div className="flex flex-col gap-3 rounded-xl border border-foreground/8 bg-card p-3 shadow-card md:p-4">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">{translate("products.productPage.titles.selectedLabel")}</span>
+              <span className="truncate font-heading text-base font-semibold">
+                {current.title || translate("products.productPage.titles.untitled")}
+              </span>
+              {current.language && <Badge variant="outline">{current.language}</Badge>}
+              <StatusBadge status={current.status} />
+            </div>
+            {isOwner && (
+              <Button
+                size="sm"
+                className="ml-auto"
+                variant={published ? "outline" : "default"}
+                disabled={dirty}
+                onClick={togglePublish}
+              >
+                {published ? <EyeOff /> : <Send />}
+                {published
+                  ? translate("products.productPage.buttons.unpublish")
+                  : translate("products.productPage.buttons.publish")}
               </Button>
-              <Button size="sm" variant="outline" disabled={dirty} onClick={() => navigate(`${base}/feedback`)}>
-                <MessageSquare />
-                {translate("products.productPage.buttons.feedback")}
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 border-t border-foreground/8 pt-3">
+            <ButtonGroup aria-label={translate("products.productPage.texts.viewAndPrint")}>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={dirty}
+                onClick={() => window.open(`/p-cd/${current.uuid}/EMPTY`, "_blank")}
+              >
+                <Eye />
+                {translate("products.productPage.buttons.viewLabel")}
               </Button>
-              <Button size="sm" variant="outline" disabled={dirty} onClick={() => navigate(`${base}/statistics`)}>
-                <BarChart3 />
-                {translate("products.productPage.buttons.statistics")}
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={dirty}
+                onClick={() =>
+                  download(
+                    ep.getProductLabelInstructions,
+                    { path: { id: current.id! } },
+                    `${current.title || "label"}-instructions.pdf`
+                  )
+                }
+              >
+                <FileDown />
+                {translate("products.productPage.buttons.instructions")}
               </Button>
-            </>
-          )}
-          {isOwner && (
-            <Button size="sm" variant="destructive" onClick={remove}>
-              <Trash2 />
-              {translate("products.productPage.buttons.deleteLabel")}
-            </Button>
-          )}
+            </ButtonGroup>
+            {isOwner && (
+              <ButtonGroup aria-label={translate("products.productPage.texts.labelActivity")}>
+                <Button size="sm" variant="outline" disabled={dirty} onClick={() => navigate(`${base}/batches`)}>
+                  <Layers />
+                  {translate("products.productPage.buttons.batches")}
+                </Button>
+                <Button size="sm" variant="outline" disabled={dirty} onClick={() => navigate(`${base}/feedback`)}>
+                  <MessageSquare />
+                  {translate("products.productPage.buttons.feedback")}
+                </Button>
+                <Button size="sm" variant="outline" disabled={dirty} onClick={() => navigate(`${base}/statistics`)}>
+                  <BarChart3 />
+                  {translate("products.productPage.buttons.statistics")}
+                </Button>
+              </ButtonGroup>
+            )}
+            {isOwner && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={remove}
+              >
+                <Trash2 />
+                {translate("products.productPage.buttons.deleteLabel")}
+              </Button>
+            )}
+          </div>
           {dirty && (
-            <p className="w-full text-xs text-muted-foreground">{translate("products.productPage.texts.saveYourChangesToUse")}</p>
+            <p className="text-xs text-muted-foreground">{translate("products.productPage.texts.saveYourChangesToUse")}</p>
           )}
         </div>
       )}
@@ -299,13 +355,25 @@ function LabelCard({
     <button
       type="button"
       onClick={onSelect}
+      aria-pressed={selected}
       className={cn(
-        "flex w-40 shrink-0 flex-col items-center gap-1.5 rounded-md border bg-white p-2 text-center transition-colors hover:outline-3 hover:-outline-offset-3",
-        selected ? "border-primary text-primary-strong" : "text-neutral-500"
+        // The printed label is always white, also in dark mode.
+        "relative flex w-40 shrink-0 flex-col items-center gap-1.5 rounded-lg border bg-white p-2 text-center transition-[box-shadow,border-color] outline-none",
+        "focus-visible:ring-3 focus-visible:ring-ring/50",
+        selected
+          ? "border-primary text-primary-strong shadow-md ring-2 ring-primary"
+          : "border-foreground/10 text-neutral-500 hover:border-primary/50 hover:shadow-sm"
       )}
     >
       <div className="flex w-full items-center justify-between gap-1">
-        <img src="/logo-INA.png" alt="" className={cn("w-7", !selected && "opacity-50 grayscale")} />
+        {selected ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary px-1.5 py-0.5 text-[0.625rem] font-medium text-primary-foreground">
+            <Check className="size-3" />
+            {translate("products.productPage.texts.editing")}
+          </span>
+        ) : (
+          <img src="/logo-INA.png" alt="" className="w-7 opacity-50 grayscale" />
+        )}
         {label.status === "PUBLISHED" && (
           <Badge className="h-4 px-1.5">
             {translate("products.productPage.titles.published")}

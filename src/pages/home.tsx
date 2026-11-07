@@ -2,9 +2,9 @@ import { useList, useTranslate } from "@refinedev/core";
 import { useState } from "react";
 import { Link } from "react-router";
 import type { ApiProductListResponse } from "@/client/types.gen";
-import { PageHeader, PageLoader, Section } from "@/components/app/page";
+import { PageHeader, Section } from "@/components/app/page";
 import { OnboardingHome } from "@/components/app/onboarding";
-import { ProductCard } from "@/components/app/product-card";
+import { PRODUCT_GRID, ProductCard, ProductCardSkeleton } from "@/components/app/product-card";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { useIdentity, useSelectedCompany } from "@/hooks/use-session";
@@ -84,7 +84,11 @@ export function HomePage() {
       {company && <OnboardingHome />}
       <Section plain title={translate("home.titles.myProducts")}>
         {query.isLoading ? (
-          <PageLoader />
+          <div className={PRODUCT_GRID} aria-busy="true">
+            {Array.from({ length: 8 }, (_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
         ) : result.data.length === 0 ? (
           <Empty className="border">
             <EmptyHeader>
@@ -93,7 +97,7 @@ export function HomePage() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6">
+          <div className={PRODUCT_GRID}>
             {result.data.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

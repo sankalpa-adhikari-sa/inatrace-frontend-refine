@@ -1117,6 +1117,7 @@
         "labelHasBeenSuccessfullyPublished": "Label has been successfully published.",
         "labelIsNotPublishedAnymore": "Label is not published anymore.",
         "lookAndContentOfThe": "Look and content of the consumer-facing product page.",
+        "qrLabelsIntro": "Each label is a page buyers open by scanning its QR code. Select a label to edit what it shows.",
         "uploadFontUsedForMain": "Upload font used for main content (TTF, WOFF or WOFF2)",
         "uploadFontUsedForProduct": "Upload font used for product title (TTF, WOFF or WOFF2)",
         "uploadHighQualityHeaderBackground": "Upload high-quality header background image (recommended size 1200x476px, file types: PNG, JPG and JPEG)",
@@ -1229,10 +1230,13 @@
         "enterTheLabelTitle": "Enter the label title"
       },
       "texts": {
+        "editing": "Editing",
+        "labelActivity": "Label activity",
         "noneInTheCompanyProfile": "None in the company profile",
         "onlyTheCompanyThatOwns": "Only the company that owns this product can edit it.",
         "saveYourChangesToUse": "Save your changes to use these actions.",
-        "theRouteOfTheProduct": "The route of the product: click the map to add points in order, drag them to move."
+        "theRouteOfTheProduct": "The route of the product: click the map to add points in order, drag them to move.",
+        "viewAndPrint": "View and print"
       },
       "titles": {
         "b2cSettings": "B2C settings",
@@ -1244,12 +1248,14 @@
         "media": "Media",
         "meetTheFarmers": "Meet the farmers",
         "newProduct": "New product",
+        "noQrLabelsYet": "No QR labels yet",
         "process": "Process",
         "productData": "Product data",
         "productionRecords": "Production records",
         "products": "Products",
         "published": "Published",
         "qrLabels": "QR labels",
+        "selectedLabel": "Selected label",
         "settings": "Settings",
         "socialResponsibility": "Social responsibility",
         "untitled": "Untitled",

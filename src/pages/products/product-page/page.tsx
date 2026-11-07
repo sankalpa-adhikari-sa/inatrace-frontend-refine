@@ -9,7 +9,6 @@ import { FormSkeleton } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
 import { ep } from "@/lib/endpoints";
@@ -77,7 +76,6 @@ export function LabelRedirect() {
 }
 
 function LabelsMode({ product }: { product: ApiProduct }) {
-  const translate = useTranslate();
   const [params, setParams] = useSearchParams();
   const {
     data: labels = [],
@@ -110,9 +108,6 @@ function LabelsMode({ product }: { product: ApiProduct }) {
       <>
         <ProductTabs productId={product.id!} />
         <LabelBar product={product} labels={labels} onCreated={async (id) => (await refetchLabels(), select(id))} />
-        <p className="text-sm text-muted-foreground">
-          {translate("products.productPage.fields.thisProductHasNoQr")}
-        </p>
       </>
     );
   }

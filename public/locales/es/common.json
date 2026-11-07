@@ -1117,6 +1117,7 @@
         "labelHasBeenSuccessfullyPublished": "La etiqueta ha sido publicada con éxito.",
         "labelIsNotPublishedAnymore": "La etiqueta no está más publicada.",
         "lookAndContentOfThe": "Aspecto y contenido de la página del producto para los consumidores.",
+        "qrLabelsIntro": "Cada etiqueta es una página que los compradores abren al escanear su código QR. Seleccione una etiqueta para editar lo que muestra.",
         "uploadFontUsedForMain": "Suba fuente para el texto (TTF, WOFF or WOFF2)",
         "uploadFontUsedForProduct": "Suba fuente para el título de producto (TTF, WOFF or WOFF2)",
         "uploadHighQualityHeaderBackground": "Suba imagen para fondo de encabezado (tamaño recomendado: 1200x476px, tipo de archivo: PNG, JPG and JPEG)",
@@ -1229,10 +1230,13 @@
         "enterTheLabelTitle": "Introduzca título de la etiqueta"
       },
       "texts": {
+        "editing": "Editando",
+        "labelActivity": "Actividad de la etiqueta",
         "noneInTheCompanyProfile": "Ninguno en el perfil de la empresa",
         "onlyTheCompanyThatOwns": "Solo la empresa propietaria de este producto puede editarlo.",
         "saveYourChangesToUse": "Guarde sus cambios para usar estas acciones.",
-        "theRouteOfTheProduct": "La ruta del producto: haga clic en el mapa para agregar puntos en orden y arrástrelos para moverlos."
+        "theRouteOfTheProduct": "La ruta del producto: haga clic en el mapa para agregar puntos en orden y arrástrelos para moverlos.",
+        "viewAndPrint": "Ver e imprimir"
       },
       "titles": {
         "b2cSettings": "Ajustes B2C",
@@ -1244,12 +1248,14 @@
         "media": "Multimedia",
         "meetTheFarmers": "Conozca a los agricultores",
         "newProduct": "Nuevo producto",
+        "noQrLabelsYet": "Aún no hay etiquetas QR",
         "process": "Proceso",
         "productData": "Datos del producto",
         "productionRecords": "Archivos de producción",
         "products": "Productos",
         "published": "Publicado",
         "qrLabels": "Etiquetas QR",
+        "selectedLabel": "Etiqueta seleccionada",
         "settings": "Configuración",
         "socialResponsibility": "Responsabilidad social",
         "untitled": "Sin título",

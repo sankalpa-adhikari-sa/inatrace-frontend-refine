@@ -22,6 +22,26 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+/**
+ * Sets the theme class on <html> with CSS transitions switched off for that moment. Elements with a colour
+ * transition (hover effects on cards, buttons, tabs) would otherwise fade to the new theme ~150ms after
+ * everything else, which looks like a delay. Same approach as next-themes' `disableTransitionOnChange`.
+ */
+function applyTheme(resolved: "light" | "dark") {
+  const root = document.documentElement;
+  if (root.classList.contains(resolved)) return;
+  const style = document.createElement("style");
+  style.appendChild(
+    document.createTextNode("*,*::before,*::after{-webkit-transition:none!important;transition:none!important}")
+  );
+  document.head.appendChild(style);
+  root.classList.remove("light", "dark");
+  root.classList.add(resolved);
+  // Apply the new colours while transitions are off, then let them work again for hover.
+  void window.getComputedStyle(document.body).opacity;
+  requestAnimationFrame(() => requestAnimationFrame(() => style.remove()));
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "system",
@@ -33,21 +53,13 @@ export function ThemeProvider({
   );
 
   useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => applyTheme(theme === "system" ? (media.matches ? "dark" : "light") : theme);
+    apply();
+    // "System" follows the OS switching between light and dark while the app is open.
+    if (theme !== "system") return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
   }, [theme]);
 
   const value = {

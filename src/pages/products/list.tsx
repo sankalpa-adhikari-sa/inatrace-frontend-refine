@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { ApiProductListResponse } from "@/client/types.gen";
 import { SearchInput, SimpleSelect, Toolbar } from "@/components/app/controls";
-import { PageHeader, PageLoader } from "@/components/app/page";
-import { ProductCard } from "@/components/app/product-card";
+import { PageHeader } from "@/components/app/page";
+import { PRODUCT_GRID, ProductCard, ProductCardSkeleton } from "@/components/app/product-card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -80,7 +80,11 @@ export function ProductList() {
         )}
       </Toolbar>
       {query.isLoading ? (
-        <PageLoader />
+        <div className={PRODUCT_GRID} aria-busy="true">
+          {Array.from({ length: 8 }, (_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
       ) : result.data.length === 0 ? (
         <Empty className="border">
           <EmptyHeader>
@@ -89,7 +93,7 @@ export function ProductList() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6">
+        <div className={PRODUCT_GRID}>
           {result.data.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

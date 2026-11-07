@@ -197,6 +197,7 @@ export function SearchInput({
 const STATUS_TONE: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   ACTIVE: "default",
   ENABLED: "default",
+  PUBLISHED: "default",
   REGISTERED: "secondary",
   CONFIRMED_EMAIL: "secondary",
   UNCONFIRMED: "outline",

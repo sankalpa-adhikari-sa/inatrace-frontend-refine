@@ -1117,6 +1117,7 @@
         "labelHasBeenSuccessfullyPublished": "Label wurde erfolgreich veröffentlicht",
         "labelIsNotPublishedAnymore": "Label ist nicht mehr öffentlich",
         "lookAndContentOfThe": "Aussehen und Inhalt der Produktseite für Verbraucher*innen.",
+        "qrLabelsIntro": "Jedes Etikett ist eine Seite, die Käufer über den QR-Code öffnen. Wählen Sie ein Etikett, um seinen Inhalt zu bearbeiten.",
         "uploadFontUsedForMain": "Schriftart für Hauptinhalt hochladen (TTF, WOFF oder WOFF2)",
         "uploadFontUsedForProduct": "Schriftart für Produkttitel hochladen (TTF, WOFF oder WOFF2)",
         "uploadHighQualityHeaderBackground": "Laden Sie ein qualitativ hochwertiges Header Hintergundbild hoch (Empfohlene Größe 1200x476px, Dateityp: PNG, JPG oder JPEG)",
@@ -1229,10 +1230,13 @@
         "enterTheLabelTitle": "Geben Sie den Titel des Etiketts ein"
       },
       "texts": {
+        "editing": "In Bearbeitung",
+        "labelActivity": "Etikett-Aktivität",
         "noneInTheCompanyProfile": "Keine im Unternehmensprofil",
         "onlyTheCompanyThatOwns": "Nur das Unternehmen, dem dieses Produkt gehört, kann es bearbeiten.",
         "saveYourChangesToUse": "Speichern Sie Ihre Änderungen, um diese Aktionen zu nutzen.",
-        "theRouteOfTheProduct": "Der Weg des Produkts: Klicken Sie auf die Karte, um Punkte der Reihe nach hinzuzufügen, und ziehen Sie sie zum Verschieben."
+        "theRouteOfTheProduct": "Der Weg des Produkts: Klicken Sie auf die Karte, um Punkte der Reihe nach hinzuzufügen, und ziehen Sie sie zum Verschieben.",
+        "viewAndPrint": "Ansehen und drucken"
       },
       "titles": {
         "b2cSettings": "B2C-Einstellungen",
@@ -1244,12 +1248,14 @@
         "media": "Medien",
         "meetTheFarmers": "Lernen Sie die Landwirt*innen kennen",
         "newProduct": "Neues Produkt",
+        "noQrLabelsYet": "Noch keine QR-Etiketten",
         "process": "Prozess",
         "productData": "Produktdaten",
         "productionRecords": "Aufzeichnungen zur Produktion",
         "products": "Produkte",
         "published": "Veröffentlichen",
         "qrLabels": "QR-Code Label",
+        "selectedLabel": "Ausgewähltes Etikett",
         "settings": "Einstelllungen",
         "socialResponsibility": "Soziale Verantwortung",
         "untitled": "Ohne Titel",
