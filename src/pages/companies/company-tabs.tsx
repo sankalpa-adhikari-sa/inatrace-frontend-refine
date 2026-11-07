@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PageHeader, PageTabs } from "@/components/app/page";
+import { type Crumb, PageHeader, PageTabs } from "@/components/app/page";
 import { useIdentity } from "@/hooks/use-session";
 import { isAdmin, isCompanyAdmin } from "@/providers/auth";
 import { useApi } from "@/lib/http";
@@ -15,10 +15,14 @@ import { useTranslate } from "@refinedev/core";
 export function CompanyTabs({
   companyId,
   title,
+  crumbs,
   actions,
 }: {
   companyId?: number;
+  /** Replaces the company name as the title, on a page inside a tab (e.g. a facility form). */
   title?: ReactNode;
+  /** Steps between the company and this page (e.g. Facilities), for such a page's breadcrumb trail. */
+  crumbs?: Crumb[];
   actions?: ReactNode;
 }) {
   const translate = useTranslate();
@@ -32,17 +36,17 @@ export function CompanyTabs({
   );
 
   const base = `/companies/${companyId}`;
+  const companyLabel = isNew ? translate("companies.titles.newCompany") : (name ?? translate("companies.titles.company"));
+  const breadcrumbs: Crumb[] = [
+    ...(isAdmin(user) ? [{ label: translate("companies.titles.companies"), to: "/companies" }] : []),
+    ...(crumbs ? [{ label: companyLabel, to: `${base}/company` }, ...crumbs] : []),
+  ];
   const onlyCompanyAdmins = translate("companies.texts.onlyAdminsOfThisCompany");
   return (
     <>
       <PageHeader
-        title={
-          title ??
-          (isNew
-            ? translate("companies.titles.newCompany")
-            : name ?? translate("companies.titles.company"))
-        }
-        back={isAdmin(user) ? "/companies" : undefined}
+        title={title ?? companyLabel}
+        breadcrumbs={breadcrumbs}
         actions={actions}
       />
       <PageTabs

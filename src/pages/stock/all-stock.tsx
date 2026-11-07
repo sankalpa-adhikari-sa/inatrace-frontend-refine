@@ -1,5 +1,6 @@
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
+import { CalendarDays, Ruler, Scale, Truck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import type { ApiGroupStockOrder } from "@/client/types.gen";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useUrlFilters } from "@/hooks/use-url-state";
 import { BeycoControls } from "./beyco";
 import { useFacilityParam } from "./deliveries";
 import { ORDER_TYPES, day, fmt } from "./shared";
@@ -24,10 +26,16 @@ export function AllStockTab() {
   const translate = useTranslate();
   const { companyId, company } = useSelectedCompany();
   const [facilityId, setFacilityId] = useFacilityParam();
-  const [view, setView] = useState<"single" | "group">("single");
-  const [purchaseOnly, setPurchaseOnly] = useState(false);
-  const [availableOnly, setAvailableOnly] = useState(false);
-  const [semiProductId, setSemiProductId] = useState<number | null>(null);
+  // In the URL, so a reload or the back button from a stock order keeps them.
+  const url = useUrlFilters(["view", "purchaseOnly", "availableOnly", "semiProductId"] as const);
+  const view: "single" | "group" = url.values.view === "group" ? "group" : "single";
+  const purchaseOnly = url.values.purchaseOnly === "true";
+  const availableOnly = url.values.availableOnly === "true";
+  const semiProductId = url.values.semiProductId ? Number(url.values.semiProductId) : null;
+  const setView = (v: "single" | "group") => url.set({ view: v === "group" ? v : "" });
+  const setPurchaseOnly = (v: boolean) => url.set({ purchaseOnly: v });
+  const setAvailableOnly = (v: boolean) => url.set({ availableOnly: v });
+  const setSemiProductId = (v: number | null) => url.set({ semiProductId: v });
   const [total, setTotal] = useState(0);
   const [selectedGroups, setSelectedGroups] = useState<ApiGroupStockOrder[]>([]);
 
@@ -192,12 +200,14 @@ function GroupTable({
       {
         id: "date",
         header: translate("stock.fields.productionDate"),
+        meta: { card: "meta", icon: CalendarDays },
         enableSorting: false,
         cell: ({ row }) => day(row.original.productionDate),
       },
       {
         accessorKey: "internalLotNumber",
         header: translate("stock.fields.identifier"),
+        meta: { card: "title" },
         enableSorting: false,
       },
       {
@@ -209,18 +219,21 @@ function GroupTable({
       {
         id: "type",
         header: translate("common.fields.type"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ row }) => ORDER_TYPES[row.original.orderType!] ?? "",
       },
       {
         id: "product",
         header: translate("stock.fields.product"),
+        meta: { card: "subtitle" },
         enableSorting: false,
         cell: ({ row }) => row.original.semiProductName ?? row.original.finalProductName,
       },
       {
         id: "quantity",
         header: translate("stock.fields.quantityFilledAvailable"),
+        meta: { card: "stat", icon: Scale },
         enableSorting: false,
         cell: ({ row }) =>
           `${fmt(row.original.totalQuantity ?? 0)} / ${fmt(row.original.fulfilledQuantity ?? 0)} / ${fmt(
@@ -230,17 +243,20 @@ function GroupTable({
       {
         accessorKey: "unitLabel",
         header: translate("common.fields.unit"),
+        meta: { card: "meta", icon: Ruler },
         enableSorting: false,
       },
       {
         id: "delivery",
         header: translate("common.fields.deliveryDate"),
+        meta: { card: "meta", icon: Truck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.deliveryTime),
       },
       {
         id: "status",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ row }) => <StatusBadge status={row.original.available ? "ACTIVE" : "DEACTIVATED"} />,
       },
@@ -316,5 +332,5 @@ function GroupTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, items]);
 
-  return <DataTable table={table} />;
+  return <DataTable table={table} filterKey={permanent} columnsKey="all-stock" />;
 }

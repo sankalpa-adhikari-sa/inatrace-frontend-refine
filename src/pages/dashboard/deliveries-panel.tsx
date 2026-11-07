@@ -7,18 +7,16 @@ import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } f
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
-import { personName, toApiDay, today } from "../stock/shared";
+import { personName, toApiDay } from "../stock/shared";
 import { download, useApi } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
 import { useTranslate } from "@refinedev/core";
-import { ChartFrame, DataTableView, ExportButton, RangeControls } from "./controls";
-import { type Aggregation, defaultAggregation, EXT, MAX_DELIVERY_POINTS, nf, SERIES_1, twoYearsAgo, unitLabel } from "./utils";
+import { ChartFrame, type DashboardRange, MultiPick, DataTableView, ExportButton, StatRow, StatTile } from "./controls";
+import { compact, EXT, MAX_DELIVERY_POINTS, nf, SERIES_1, unitLabel } from "./utils";
 
-export function DeliveriesPanel({ companyId }: { companyId: number }) {
+export function DeliveriesPanel({ companyId, range }: { companyId: number; range: DashboardRange }) {
   const translate = useTranslate();
-  const [from, setFrom] = useState(twoYearsAgo);
-  const [to, setTo] = useState(today);
-  const [aggregation, setAggregation] = useState<Aggregation>(() => defaultAggregation(twoYearsAgo(), today()));
+  const { from, to, aggregation } = range;
   const [facilityIds, setFacilityIds] = useState<number[] | null>(null);
   const [semiProductId, setSemiProductId] = useState<number | null>(null);
   const [farmerId, setFarmerId] = useState<number | null>(null);
@@ -28,7 +26,7 @@ export function DeliveriesPanel({ companyId }: { companyId: number }) {
   const [inDeposit, setInDeposit] = useState(false);
 
   const list = { requestType: "FETCH" as const, limit: 1000 };
-  const { data: facilities = [] } = useApi(
+  const { data: facilities = [], isSuccess: facilitiesLoaded } = useApi(
     ep.listCollectingFacilitiesByCompany,
     { path: { id: companyId }, query: list },
     { select: (r) => r?.items ?? [] }
@@ -64,16 +62,22 @@ export function DeliveriesPanel({ companyId }: { companyId: number }) {
     productionDateEnd: toApiDay(to),
     aggregationType: aggregation,
   };
-  const { data, isFetching } = useApi(
+  const { data, isFetching, isLoading, isError, refetch } = useApi(
     ep.getDeliveriesAggregatedData,
     { query: params },
     { enabled: facilityIds != null, select: (r) => r }
   );
 
   const totals = data?.totals ?? [];
+  // The latest periods when there are too many to plot (the series runs oldest → newest).
   const rows = totals
-    .slice(0, MAX_DELIVERY_POINTS)
+    .slice(-MAX_DELIVERY_POINTS)
     .map((t) => ({ label: unitLabel(t.unit, t.year, aggregation), quantity: t.totalQuantity ?? 0 }));
+  const sum = totals.reduce((s, t) => s + (t.totalQuantity ?? 0), 0);
+  const busiest = totals.reduce<(typeof totals)[number] | undefined>(
+    (best, t) => ((t.totalQuantity ?? 0) > (best?.totalQuantity ?? -1) ? t : best),
+    undefined
+  );
   const unit = semiProducts.find((s) => s.id === semiProductId)?.measurementUnitType?.label ?? "";
   const config: ChartConfig = {
     quantity: {
@@ -85,7 +89,7 @@ export function DeliveriesPanel({ companyId }: { companyId: number }) {
   return (
     <Section
       title={translate("common.titles.deliveries")}
-      description={translate("dashboard.descriptions.deliveredQuantityPerPeriod", { unit: unit ? ` in ${unit}` : "" })}
+      description={translate("dashboard.descriptions.deliveredQuantityPerPeriod", { unit: unit ? ` (${unit})` : "" })}
       actions={
         <ExportButton
           onExport={(type) =>
@@ -95,23 +99,17 @@ export function DeliveriesPanel({ companyId }: { companyId: number }) {
       }
     >
       <div className="flex flex-wrap items-center gap-2">
-        <RangeControls
-          from={from}
-          to={to}
-          setFrom={setFrom}
-          setTo={setTo}
-          aggregation={aggregation}
-          setAggregation={setAggregation}
-        />
-        <SimpleCombobox
-          className="w-60"
-          clearable={false}
+        <MultiPick
           prefix={translate("common.fields.facility")}
           options={facilities.map((f) => ({ value: f.id!, label: f.name ?? "" }))}
-          value={facilityIds?.[0] ?? null}
-          onChange={(id) => {
-            setFacilityIds(id ? [id] : []);
-            setSemiProductId(facilities.find((f) => f.id === id)?.facilitySemiProductList?.[0]?.id ?? null);
+          value={facilityIds ?? []}
+          onChange={(ids) => {
+            setFacilityIds(ids);
+            // Keep the semi-product if one of the chosen facilities still handles it.
+            const offered = facilities
+              .filter((f) => ids.includes(f.id!))
+              .flatMap((f) => f.facilitySemiProductList ?? []);
+            if (!offered.some((s) => s.id === semiProductId)) setSemiProductId(offered[0]?.id ?? null);
           }}
         />
         <SimpleCombobox
@@ -166,8 +164,33 @@ export function DeliveriesPanel({ companyId }: { companyId: number }) {
           </div>
         </FilterPopover>
       </div>
+      {totals.length > 0 && (
+        <StatRow>
+          <StatTile
+            label={translate("dashboard.fields.totalDelivered")}
+            value={compact.format(sum)}
+            note={unit || undefined}
+          />
+          <StatTile
+            label={translate("dashboard.fields.averagePerPeriod")}
+            value={compact.format(sum / totals.length)}
+            note={unit || undefined}
+          />
+          {busiest && (
+            <StatTile
+              label={translate("dashboard.fields.busiestPeriod")}
+              value={unitLabel(busiest.unit, busiest.year, aggregation)}
+              note={`${nf.format(busiest.totalQuantity ?? 0)} ${unit}`.trim()}
+            />
+          )}
+        </StatRow>
+      )}
       <ChartFrame
-        empty={!isFetching && rows.length === 0}
+        loading={isLoading || (!facilitiesLoaded && facilityIds == null)}
+        error={isError}
+        onRetry={() => void refetch()}
+        emptyText={facilitiesLoaded && facilities.length === 0 ? translate("dashboard.texts.noCollectingFacilitiesYet") : undefined}
+        empty={(!isFetching && rows.length === 0) || (facilitiesLoaded && facilities.length === 0)}
         truncated={totals.length > MAX_DELIVERY_POINTS ? MAX_DELIVERY_POINTS : undefined}
         table={
           <DataTableView

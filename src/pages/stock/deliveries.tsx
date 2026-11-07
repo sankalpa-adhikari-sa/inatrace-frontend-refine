@@ -1,9 +1,9 @@
 import { format } from "date-fns";
-import { Banknote, ChevronDown, Download, Layers, Plus, Truck } from "lucide-react";
+import { Banknote, ChevronDown, Layers, Plus, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ApiFacility, ApiStockOrder } from "@/client/types.gen";
-import { FilterPopover, SearchInput, SimpleCombobox, SimpleSelect, Toolbar } from "@/components/app/controls";
+import { FilterPopover, SearchInput, SimpleCombobox, SimpleSelect, Toolbar, ExportAllButton } from "@/components/app/controls";
 import { DateRangePicker } from "@/components/app/date-range-picker";
 import { PageLoader, Section } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useUrlFilters } from "@/hooks/use-url-state";
 import { WAYS_OF_PAYMENT, toApiDay, today } from "./shared";
 import { StockOrderTable } from "./stock-order-table";
 import { download, useApi } from "@/lib/http";
@@ -36,7 +37,9 @@ export function useFacilityParam() {
   const facilityId = raw && raw !== "null" ? Number(raw) : null;
   const setFacilityId = (id: number | null) =>
     setParams(
-      (p) => {
+      () => {
+        // The URL as it is now: other filters may have been set in the same tick (see useUrlFilters).
+        const p = new URLSearchParams(window.location.search);
         if (id == null) p.delete("facilityId");
         else p.set("facilityId", String(id));
         return p;
@@ -56,22 +59,29 @@ function dateRange(from: string, to: string) {
   };
 }
 
+const DELIVERY_FILTERS = ["query", "semiProductId", "from", "to", "wayOfPayment", "womenOnly", "openBalance"] as const;
+
 /** `/my-stock/deliveries` */
 export function DeliveriesTab() {
   const translate = useTranslate();
   const { companyId } = useSelectedCompany();
   const navigate = useNavigate();
   const [facilityId, setFacilityId] = useFacilityParam();
-  const [openBalanceOnly, setOpenBalanceOnly] = useState(false);
-  const [wayOfPayment, setWayOfPayment] = useState<string>("");
-  const [womenOnly, setWomenOnly] = useState<string>("");
-  const [query, setQuery] = useState("");
-  const [semiProductId, setSemiProductId] = useState<number | null>(null);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // In the URL, so a reload or the back button from a delivery keeps them.
+  const url = useUrlFilters(DELIVERY_FILTERS);
+  const { wayOfPayment, womenOnly, query, from, to } = url.values;
+  const openBalanceOnly = url.values.openBalance === "true";
+  const semiProductId = url.values.semiProductId ? Number(url.values.semiProductId) : null;
+  const setOpenBalanceOnly = (v: boolean) => url.set({ openBalance: v });
+  const setWayOfPayment = (v: string) => url.set({ wayOfPayment: v });
+  const setWomenOnly = (v: string) => url.set({ womenOnly: v });
+  const setQuery = (v: string) => url.set({ query: v });
+  const setSemiProductId = (v: number | null) => url.set({ semiProductId: v });
+  const setFrom = (v: string) => url.set({ from: v });
+  const setTo = (v: string) => url.set({ to: v });
   const [selected, setSelected] = useState<ApiStockOrder[]>([]);
+  const [selectionReset, setSelectionReset] = useState(0);
   const [total, setTotal] = useState(0);
-  const [exporting, setExporting] = useState(false);
 
   const { data: facilities = [] } = useApi(
     ep.listCollectingFacilitiesByCompany,
@@ -108,22 +118,11 @@ export function DeliveriesTab() {
       description={translate("stock.descriptions.listOfPurchaseOrdersTotal", { total })}
       actions={
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={total < 1 || exporting}
-            onClick={async () => {
-              setExporting(true);
-              try {
-                await download(ep.exportDeliveriesByCompany, { path: { companyId } }, "deliveries.xlsx");
-              } finally {
-                setExporting(false);
-              }
-            }}
-          >
-            <Download />
-            {translate("stock.buttons.export")}
-          </Button>
+          <ExportAllButton
+            label={translate("stock.buttons.export")}
+            disabled={total < 1}
+            onExport={() => download(ep.exportDeliveriesByCompany, { path: { companyId } }, "deliveries.xlsx")}
+          />
           <AddDeliveryMenu facilities={facilities} facilityId={facilityId} />
         </div>
       }
@@ -209,9 +208,11 @@ export function DeliveriesTab() {
               {translate("stock.texts.withThePriceDeterminedLater", { payableCount: selected.length - payable.length })}
             </span>
           )}
+          <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelectionReset((k) => k + 1)}>
+            {translate("stock.buttons.clearSelection")}
+          </Button>
           <Button
             size="sm"
-            className="ml-auto"
             disabled={payable.length === 0}
             onClick={() =>
               navigate(`/my-stock/payments/deliveries/bulk-payment/${payable.map((o) => o.id).join(",")}/new/PO`)
@@ -238,6 +239,9 @@ export function DeliveriesTab() {
           selectable
           onSelectionChange={setSelected}
           onTotal={setTotal}
+          isFiltered={url.active}
+          selectionResetKey={selectionReset}
+          onClearFilters={url.clear}
         />
       </div>
     </Section>

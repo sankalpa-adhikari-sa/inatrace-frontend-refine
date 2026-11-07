@@ -1,13 +1,13 @@
 import { useDelete, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Download, Plus, Venus } from "lucide-react";
+import { Banknote, CalendarCheck, CreditCard, Download, Plus, Truck, Venus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import type { ApiBulkPayment, ApiPayment, ApiStockOrder, ApiUserCustomer } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
-import { RowActions, SearchInput, SimpleSelect, Toolbar } from "@/components/app/controls";
+import { RowActions, SearchInput, SimpleSelect, Toolbar, ExportAllButton } from "@/components/app/controls";
 import { DateRangePicker } from "@/components/app/date-range-picker";
 import { PageLoader, Section } from "@/components/app/page";
 import { SearchSelectField } from "@/components/app/search-select-field";
@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useUrlFilters } from "@/hooks/use-url-state";
 import { WAYS_OF_PAYMENT, day, fmt, personName, toApiDay, today, useStockPermissions, wayOfPaymentLabel } from "../shared";
 import { call, download, useApi, useInvalidateData } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
@@ -35,10 +36,13 @@ export function PaymentsTab() {
   const { companyId } = useSelectedCompany();
   const { canEditPayments } = useStockPermissions();
   const navigate = useNavigate();
-  const [wayOfPayment, setWayOfPayment] = useState("");
-  const [query, setQuery] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // In the URL, so a reload or the back button from a payment keeps them.
+  const url = useUrlFilters(["wayOfPayment", "query", "from", "to"] as const);
+  const { wayOfPayment, query, from, to } = url.values;
+  const setWayOfPayment = (v: string) => url.set({ wayOfPayment: v });
+  const setQuery = (v: string) => url.set({ query: v });
+  const setFrom = (v: string) => url.set({ from: v });
+  const setTo = (v: string) => url.set({ to: v });
   const [picking, setPicking] = useState(false);
   const [total, setTotal] = useState(0);
 
@@ -62,14 +66,10 @@ export function PaymentsTab() {
         description={translate("stock.payments.descriptions.listOfPaymentsTotal", { total })}
         actions={
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => download(ep.exportPaymentsByCompany, { path: { id: companyId } }, "payments.xlsx")}
-            >
-              <Download />
-              {translate("stock.payments.buttons.exportData")}
-            </Button>
+            <ExportAllButton
+              label={translate("stock.payments.buttons.exportData")}
+              onExport={() => download(ep.exportPaymentsByCompany, { path: { id: companyId } }, "payments.xlsx")}
+            />
             {canEditPayments && (
               <Button size="sm" data-onboarding="add-payment" onClick={() => setPicking(true)}>
                 <Plus />
@@ -149,48 +149,56 @@ export function PaymentsTable({
       {
         id: "purpose",
         header: translate("stock.payments.fields.purpose"),
+        meta: { card: "subtitle" },
         enableSorting: false,
         cell: ({ row }) => purposeLabel(row.original.paymentPurposeType),
       },
       {
         id: "amount",
         header: translate("stock.payments.fields.amount"),
+        meta: { card: "stat", icon: Banknote },
         enableSorting: false,
         cell: ({ row }) => `${fmt(row.original.amount)} ${row.original.currency ?? ""}`,
       },
       {
         id: "recipient",
         header: translate("common.fields.farmer"),
+        meta: { card: "title" },
         enableSorting: false,
         cell: ({ row }) => personName(row.original.recipientUserCustomer),
       },
       {
         id: "company",
         header: translate("common.fields.company"),
+        meta: { card: "title" },
         enableSorting: false,
         cell: ({ row }) => row.original.recipientCompany?.name,
       },
       {
         id: "productionDate",
         header: translate("common.fields.deliveryDate"),
+        meta: { card: "meta", icon: Truck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.productionDate),
       },
       {
         id: "formalCreationTime",
         header: translate("stock.payments.fields.paymentDate"),
+        meta: { card: "meta", icon: CalendarCheck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.formalCreationTime),
       },
       {
         id: "way",
         header: translate("stock.payments.fields.wayOfPayment"),
+        meta: { card: "meta", icon: CreditCard },
         enableSorting: false,
         cell: ({ row }) => wayOfPaymentLabel(row.original.preferredWayOfPayment),
       },
       {
         id: "status",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ row }) =>
           row.original.paymentStatus === "CONFIRMED" ? (
@@ -265,7 +273,7 @@ export function PaymentsTable({
     if (total != null) onTotal?.(total);
   }, [total, onTotal]);
 
-  return <DataTable table={table} />;
+  return <DataTable table={table} filterKey={permanent} columnsKey="payments" />;
 }
 
 function BulkPayments({ companyId }: { companyId: number }) {
@@ -276,23 +284,27 @@ function BulkPayments({ companyId }: { companyId: number }) {
       {
         accessorKey: "receiptNumber",
         header: translate("stock.payments.fields.receiptNumber"),
+        meta: { card: "title" },
         enableSorting: false,
       },
       {
         id: "purpose",
         header: translate("stock.payments.fields.purpose"),
+        meta: { card: "subtitle" },
         enableSorting: false,
         cell: ({ row }) => purposeLabel(row.original.paymentPurposeType),
       },
       {
         id: "total",
         header: translate("stock.payments.fields.totalAmount"),
+        meta: { card: "stat", icon: Banknote },
         enableSorting: false,
         cell: ({ row }) => `${fmt(row.original.totalAmount)} ${row.original.currency ?? ""}`,
       },
       {
         id: "date",
         header: translate("stock.payments.fields.paymentDate"),
+        meta: { card: "meta", icon: CalendarCheck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.formalCreationTime),
       },

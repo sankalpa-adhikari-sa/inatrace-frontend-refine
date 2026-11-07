@@ -2,7 +2,8 @@ import { useTranslate } from "@refinedev/core";
 import { Plus, Trash2 } from "lucide-react";
 import { type Control, useFieldArray, useWatch } from "react-hook-form";
 import type { ApiFacility, ApiProcessingAction } from "@/client/types.gen";
-import { DateField, EntitySelectField, TextField } from "@/components/app/form-fields";
+import { DateField, EntitySelectField, TextField, ReadOnlyField } from "@/components/app/form-fields";
+import { RepeaterItem } from "@/components/app/repeater-item";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { fmt } from "../shared";
@@ -10,7 +11,6 @@ import { EvidenceField } from "./evidence";
 import {
   type ActionType,
   type FormValues,
-  ReadOnly,
   type Sac,
   type Target,
   notAllOutputUsed,
@@ -28,6 +28,7 @@ export function OutputFields({
   facilities,
   showQuantity,
   showOrderId,
+  numbered,
   onRemove,
 }: {
   index: number;
@@ -38,6 +39,8 @@ export function OutputFields({
   showQuantity: boolean;
   /** Quote orders without a product order take a free order ID. */
   showOrderId: boolean;
+  /** Head the output "Output n" (when the order has more than one). */
+  numbered?: boolean;
   onRemove?: () => void;
 }) {
   const translate = useTranslate();
@@ -59,11 +62,11 @@ export function OutputFields({
     sacs.replace(next);
   }
 
-  return (
-    <div className="flex flex-col gap-4 border-b pb-4 last:border-b-0 last:pb-0">
+  const body = (
+    <>
       <FieldGroup className="grid gap-4 sm:grid-cols-2">
         {t.finalProduct ? (
-          <ReadOnly
+          <ReadOnlyField
             label={translate("stock.processingOrder.fields.finalProductType")}
             value={`${t.finalProduct.name} (${t.finalProduct.product?.name ?? ""})`}
           />
@@ -104,7 +107,7 @@ export function OutputFields({
           />
         )}
         {action.prefix && (
-          <ReadOnly label={translate("stock.processingOrder.fields.prefix")} value={action.prefix} />
+          <ReadOnlyField label={translate("stock.processingOrder.fields.prefix")} value={action.prefix} />
         )}
         <TextField
           control={control}
@@ -159,14 +162,14 @@ export function OutputFields({
               <Button
                 type="button"
                 variant="outline"
-                size="icon-sm"
-                aria-label={translate("stock.processingOrder.buttons.sacNumber")}
+                size="sm"
                 onClick={() => {
                   const last = t.sacs?.at(-1)?.sacNumber;
                   sacs.append({ sacNumber: last ? last + 1 : null, totalQuantity: null });
                 }}
               >
                 <Plus />
+                {translate("stock.processingOrder.buttons.addSac")}
               </Button>
             </div>
           </div>
@@ -201,7 +204,7 @@ export function OutputFields({
             </div>
           ))}
           {notAllOutputUsed(action, t) && (
-            <FieldError>
+            <FieldError data-invalid>
               {translate("stock.processingOrder.errors.enteredOutputQuantityIsNot")}{" "}
               ({fmt(sacTotal)} / {fmt(Number(t.totalQuantity))})
             </FieldError>
@@ -209,18 +212,14 @@ export function OutputFields({
         </div>
       )}
 
-      {onRemove && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="self-end"
-          aria-label={translate("buttons.remove")}
-          onClick={onRemove}
-        >
-          <Trash2 />
-        </Button>
-      )}
-    </div>
+    </>
+  );
+  // With several outputs each gets a numbered, removable frame; a single one stays plain.
+  return numbered ? (
+    <RepeaterItem title={translate("stock.processingOrder.titles.outputNumber", { number: i + 1 })} onRemove={onRemove}>
+      {body}
+    </RepeaterItem>
+  ) : (
+    <div className="flex flex-col gap-4">{body}</div>
   );
 }

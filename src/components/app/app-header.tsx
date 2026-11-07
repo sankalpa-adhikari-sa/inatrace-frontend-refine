@@ -11,6 +11,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -20,7 +22,7 @@ import { useRoleLabels } from "@/hooks/use-roles";
 import { useIdentity, useSelectedCompany } from "@/hooks/use-session";
 import { isAdmin } from "@/providers/auth";
 import { CompanyAvatar } from "./company-avatar";
-import { LanguageSelect } from "./language-select";
+import { LANGUAGE_OPTIONS, LanguageSelect, useChangeLanguage } from "./language-select";
 import { useCompanyPicker } from "./company-picker";
 
 export function AppHeader() {
@@ -31,6 +33,7 @@ export function AppHeader() {
   const navigate = useNavigate();
   const openCompanyPicker = useCompanyPicker();
   const roles = useRoleLabels();
+  const language = useChangeLanguage();
 
   const initials = `${user?.name?.[0] ?? ""}${user?.surname?.[0] ?? ""}`.toUpperCase();
   const hasManyCompanies = (user?.companyIds?.length ?? 0) > 1;
@@ -102,6 +105,21 @@ export function AppHeader() {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            {/* The header's language picker is hidden on phones; offer it here instead. */}
+            <DropdownMenuGroup className="sm:hidden">
+              <DropdownMenuLabel>{translate("common.fields.language")}</DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={language.locale}
+                onValueChange={(v) => language.change(v as typeof language.locale)}
+              >
+                {LANGUAGE_OPTIONS.map((o) => (
+                  <DropdownMenuRadioItem key={o.value} value={o.value} disabled={language.pending}>
+                    {o.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+            </DropdownMenuGroup>
             <DropdownMenuItem onClick={() => navigate("/user-profile")}>
               <UserCog />
               {translate("buttons.myProfile")}

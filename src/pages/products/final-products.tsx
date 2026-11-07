@@ -1,7 +1,7 @@
 import { useCreate, useDelete, useList, useOne, useUpdate, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Plus, Ruler } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router";
@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useSelectedCompany } from "@/hooks/use-session";
 import { ep } from "@/lib/endpoints";
 import { useApi } from "@/lib/http";
+import { focusFirstError } from "@/lib/form-errors";
 import { ProductTabs } from "./tabs";
 
 /** `/product-labels/:id/final-products` (FinalProductComponent + FinalProductListComponent) */
@@ -34,17 +35,19 @@ export function FinalProducts() {
 
   const columns = useMemo<ColumnDef<ApiFinalProduct>[]>(
     () => [
-      { id: "name", accessorKey: "name", header: translate("common.fields.name") },
+      { id: "name", accessorKey: "name", header: translate("common.fields.name"), meta: { card: "title" } },
       {
         id: "description",
         accessorKey: "description",
         header: translate("common.fields.description"),
+        meta: { card: "body" },
         enableSorting: false,
       },
       {
         id: "unitLabel",
         accessorFn: (f) => f.measurementUnitType?.label,
         header: translate("products.fields.unitLabel"),
+        meta: { card: "meta", icon: Ruler },
         enableSorting: false,
       },
       {
@@ -184,7 +187,7 @@ function FinalProductForm({
               : translate("products.titles.editFinalProduct")}
           </DialogTitle>
         </DialogHeader>
-        <form id="final-product-form" onSubmit={handleSubmit(submit)}>
+        <form id="final-product-form" onSubmit={handleSubmit(submit, focusFirstError)}>
           <FieldGroup>
             <TextField
               control={control}

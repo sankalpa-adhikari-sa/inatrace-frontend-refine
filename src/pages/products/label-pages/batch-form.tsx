@@ -15,6 +15,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { ep } from "@/lib/endpoints";
 import { call } from "@/lib/http";
+import { focusFirstError } from "@/lib/form-errors";
 import { LabelPageHeader, useLabelParams } from "./shared";
 
 /** `.../batches/new` and `.../batches/:batchId` (BatchDetailPageComponent) */
@@ -80,11 +81,12 @@ export function BatchForm() {
   return (
     <>
       <LabelPageHeader
+        crumbs={[{ label: translate("products.productPage.buttons.batches"), to: `/product-labels/${productId}/labels/${labelId}/batches` }]}
         title={
           isNew ? translate("products.labelPages.titles.addBatch") : translate("products.labelPages.titles.editBatch")
         }
       />
-      <form onSubmit={handleSubmit((v) => onFinish(isNew ? { ...v, labelId } : v))} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit((v) => onFinish(isNew ? { ...v, labelId } : v), focusFirstError)} className="flex flex-col gap-6">
         <Section>
           <FieldGroup>
             <TextField

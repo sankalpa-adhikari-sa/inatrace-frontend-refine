@@ -148,7 +148,6 @@
     "addLocation": "Add location",
     "addProductionRecord": "Add production record",
     "addVideo": "Add video",
-    "apply": "Apply",
     "back": "Back",
     "bold": "Bold",
     "bulletList": "Bullet list",
@@ -164,6 +163,7 @@
     "delete": "Delete",
     "done": "Done",
     "edit": "Edit",
+    "goToFirstError": "Go to first error",
     "goToFirstPage": "Go to first page",
     "goToLastPage": "Go to last page",
     "goToNextPage": "Go to next page",
@@ -171,7 +171,6 @@
     "heading": "Heading",
     "italic": "Italic",
     "logOut": "Log out",
-    "logout": "Logout",
     "map": "Map",
     "myProfile": "My profile",
     "next": "Next",
@@ -184,6 +183,7 @@
     "remove": "Remove",
     "removeLocation": "Remove location",
     "reset": "Reset",
+    "retry": "Retry",
     "satellite": "Satellite",
     "save": "Save",
     "select": "Select",
@@ -197,14 +197,18 @@
       "chooseWhichOptionalCookiesThis": "Choose which optional cookies this site may use.",
       "currentlyYouHaveNoCompanies": "Currently you have no companies assigned. Contact your administrator.",
       "customerSupportWithLiveChat": "Customer support with live chat.",
+      "exportsAllRecordsFiltersDontApply": "Exports all of the company's records; the filters above don't apply.",
       "inaTrace": "INATrace",
       "listAndBrieflyDescribeThe": "List and briefly describe the certificates you are currently holding and standards you are following.",
       "noRecordsMatchYourSearch": "No records match your search or filters.",
       "performanceCookies": "Performance cookies.",
+      "removeThisItem": "Remove this item and what was entered for it?",
       "requestCouldNotBeCompleted": "Request could not be completed. Please review the entered data and try again.",
+      "theDataCouldNotBeLoaded": "The data could not be loaded. Check your connection and try again.",
       "thisTableIsEmptyFor": "This table is empty for the time being.",
       "total": "{{total}} total",
-      "withEveryCertificateOrStandard": "With every certificate or standard listed above, upload pdf/image proofs of holding those certificates and following the standards (make sure to not upload confidential information)"
+      "withEveryCertificateOrStandard": "With every certificate or standard listed above, upload pdf/image proofs of holding those certificates and following the standards (make sure to not upload confidential information)",
+      "youHaveUnsavedChangesDiscard": "You have unsaved changes. Discard them?"
     },
     "errors": {
       "atMost1000Characters": "At most 1000 characters",
@@ -249,7 +253,6 @@
       "crop": "Crop",
       "currencies": "Currencies",
       "currency": "Currency",
-      "dark": "Dark",
       "dashboard": "Dashboard",
       "date": "Date",
       "delete": "Delete",
@@ -277,7 +280,6 @@
       "language": "Language",
       "lastName": "Last name",
       "latitude": "Latitude",
-      "light": "Light",
       "link": "Link",
       "linkUrl": "Link URL",
       "longitude": "Longitude",
@@ -338,6 +340,7 @@
       "addCornerHere": "Add a corner here"
     },
     "placeholders": {
+      "jumpTo": "Jump to",
       "nothingLeftToAdd": "Nothing left to add",
       "pickADate": "Pick a date",
       "searchByName": "Search by name",
@@ -357,16 +360,17 @@
       "current": "Current",
       "euOrganic": "EU Organic",
       "fairtrade": "Fairtrade",
+      "fieldsToFix": "Fields to fix: {{count}}",
       "filters": "Filters",
+      "hasErrors": "Has errors",
       "inaTrace": "INATrace",
       "last12Months": "Last 12 months",
       "last2Years": "Last 2 years",
       "last30Days": "Last 30 days",
       "last3Months": "Last 3 months",
-      "loggingOut": "Logging out...",
+      "loading": "Loading…",
       "makeAgriculturalSupplyChainsTransparent": "Make agricultural supply chains transparent and fair with INATrace",
       "manager": "Manager",
-      "more": "more",
       "noAddress": "No address",
       "noCertifications": "No certifications",
       "noCompaniesMatch": "No companies match “{{search}}”.",
@@ -389,6 +393,7 @@
       "theWebsiteUsesCookiesFor": "The website uses cookies for a variety of purposes. Some are essential for the operation of online services. However, cookies for analytics and your settings provide a better user experience, easier site usage. You can read more about cookies and edit your settings on the",
       "thisYear": "This year",
       "typeToSearch": "Type to search…",
+      "unsavedChanges": "Unsaved changes",
       "updatedAt": "{{user}} updated {{date}} at {{time}}",
       "user": "User",
       "yourEMailIsConfirmed": "Your e-mail is confirmed. An administrator still needs to activate your account before you can use INATrace."
@@ -398,15 +403,18 @@
       "accountNotActiveYet": "Account not active yet",
       "areYouSure": "Are you sure?",
       "basicInformation": "Basic information",
+      "certificationNumber": "Certification {{number}}",
       "cookiesSettings": "Cookies settings",
       "copyToClipboard": "Copy to clipboard",
       "deliveries": "Deliveries",
       "filters": "Filters",
       "noDataToDisplay": "No data to display",
       "noResultsFound": "No results found",
+      "onThisPage": "On this page",
       "orderItemQrCode": "Order item QR code",
       "processingEvidenceFields": "Processing evidence fields",
       "selectCompany": "Select company",
+      "somethingWentWrong": "Something went wrong",
       "switchCompany": "Switch company",
       "whisp": "Whisp {{geoId}}",
       "whisp2": "Whisp - {{geoId}}"
@@ -575,7 +583,6 @@
     "titles": {
       "additionalAttributes": "Additional attributes",
       "baseCurrency": "Base currency",
-      "beycoIntegration": "Beyco Integration",
       "certification": "Certification",
       "companies": "Companies",
       "company": "Company",
@@ -596,6 +603,7 @@
       "socialMedia": "Social media",
       "usersWithCompanyRoles": "Users with company roles",
       "valueChains": "Value chains",
+      "valueChainsAndTrade": "Value chains and trade",
       "videos": "Videos"
     }
   },
@@ -662,6 +670,8 @@
       "inputAndOutputQuantitiesOf": "Input and output quantities of a processing action, and their ratio"
     },
     "fields": {
+      "averagePerPeriod": "Average per period",
+      "busiestPeriod": "Busiest period",
       "delivered": "Delivered{{unit}}",
       "input": "Input ({{unit}})",
       "organic": "Organic",
@@ -671,6 +681,9 @@
       "productInDeposit": "Product in deposit",
       "ratio": "Ratio",
       "semiProduct": "Semi-product",
+      "totalDelivered": "Total delivered",
+      "totalInput": "Total input",
+      "totalOutput": "Total output",
       "week": "Week {{week}}",
       "womensOnly": "Women's only"
     },
@@ -679,8 +692,12 @@
       "allFarmers": "All farmers"
     },
     "texts": {
+      "allCount": "All ({{count}})",
+      "noCollectingFacilitiesYet": "This company has no collecting facilities yet, so there are no deliveries to show.",
       "noDataForTheSelected": "No data for the selected filters.",
-      "onlyTheFirstValuesAre": "Only the first {{truncated}} values are shown."
+      "onlyTheLatestPeriodsAre": "Only the latest {{truncated}} periods are shown. Choose a shorter date range or a longer grouping to see them all.",
+      "overTheWholeRange": "Over the whole date range",
+      "selectedCount": "{{count}} selected"
     },
     "titles": {
       "dashboard": "Dashboard",
@@ -758,7 +775,8 @@
     },
     "titles": {
       "myProducts": "My products",
-      "noProducts": "No products"
+      "noProducts": "No products",
+      "welcomeName": "Welcome, {{name}}"
     }
   },
   "notifications": {
@@ -990,7 +1008,6 @@
     },
     "labelPages": {
       "buttons": {
-        "backToLabel": "Back to label",
         "downloadEMails": "Download e-mails",
         "newBatch": "New batch",
         "prefillLocationsFromProduct": "Prefill locations from product",
@@ -1100,6 +1117,7 @@
         "labelHasBeenSuccessfullyPublished": "Label has been successfully published.",
         "labelIsNotPublishedAnymore": "Label is not published anymore.",
         "lookAndContentOfThe": "Look and content of the consumer-facing product page.",
+        "qrLabelsIntro": "Each label is a page buyers open by scanning its QR code. Select a label to edit what it shows.",
         "uploadFontUsedForMain": "Upload font used for main content (TTF, WOFF or WOFF2)",
         "uploadFontUsedForProduct": "Upload font used for product title (TTF, WOFF or WOFF2)",
         "uploadHighQualityHeaderBackground": "Upload high-quality header background image (recommended size 1200x476px, file types: PNG, JPG and JPEG)",
@@ -1212,10 +1230,13 @@
         "enterTheLabelTitle": "Enter the label title"
       },
       "texts": {
+        "editing": "Editing",
+        "labelActivity": "Label activity",
         "noneInTheCompanyProfile": "None in the company profile",
         "onlyTheCompanyThatOwns": "Only the company that owns this product can edit it.",
         "saveYourChangesToUse": "Save your changes to use these actions.",
-        "theRouteOfTheProduct": "The route of the product: click the map to add points in order, drag them to move."
+        "theRouteOfTheProduct": "The route of the product: click the map to add points in order, drag them to move.",
+        "viewAndPrint": "View and print"
       },
       "titles": {
         "b2cSettings": "B2C settings",
@@ -1227,16 +1248,17 @@
         "media": "Media",
         "meetTheFarmers": "Meet the farmers",
         "newProduct": "New product",
+        "noQrLabelsYet": "No QR labels yet",
         "process": "Process",
         "productData": "Product data",
         "productionRecords": "Production records",
         "products": "Products",
         "published": "Published",
         "qrLabels": "QR labels",
+        "selectedLabel": "Selected label",
         "settings": "Settings",
         "socialResponsibility": "Social responsibility",
         "untitled": "Untitled",
-        "valueChain": "Value chain",
         "videos": "Videos"
       }
     },
@@ -1425,6 +1447,7 @@
       "addPayments": "Add payments ({{payableCount}})",
       "addProof": "Add proof",
       "chooseAFacilityToContinue": "Choose a facility to continue",
+      "clearSelection": "Clear selection",
       "export": "Export",
       "groupView": "Group view",
       "removeFarmer": "Remove farmer",
@@ -1467,6 +1490,7 @@
       "anyWayOfPayment": "Any way of payment",
       "available": "Available",
       "availableOnly": "Available only",
+      "balance": "Balance",
       "basePayment": "Base payment",
       "comment": "Comment",
       "cooperativeEmployee": "Cooperative employee",
@@ -1491,7 +1515,7 @@
       "openBalanceOnly": "Open balance only",
       "orderType": "Order type",
       "organic": "Organic",
-      "payableBalance": "Payable / Balance",
+      "payable": "Payable",
       "payment": "Payment",
       "paymentList": "Payment list",
       "paymentOrderApproved": "Payment order approved",
@@ -1658,13 +1682,14 @@
       "buttons": {
         "addAdditionalOutput": "Add additional output",
         "addDocument": "Add document",
+        "addSac": "Add sac",
         "clearFilters": "Clear filters",
         "prefill": "Prefill",
-        "sacNumber": "Sac number",
         "tryAgain": "Try again"
       },
       "descriptions": {
-        "expectedOutputQuantityRange": "Expected output quantity range:"
+        "expectedOutputQuantityRange": "Expected output quantity range:",
+        "removeThisOutput": "Remove this output and the quantities entered for it?"
       },
       "errors": {
         "atLeastOneInputSemi": "At least one input semi-product is required",
@@ -1741,6 +1766,7 @@
         "materialToBeRecorded": "Material to be recorded",
         "orderDetails": "Order details",
         "organicCoffee": "Organic coffee",
+        "outputNumber": "Output {{number}}",
         "outputsOfThisProcessing": "Outputs of this processing",
         "placeNewOrder": "Place new order",
         "processingEvidence": "Processing evidence",
@@ -1790,54 +1816,8 @@
       "processingActions": "Processing actions",
       "processingEvidenceDocuments": "Processing evidence documents",
       "processingInformation": "Processing information",
+      "proofNumber": "Proof {{number}}",
       "updateDelivery": "Update delivery"
-    }
-  },
-  "table": {
-    "filter": {
-      "combobox": {
-        "noResults": "Results not found.",
-        "placeholder": "Select...",
-        "search": "Search..."
-      },
-      "numeric": {
-        "placeholder": "Filter by..."
-      },
-      "operator": {
-        "between": "Between",
-        "contains": "Contains",
-        "containss": "Contains (case sensitive)",
-        "endswith": "Ends with",
-        "endswiths": "Ends with (case sensitive)",
-        "eq": "Equals",
-        "eqs": "Equals (case sensitive)",
-        "gt": "Greater than",
-        "gte": "Greater than or equal",
-        "in": "Includes in an array",
-        "ina": "Includes in an array (case sensitive)",
-        "lt": "Less than",
-        "lte": "Less than or equal",
-        "nbetween": "Not between",
-        "ncontains": "Not contains",
-        "ncontainss": "Not contains (case sensitive)",
-        "ne": "Not equals",
-        "nendswith": "Not ends with",
-        "nendswiths": "Not ends with (case sensitive)",
-        "nes": "Not equals (case sensitive)",
-        "nin": "Not includes in an array",
-        "nina": "Not includes in an array (case sensitive)",
-        "nnull": "Is not null",
-        "noResults": "No operator found.",
-        "nstartswith": "Not starts with",
-        "nstartswiths": "Not starts with (case sensitive)",
-        "null": "Is null",
-        "placeholder": "Search operator...",
-        "startswith": "Starts with",
-        "startswiths": "Starts with (case sensitive)"
-      },
-      "text": {
-        "placeholder": "Filter by..."
-      }
     }
   },
   "userCustomers": {
@@ -2016,6 +1996,7 @@
       "payments": "Payments",
       "plots": "Plots",
       "productTypes": "Product types",
+      "profile": "Profile",
       "template": "Template",
       "uploadData": "Upload data",
       "validationErrors": "Validation errors"
@@ -2112,9 +2093,20 @@
       "measuringUnitTypes": "Measuring unit types",
       "newValueChain": "New value chain",
       "processingEvidenceTypes": "Processing evidence types",
-      "productType": "Product type",
       "semiProducts": "Semi-products",
       "valueChains": "Value chains"
+    }
+  },
+  "table": {
+    "texts": {
+      "hiddenCount": "{{count}} hidden",
+      "showColumns": "Show columns",
+      "sortBy": "Sort by {{column}}",
+      "sortedAscending": "{{column}}: sorted ascending",
+      "sortedDescending": "{{column}}: sorted descending"
+    },
+    "buttons": {
+      "columns": "Columns"
     }
   }
 }

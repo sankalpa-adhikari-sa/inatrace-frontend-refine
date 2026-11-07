@@ -1,7 +1,7 @@
 import { useDelete, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { CalendarX, Factory, Plus } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import type { ApiProductLabelBatch } from "@/client/types.gen";
@@ -27,16 +27,19 @@ export function LabelBatches() {
         id: "number",
         accessorKey: "number",
         header: translate("products.labelPages.fields.batchNumber"),
+        meta: { card: "title" },
       },
       {
         id: "productionDate",
         accessorKey: "productionDate",
         header: translate("products.labelPages.fields.productionDate"),
+        meta: { card: "meta", icon: Factory },
       },
       {
         id: "expiryDate",
         accessorKey: "expiryDate",
         header: translate("products.labelPages.fields.expiryDate"),
+        meta: { card: "meta", icon: CalendarX },
       },
       {
         id: "actions",

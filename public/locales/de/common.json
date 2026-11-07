@@ -148,7 +148,6 @@
     "addLocation": "Standort hinzufügen",
     "addProductionRecord": "Produktionsnachweis hinzufügen",
     "addVideo": "Video hinzufügen",
-    "apply": "Anwenden",
     "back": "Zurück",
     "bold": "Fett",
     "bulletList": "Aufzählung",
@@ -164,6 +163,7 @@
     "delete": "Löschen",
     "done": "Fertig",
     "edit": "Bearbeiten",
+    "goToFirstError": "Zum ersten Fehler",
     "goToFirstPage": "Zur ersten Seite",
     "goToLastPage": "Zur letzten Seite",
     "goToNextPage": "Zur nächsten Seite",
@@ -171,7 +171,6 @@
     "heading": "Überschrift",
     "italic": "Kursiv",
     "logOut": "Abmelden",
-    "logout": "Logout",
     "map": "Karte",
     "myProfile": "Mein Profil",
     "next": "Nächster",
@@ -184,6 +183,7 @@
     "remove": "Entfernen",
     "removeLocation": "Standort entfernen",
     "reset": "Zurücksetzen",
+    "retry": "Erneut versuchen",
     "satellite": "Satellit",
     "save": "Speichern",
     "select": "Auswählen",
@@ -197,14 +197,18 @@
       "chooseWhichOptionalCookiesThis": "Wählen Sie, welche optionalen Cookies diese Website verwenden darf.",
       "currentlyYouHaveNoCompanies": "Derzeit sind Ihnen keine Unternehmen zugeordnet. Kontaktieren Sie Ihren Administrator.",
       "customerSupportWithLiveChat": "Kundensupport per Live-Chat.",
+      "exportsAllRecordsFiltersDontApply": "Exportiert alle Datensätze des Unternehmens; die Filter oben gelten nicht.",
       "inaTrace": "INATrace",
       "listAndBrieflyDescribeThe": "Führen Sie Ihre derzeitigen Zertifikate und Standards auf und beschreiben Sie diese kurz (z. B. Bio - Verwendung von Bio-Sämlingen, Bio-Düngemitteln, Fairer Handel - Faire Bezahlung von Landwirt*innen und anderen Akteuren innerhalb der Lieferkette…)",
       "noRecordsMatchYourSearch": "Keine Einträge entsprechen Ihrer Suche oder Ihren Filtern.",
       "performanceCookies": "Leistungs-Cookies.",
+      "removeThisItem": "Diesen Eintrag und die dazu eingegebenen Angaben entfernen?",
       "requestCouldNotBeCompleted": "Die Anfrage konnte nicht abgeschlossen werden. Bitte überprüfen Sie die eingegebenen Daten und versuchen Sie es erneut.",
+      "theDataCouldNotBeLoaded": "Die Daten konnten nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
       "thisTableIsEmptyFor": "Diese Tabelle ist derzeit leer.",
       "total": "{{total}} insgesamt",
-      "withEveryCertificateOrStandard": "Laden Sie für jedes oben aufgeführte Zertifikat und jeden Standard PDF- / Bildnachweise hoch über die Führung dieser Zertifikate und die Einhaltung der Standards (Stellen Sie sicher, dass Sie keine vertraulichen Informationen hochladen)."
+      "withEveryCertificateOrStandard": "Laden Sie für jedes oben aufgeführte Zertifikat und jeden Standard PDF- / Bildnachweise hoch über die Führung dieser Zertifikate und die Einhaltung der Standards (Stellen Sie sicher, dass Sie keine vertraulichen Informationen hochladen).",
+      "youHaveUnsavedChangesDiscard": "Sie haben ungespeicherte Änderungen. Verwerfen?"
     },
     "errors": {
       "atMost1000Characters": "Höchstens 1000 Zeichen",
@@ -249,7 +253,6 @@
       "crop": "Crop",
       "currencies": "Währungen",
       "currency": "Währung",
-      "dark": "Dunkel",
       "dashboard": "Dashboard",
       "date": "Datum",
       "delete": "Löschen",
@@ -277,7 +280,6 @@
       "language": "Sprache",
       "lastName": "Nachname",
       "latitude": "Breitengrad",
-      "light": "Hell",
       "link": "Link",
       "linkUrl": "Link-URL",
       "longitude": "Längengrad",
@@ -338,6 +340,7 @@
       "addCornerHere": "Hier eine Ecke hinzufügen"
     },
     "placeholders": {
+      "jumpTo": "Springe zu",
       "nothingLeftToAdd": "Nichts mehr hinzuzufügen",
       "pickADate": "Datum wählen",
       "searchByName": "Nach Name suchen",
@@ -357,16 +360,17 @@
       "current": "Aktuell",
       "euOrganic": "EU-Bio",
       "fairtrade": "Fairtrade",
+      "fieldsToFix": "Zu korrigierende Felder: {{count}}",
       "filters": "Filter",
+      "hasErrors": "Enthält Fehler",
       "inaTrace": "INATrace",
       "last12Months": "Letzte 12 Monate",
       "last2Years": "Letzte 2 Jahre",
       "last30Days": "Letzte 30 Tage",
       "last3Months": "Letzte 3 Monate",
-      "loggingOut": "Abmelden...",
+      "loading": "Wird geladen…",
       "makeAgriculturalSupplyChainsTransparent": "Machen Sie landwirtschaftliche Lieferketten mit INATrace transparent und fair",
       "manager": "Manager",
-      "more": "mehr",
       "noAddress": "Keine Adresse",
       "noCertifications": "Keine Zertifizierungen",
       "noCompaniesMatch": "Keine Unternehmen entsprechen „{{search}}“.",
@@ -389,6 +393,7 @@
       "theWebsiteUsesCookiesFor": "Die Website verwendet Cookies für verschiedene Zwecke. Einige sind für den Betrieb der Online-Dienste unerlässlich. Cookies für Analysen und Ihre Einstellungen sorgen jedoch für eine bessere Nutzererfahrung und eine einfachere Nutzung der Website. Mehr über Cookies erfahren und Ihre Einstellungen ändern können Sie auf der",
       "thisYear": "Dieses Jahr",
       "typeToSearch": "Zum Suchen tippen…",
+      "unsavedChanges": "Ungespeicherte Änderungen",
       "updatedAt": "{{user}} aktualisiert {{date}} am {{time}}",
       "user": "Benutzer",
       "yourEMailIsConfirmed": "Ihre E-Mail ist bestätigt. Ein*e Administrator*in muss Ihr Konto noch aktivieren, bevor Sie INATrace nutzen können."
@@ -398,15 +403,18 @@
       "accountNotActiveYet": "Konto noch nicht aktiv",
       "areYouSure": "Sind Sie sicher?",
       "basicInformation": "Allgemeine Information",
+      "certificationNumber": "Zertifizierung {{number}}",
       "cookiesSettings": "Cookie-Einstellungen",
       "copyToClipboard": "In die Zwischenablage kopieren",
       "deliveries": "Lieferungen",
       "filters": "Filter",
       "noDataToDisplay": "Keine Daten zum Anzeigen",
       "noResultsFound": "Keine Ergebnisse gefunden",
+      "onThisPage": "Auf dieser Seite",
       "orderItemQrCode": "Bestelleinheit QR code",
       "processingEvidenceFields": "Verarbeitungsnachweisfelder",
       "selectCompany": "Unternehmen auswählen",
+      "somethingWentWrong": "Etwas ist schiefgelaufen",
       "switchCompany": "Unternehmen wechseln",
       "whisp": "Whisp {{geoId}}",
       "whisp2": "Whisp - {{geoId}}"
@@ -575,7 +583,6 @@
     "titles": {
       "additionalAttributes": "Zusätzliche Eigenschaften",
       "baseCurrency": "Hauptwährung",
-      "beycoIntegration": "Beyco-Integration",
       "certification": "Zertifizierung",
       "companies": "Unternehmen",
       "company": "Unternehmen",
@@ -596,6 +603,7 @@
       "socialMedia": "Social Media",
       "usersWithCompanyRoles": "Nutzer mit Unternehmensrolle",
       "valueChains": "Wertschöpfungsketten",
+      "valueChainsAndTrade": "Wertschöpfungsketten und Handel",
       "videos": "Videos"
     }
   },
@@ -662,6 +670,8 @@
       "inputAndOutputQuantitiesOf": "Eingangs- und Ausgangsmengen eines Verarbeitungsvorgangs und ihr Verhältnis"
     },
     "fields": {
+      "averagePerPeriod": "Durchschnitt pro Zeitraum",
+      "busiestPeriod": "Stärkster Zeitraum",
       "delivered": "Geliefert{{unit}}",
       "input": "Eingang ({{unit}})",
       "organic": "Bio",
@@ -671,6 +681,9 @@
       "productInDeposit": "Produkt im Depot",
       "ratio": "Verhältnis",
       "semiProduct": "Halbfertigprodukt*",
+      "totalDelivered": "Insgesamt geliefert",
+      "totalInput": "Eingang gesamt",
+      "totalOutput": "Ausgang gesamt",
       "week": "KW {{week}}",
       "womensOnly": "Nur von Frauen"
     },
@@ -679,8 +692,12 @@
       "allFarmers": "Alle Landwirt*innen"
     },
     "texts": {
+      "allCount": "Alle ({{count}})",
+      "noCollectingFacilitiesYet": "Dieses Unternehmen hat noch keine Sammelstellen, daher gibt es keine Lieferungen anzuzeigen.",
       "noDataForTheSelected": "Keine Daten für die ausgewählten Filter.",
-      "onlyTheFirstValuesAre": "Nur die ersten {{truncated}} Werte werden angezeigt."
+      "onlyTheLatestPeriodsAre": "Nur die letzten {{truncated}} Zeiträume werden angezeigt. Wählen Sie einen kürzeren Zeitraum oder eine gröbere Gruppierung, um alle zu sehen.",
+      "overTheWholeRange": "Über den gesamten Zeitraum",
+      "selectedCount": "{{count}} ausgewählt"
     },
     "titles": {
       "dashboard": "Dashboard",
@@ -758,7 +775,8 @@
     },
     "titles": {
       "myProducts": "Meine Produkte",
-      "noProducts": "Keine Produkte"
+      "noProducts": "Keine Produkte",
+      "welcomeName": "Willkommen, {{name}}"
     }
   },
   "notifications": {
@@ -990,7 +1008,6 @@
     },
     "labelPages": {
       "buttons": {
-        "backToLabel": "Zurück zum Label",
         "downloadEMails": "E-Mails herunterladen",
         "newBatch": "Neuer Batch",
         "prefillLocationsFromProduct": "Standorte von Produkt übernehmen",
@@ -1100,6 +1117,7 @@
         "labelHasBeenSuccessfullyPublished": "Label wurde erfolgreich veröffentlicht",
         "labelIsNotPublishedAnymore": "Label ist nicht mehr öffentlich",
         "lookAndContentOfThe": "Aussehen und Inhalt der Produktseite für Verbraucher*innen.",
+        "qrLabelsIntro": "Jedes Etikett ist eine Seite, die Käufer über den QR-Code öffnen. Wählen Sie ein Etikett, um seinen Inhalt zu bearbeiten.",
         "uploadFontUsedForMain": "Schriftart für Hauptinhalt hochladen (TTF, WOFF oder WOFF2)",
         "uploadFontUsedForProduct": "Schriftart für Produkttitel hochladen (TTF, WOFF oder WOFF2)",
         "uploadHighQualityHeaderBackground": "Laden Sie ein qualitativ hochwertiges Header Hintergundbild hoch (Empfohlene Größe 1200x476px, Dateityp: PNG, JPG oder JPEG)",
@@ -1212,10 +1230,13 @@
         "enterTheLabelTitle": "Geben Sie den Titel des Etiketts ein"
       },
       "texts": {
+        "editing": "In Bearbeitung",
+        "labelActivity": "Etikett-Aktivität",
         "noneInTheCompanyProfile": "Keine im Unternehmensprofil",
         "onlyTheCompanyThatOwns": "Nur das Unternehmen, dem dieses Produkt gehört, kann es bearbeiten.",
         "saveYourChangesToUse": "Speichern Sie Ihre Änderungen, um diese Aktionen zu nutzen.",
-        "theRouteOfTheProduct": "Der Weg des Produkts: Klicken Sie auf die Karte, um Punkte der Reihe nach hinzuzufügen, und ziehen Sie sie zum Verschieben."
+        "theRouteOfTheProduct": "Der Weg des Produkts: Klicken Sie auf die Karte, um Punkte der Reihe nach hinzuzufügen, und ziehen Sie sie zum Verschieben.",
+        "viewAndPrint": "Ansehen und drucken"
       },
       "titles": {
         "b2cSettings": "B2C-Einstellungen",
@@ -1227,16 +1248,17 @@
         "media": "Medien",
         "meetTheFarmers": "Lernen Sie die Landwirt*innen kennen",
         "newProduct": "Neues Produkt",
+        "noQrLabelsYet": "Noch keine QR-Etiketten",
         "process": "Prozess",
         "productData": "Produktdaten",
         "productionRecords": "Aufzeichnungen zur Produktion",
         "products": "Produkte",
         "published": "Veröffentlichen",
         "qrLabels": "QR-Code Label",
+        "selectedLabel": "Ausgewähltes Etikett",
         "settings": "Einstelllungen",
         "socialResponsibility": "Soziale Verantwortung",
         "untitled": "Ohne Titel",
-        "valueChain": "Wertschöpfungskette",
         "videos": "Videos"
       }
     },
@@ -1425,6 +1447,7 @@
       "addPayments": "Zahlungen hinzufügen ({{payableCount}})",
       "addProof": "Nachweis hinzufügen",
       "chooseAFacilityToContinue": "Wählen Sie eine Anlage, um fortzufahren",
+      "clearSelection": "Auswahl aufheben",
       "export": "Exportieren",
       "groupView": "Group view",
       "removeFarmer": "Landwirt*in entfernen",
@@ -1467,6 +1490,7 @@
       "anyWayOfPayment": "Beliebige Zahlungsart",
       "available": "Verfügbar",
       "availableOnly": "Nur verfügbare",
+      "balance": "Saldo",
       "basePayment": "Basiszahlung",
       "comment": "Kommentar",
       "cooperativeEmployee": "Mitarbeiter*in der Kooperative",
@@ -1491,7 +1515,7 @@
       "openBalanceOnly": "Nur offener Saldo",
       "orderType": "Bestellart",
       "organic": "Bio",
-      "payableBalance": "Gesamtbetrag /Offener Betrag",
+      "payable": "Zu zahlen",
       "payment": "Zahlung",
       "paymentList": "Zahlungsliste",
       "paymentOrderApproved": "Zahlungsvorgang genehmigt",
@@ -1658,13 +1682,14 @@
       "buttons": {
         "addAdditionalOutput": "Fügen Sie zusätzliche Ausgabe hinzu",
         "addDocument": "Dokument hinzufügen",
+        "addSac": "Sack hinzufügen",
         "clearFilters": "Filter zurücksetzen",
         "prefill": "Vorausfüllen",
-        "sacNumber": "Nummer des Sacks",
         "tryAgain": "Erneut versuchen"
       },
       "descriptions": {
-        "expectedOutputQuantityRange": "Bereich der erwarteten Output-Menge"
+        "expectedOutputQuantityRange": "Bereich der erwarteten Output-Menge",
+        "removeThisOutput": "Diese Ausgabe und die dafür eingegebenen Mengen entfernen?"
       },
       "errors": {
         "atLeastOneInputSemi": "Mindestens ein Input-Halbfertigprodukt wird benötigt",
@@ -1741,6 +1766,7 @@
         "materialToBeRecorded": "Input",
         "orderDetails": "Details zur Bestellung",
         "organicCoffee": "Bio-Kaffee",
+        "outputNumber": "Ausgabe {{number}}",
         "outputsOfThisProcessing": "Ergebnisse dieser Verarbeitung",
         "placeNewOrder": "Neue Bestellung aufgeben",
         "processingEvidence": "Verarbeitungsnachweis",
@@ -1790,54 +1816,8 @@
       "processingActions": "Verarbeitungsvorgänge",
       "processingEvidenceDocuments": "Verarbeitung von Nachweisdokumenten",
       "processingInformation": "Verarbeitungsinformation",
+      "proofNumber": "Nachweis {{number}}",
       "updateDelivery": "Lieferung aktualisieren"
-    }
-  },
-  "table": {
-    "filter": {
-      "combobox": {
-        "noResults": "Keine Ergebnisse gefunden.",
-        "placeholder": "Auswählen...",
-        "search": "Suchen..."
-      },
-      "numeric": {
-        "placeholder": "Filtern nach..."
-      },
-      "operator": {
-        "between": "Zwischen",
-        "contains": "Enthält",
-        "containss": "Enthält (Groß-/Kleinschreibung)",
-        "endswith": "Endet mit",
-        "endswiths": "Endet mit (Groß-/Kleinschreibung)",
-        "eq": "Gleich",
-        "eqs": "Gleich (Groß-/Kleinschreibung)",
-        "gt": "Größer als",
-        "gte": "Größer oder gleich",
-        "in": "In Liste enthalten",
-        "ina": "In Liste enthalten (Groß-/Kleinschreibung)",
-        "lt": "Kleiner als",
-        "lte": "Kleiner oder gleich",
-        "nbetween": "Nicht zwischen",
-        "ncontains": "Enthält nicht",
-        "ncontainss": "Enthält nicht (Groß-/Kleinschreibung)",
-        "ne": "Ungleich",
-        "nendswith": "Endet nicht mit",
-        "nendswiths": "Endet nicht mit (Groß-/Kleinschreibung)",
-        "nes": "Ungleich (Groß-/Kleinschreibung)",
-        "nin": "Nicht in Liste enthalten",
-        "nina": "Nicht in Liste enthalten (Groß-/Kleinschreibung)",
-        "nnull": "Ist nicht leer",
-        "noResults": "Kein Operator gefunden.",
-        "nstartswith": "Beginnt nicht mit",
-        "nstartswiths": "Beginnt nicht mit (Groß-/Kleinschreibung)",
-        "null": "Ist leer",
-        "placeholder": "Operator suchen...",
-        "startswith": "Beginnt mit",
-        "startswiths": "Beginnt mit (Groß-/Kleinschreibung)"
-      },
-      "text": {
-        "placeholder": "Filtern nach..."
-      }
     }
   },
   "userCustomers": {
@@ -2016,6 +1996,7 @@
       "payments": "Zahlungen",
       "plots": "Parzellen",
       "productTypes": "Produkttypen",
+      "profile": "Profil",
       "template": "Vorlage",
       "uploadData": "Daten hochladen",
       "validationErrors": "Validierungsfehler"
@@ -2112,9 +2093,20 @@
       "measuringUnitTypes": "Arten der Messeinheiten",
       "newValueChain": "Neue Wertschöpfungskette",
       "processingEvidenceTypes": "Art der Prozessbelege",
-      "productType": "Produktart",
       "semiProducts": "Halbfertigprodukte",
       "valueChains": "Wertschöpfungsketten"
+    }
+  },
+  "table": {
+    "texts": {
+      "hiddenCount": "{{count}} ausgeblendet",
+      "showColumns": "Spalten anzeigen",
+      "sortBy": "Nach {{column}} sortieren",
+      "sortedAscending": "{{column}}: aufsteigend sortiert",
+      "sortedDescending": "{{column}}: absteigend sortiert"
+    },
+    "buttons": {
+      "columns": "Spalten"
     }
   }
 }

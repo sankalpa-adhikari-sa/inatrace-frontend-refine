@@ -1,14 +1,15 @@
 import { type CrudFilter, useNotification, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { Banknote, CalendarDays, History, Ruler, Scale, Truck, Wallet } from "lucide-react";
 import type { ApiStockOrder } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
 import { RowActions, StatusBadge } from "@/components/app/controls";
 import { QrCodeDialog } from "@/components/app/qr-code-dialog";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { DataTableSorter } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ORDER_TYPES, day, fmt, personName } from "./shared";
@@ -23,14 +24,6 @@ export type StockListMode = "PURCHASE_ORDERS" | "COMPANY_ADMIN";
 
 export type StockOrderFilters = Record<string, string | number | boolean | null | undefined>;
 
-const sortable = (label: string) =>
-  function Header({ column }: { column: any }) {
-    return (
-      <div className="flex items-center gap-1">
-        {label} <DataTableSorter column={column} />
-      </div>
-    );
-  };
 
 function canDelete(o: ApiStockOrder) {
   if (o.orderType === "GENERAL_ORDER") {
@@ -48,6 +41,10 @@ export function StockOrderTable({
   selectable,
   onSelectionChange,
   onTotal,
+  isFiltered,
+  onClearFilters,
+  selectionResetKey,
+  hideFarmer,
 }: {
   mode: StockListMode;
   companyId: number;
@@ -56,6 +53,13 @@ export function StockOrderTable({
   selectable?: boolean;
   onSelectionChange?: (orders: ApiStockOrder[]) => void;
   onTotal?: (total: number) => void;
+  /** Whether the page's own filter controls narrow the list, for the "no results" state. */
+  isFiltered?: boolean;
+  onClearFilters?: () => void;
+  /** Changing it clears the selection. */
+  selectionResetKey?: number;
+  /** Leave out the farmer column, on a list of one farmer's deliveries. */
+  hideFarmer?: boolean;
 }) {
   const translate = useTranslate();
   const navigate = useNavigate();
@@ -119,6 +123,7 @@ export function StockOrderTable({
     cols.push({
       id: "date",
       header: sortable(purchases ? translate("common.fields.deliveryDate") : translate("stock.fields.productionDate")),
+      meta: { card: "meta", icon: CalendarDays },
       cell: ({ row }) => day(row.original.productionDate),
     });
     if (!purchases) {
@@ -127,20 +132,23 @@ export function StockOrderTable({
           id: "identifier",
           header: translate("stock.fields.identifier"),
           enableSorting: false,
+          meta: { primary: true },
           cell: ({ row }) => row.original.internalLotNumber || row.original.identifier,
         },
         {
           id: "orderType",
           header: translate("common.fields.type"),
           enableSorting: false,
+          meta: { card: "badge" },
           cell: ({ row }) => ORDER_TYPES[row.original.orderType!] ?? "",
         }
       );
-    } else {
+    } else if (!hideFarmer) {
       cols.push({
         id: "farmer",
         header: translate("common.fields.farmer"),
         enableSorting: false,
+        meta: { primary: true },
         cell: ({ row }) => personName(row.original.producerUserCustomer),
       });
     }
@@ -148,6 +156,7 @@ export function StockOrderTable({
       id: "semiProduct",
       header: translate("stock.fields.semiProduct"),
       enableSorting: false,
+      meta: { card: "subtitle" },
       cell: ({ row }) => {
         const o = row.original;
         if (o.semiProduct) return o.semiProduct.name;
@@ -161,19 +170,36 @@ export function StockOrderTable({
           id: "quantity",
           header: translate("common.fields.quantity"),
           enableSorting: false,
+          meta: { align: "right", icon: Scale },
           cell: ({ row }) => `${fmt(row.original.totalQuantity)} ${row.original.measureUnitType?.label ?? ""}`,
         },
         {
           id: "payable",
-          header: translate("stock.fields.payableBalance"),
+          header: translate("stock.fields.payable"),
           enableSorting: false,
+          meta: { align: "right", icon: Banknote },
           cell: ({ row }) =>
             row.original.priceDeterminedLater ? (
-              <span className="text-muted-foreground">
+              <span className="font-normal text-muted-foreground">
                 {translate("stock.fields.priceDeterminedLater")}
               </span>
             ) : (
-              `${fmt(row.original.cost)} / ${fmt(row.original.balance)}`
+              fmt(row.original.cost)
+            ),
+        },
+        {
+          id: "balance",
+          header: translate("stock.fields.balance"),
+          enableSorting: false,
+          meta: { align: "right", icon: Wallet },
+          cell: ({ row }) =>
+            row.original.priceDeterminedLater ? (
+              ""
+            ) : (
+              // An open balance stands out; a settled one doesn't need to.
+              <span className={(row.original.balance ?? 0) > 0 ? "font-semibold text-amber-700 dark:text-amber-400" : undefined}>
+                {fmt(row.original.balance)}
+              </span>
             ),
         }
       );
@@ -181,29 +207,49 @@ export function StockOrderTable({
       cols.push(
         {
           id: "quantity",
-          header: translate("stock.fields.quantityFilledAvailable"),
+          header: translate("common.fields.quantity"),
           enableSorting: false,
-          cell: ({ row }) =>
-            `${fmt(row.original.totalQuantity ?? 0)} / ${fmt(row.original.fulfilledQuantity ?? 0)} / ${fmt(
-              row.original.availableQuantity ?? 0
-            )}`,
+          meta: { align: "right" },
+          cell: ({ row }) => fmt(row.original.totalQuantity ?? 0),
+        },
+        {
+          id: "filled",
+          header: translate("stock.fields.filled"),
+          enableSorting: false,
+          meta: { align: "right" },
+          cell: ({ row }) => fmt(row.original.fulfilledQuantity ?? 0),
+        },
+        {
+          id: "available",
+          header: translate("stock.fields.available"),
+          enableSorting: false,
+          meta: { align: "right" },
+          cell: ({ row }) => fmt(row.original.availableQuantity ?? 0),
         },
         {
           id: "unit",
           header: translate("common.fields.unit"),
           enableSorting: false,
+          meta: { card: "meta", icon: Ruler },
           cell: ({ row }) => row.original.measureUnitType?.label,
         },
-        { id: "deliveryTime", header: sortable(translate("common.fields.deliveryDate")), cell: ({ row }) => day(row.original.deliveryTime) },
+        {
+          id: "deliveryTime",
+          header: sortable(translate("common.fields.deliveryDate")),
+          meta: { card: "meta", icon: Truck },
+          cell: ({ row }) => day(row.original.deliveryTime),
+        },
         {
           id: "lastChange",
           header: sortable(translate("stock.fields.lastChange")),
+          meta: { card: "meta", icon: History },
           cell: ({ row }) => row.original.updateTimestamp?.slice(0, 16).replace("T", " "),
         },
         {
           id: "isAvailable",
           header: translate("common.fields.status"),
           enableSorting: false,
+          meta: { card: "badge" },
           cell: ({ row }) => <StatusBadge status={row.original.isAvailable ? "ACTIVE" : "DEACTIVATED"} />,
         }
       );
@@ -272,7 +318,7 @@ export function StockOrderTable({
     });
     return cols;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [purchases, selectable]);
+  }, [purchases, selectable, hideFarmer]);
 
   const permanent = useMemo<CrudFilter[]>(
     () =>
@@ -303,14 +349,37 @@ export function StockOrderTable({
     if (total != null) onTotal?.(total);
   }, [total, onTotal]);
 
+  // Selection is kept by id across pages; remember each order seen so ticks on other pages still count.
+  const seen = useRef(new Map<string, ApiStockOrder>());
   useEffect(() => {
-    onSelectionChange?.(items.filter((o) => selection[String(o.id)]));
+    for (const o of items) seen.current.set(String(o.id), o);
+    onSelectionChange?.(
+      Object.keys(selection)
+        .filter((id) => selection[id])
+        .map((id) => seen.current.get(id))
+        .filter((o): o is ApiStockOrder => !!o)
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, items]);
 
+  // The page's "Clear selection".
+  useEffect(() => {
+    if (selectionResetKey) table.reactTable.resetRowSelection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionResetKey]);
+
   return (
     <div className="flex flex-col gap-4">
-      <DataTable table={table} />
+      <DataTable
+        table={table}
+        filterKey={permanent}
+        columnsKey={purchases ? "deliveries" : "stock-orders"}
+        isFiltered={isFiltered}
+        onClearFilters={onClearFilters}
+        getRowHref={(o) =>
+          o.orderType === "PURCHASE_ORDER" ? `/my-stock/deliveries/update/${o.id}` : `/my-stock/processing/update/${o.id}`
+        }
+      />
       <Aggregated items={items} />
       {qr?.qrCodeTag && (
         <QrCodeDialog qrCodeTag={qr.qrCodeTag} finalProduct={qr.qrCodeTagFinalProduct} onClose={() => setQr(null)} />

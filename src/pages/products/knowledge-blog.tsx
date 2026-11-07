@@ -2,7 +2,7 @@ import { useOne, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import { Navigate, useNavigate, useParams } from "react-router";
@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useTableFilter } from "@/hooks/use-table-filter";
 import { ProductTabs } from "./tabs";
 import { t } from "@/lib/i18n";
+import { focusFirstError } from "@/lib/form-errors";
 
 type BlogType = NonNullable<ApiKnowledgeBlog["type"]>;
 const BLOG_TYPES: { value: BlogType; label: string }[] = [
@@ -43,12 +44,13 @@ export function KnowledgeBlogList() {
 
   const columns = useMemo<ColumnDef<ApiKnowledgeBlogBase>[]>(
     () => [
-      { id: "title", accessorKey: "title", header: translate("products.fields.title") },
-      { id: "date", accessorKey: "date", header: translate("common.fields.date") },
+      { id: "title", accessorKey: "title", header: translate("products.fields.title"), meta: { card: "title" } },
+      { id: "date", accessorKey: "date", header: translate("common.fields.date"), meta: { card: "meta", icon: CalendarDays } },
       {
         id: "type",
         accessorKey: "type",
         header: translate("common.fields.type"),
+        meta: { card: "badge" },
         cell: ({ getValue }) => humanize(getValue() as string),
       },
       {
@@ -188,8 +190,9 @@ export function KnowledgeBlogForm() {
     <>
       <ProductTabs productId={productId} />
       <form
-        onSubmit={handleSubmit((v) =>
-          onFinish({ ...v, type: type.value, documents: v.documents?.filter((d: ApiDocument) => d?.storageKey) })
+        onSubmit={handleSubmit(
+          (v) => onFinish({ ...v, type: type.value, documents: v.documents?.filter((d: ApiDocument) => d?.storageKey) }),
+          focusFirstError
         )}
         className="flex flex-col gap-6"
       >

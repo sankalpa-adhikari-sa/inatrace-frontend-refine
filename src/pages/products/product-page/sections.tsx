@@ -2,7 +2,7 @@ import { useTranslate } from "@refinedev/core";
 import { type ReactNode, useContext, useState } from "react";
 import { type Control, type FieldPath, type UseFormSetValue, useController, useWatch } from "react-hook-form";
 import type { ApiProduct } from "@/client/types.gen";
-import { EMAIL_PATTERN, SelectField, TextField, TextareaField } from "@/components/app/form-fields";
+import { EMAIL_PATTERN, ReadOnlyField, SelectField, TextField, TextareaField } from "@/components/app/form-fields";
 import { LocationFields } from "@/components/app/location-fields";
 import { LocationPinsField } from "@/components/app/location-pins-field";
 import { Section } from "@/components/app/page";
@@ -10,8 +10,7 @@ import { RichTextField } from "@/components/app/rich-text-field";
 import { IMAGE_TYPES, UploadField } from "@/components/app/upload-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { LANGUAGES, SOCIAL, visKey, type FormValues, LabelMode, type Language } from "./model";
@@ -105,21 +104,29 @@ export function ProductSections({
   const valueChain = useWatch({ control, name: "valueChain" });
   return (
     <>
-      <Section title={translate("products.productPage.titles.valueChain")}>
-        <Field className="max-w-md">
-          <FieldLabel>{translate("products.productPage.fields.valueChain")}</FieldLabel>
-          <Input disabled value={valueChain?.name ?? ""} />
-        </Field>
-      </Section>
-
       <Section
+        id="data"
+        navLabel={
+          mode === "labels"
+            ? translate("products.productPage.titles.labelData")
+            : translate("products.productPage.titles.productData")
+        }
         title={
           mode === "labels"
             ? translate("products.productPage.titles.labelData")
             : translate("products.productPage.titles.productData")
         }
       >
-        <FieldGroup className="grid gap-4 lg:grid-cols-2">
+        <FieldGroup className="grid gap-4 @2xl:grid-cols-2">
+          {/* Fixed when the product is created; shown for context, not a section of its own. Label content
+              doesn't carry it. */}
+          {valueChain?.name && (
+            <ReadOnlyField
+              label={translate("products.productPage.fields.valueChain")}
+              value={valueChain.name}
+              className="@2xl:col-span-2 @2xl:max-w-[calc(50%-0.5rem)]"
+            />
+          )}
           <Labeled name="name">
             <TextField
               control={control}
@@ -149,7 +156,7 @@ export function ProductSections({
               rules={required(translate("products.productPage.errors.productPhotoIsRequired"))}
             />
           </Labeled>
-          <Labeled name="description" className="lg:col-span-2">
+          <Labeled name="description" className="@2xl:col-span-2">
             <TextareaField
               control={control}
               name="description"
@@ -160,7 +167,7 @@ export function ProductSections({
               rules={{ ...required(translate("products.productPage.errors.productDescriptionIsRequired")), maxLength: max(2000) }}
             />
           </Labeled>
-          <Labeled name="origin" className="lg:col-span-2">
+          <Labeled name="origin" className="@2xl:col-span-2">
             <TextareaField
               control={control}
               name="origin.text"
@@ -181,7 +188,7 @@ export function ProductSections({
         <JourneyMarkers control={control} />
       </Section>
 
-      <Section title={translate("products.productPage.titles.process")}>
+      <Section id="process" title={translate("products.productPage.titles.process")}>
         <Labeled name="process.production">
           <TextareaField
             control={control}
@@ -193,6 +200,7 @@ export function ProductSections({
       </Section>
 
       <Section
+        id="social-responsibility"
         title={translate("products.productPage.titles.socialResponsibility")}
         actions={prefillButton("responsibility")}
       >
@@ -207,6 +215,7 @@ export function ProductSections({
       </Section>
 
       <Section
+        id="sustainability"
         title={translate("products.productPage.titles.environmentalSustainability")}
         actions={prefillButton("sustainability")}
       >
@@ -241,7 +250,7 @@ export function ProductSections({
         </FieldGroup>
       </Section>
 
-      <Section title={translate("products.productPage.titles.settings")}>
+      <Section id="settings" title={translate("products.productPage.titles.settings")}>
         <FieldGroup>
           <Labeled name="settings.language" className="max-w-xs">
             <SelectField
@@ -278,8 +287,8 @@ export function ProductSections({
         </FieldGroup>
       </Section>
 
-      <Section title={translate("products.productPage.titles.company")}>
-        <FieldGroup className="grid gap-4 lg:grid-cols-2">
+      <Section id="company" title={translate("products.productPage.titles.company")}>
+        <FieldGroup className="grid gap-4 @2xl:grid-cols-2">
           <Labeled name="company.name">
             <TextField
               control={control}
@@ -297,7 +306,7 @@ export function ProductSections({
               accept={IMAGE_TYPES}
             />
           </Labeled>
-          <Labeled name="company.headquarters" className="lg:col-span-2">
+          <Labeled name="company.headquarters" className="@2xl:col-span-2">
             <FieldLabel>{translate("products.productPage.fields.companyHeadquarters")}</FieldLabel>
             <LocationFields
               control={control}
@@ -308,7 +317,7 @@ export function ProductSections({
               flat
             />
           </Labeled>
-          <Labeled name="company.about" className="lg:col-span-2">
+          <Labeled name="company.about" className="@2xl:col-span-2">
             <TextareaField
               control={control}
               name="company.about"

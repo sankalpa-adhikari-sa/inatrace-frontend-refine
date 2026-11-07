@@ -64,10 +64,11 @@ export function MediaSection({ control }: { control: Control<FormValues> }) {
   ];
   return (
     <Section
+      id="media"
       title={translate("products.productPage.titles.media")}
       description={translate("products.productPage.descriptions.companyDocumentsCompanySettingsProfile")}
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 @3xl:grid-cols-3">
         {groups.map((g) => (
           <MediaGroup key={g.key} control={control} group={g} />
         ))}

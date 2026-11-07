@@ -1,7 +1,7 @@
 import { useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Factory, Hash, History, Plus, Ruler, Scale, Truck, Warehouse } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import type { ApiStockOrder } from "@/client/types.gen";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useUrlFilters } from "@/hooks/use-url-state";
 import { useFacilityParam } from "../stock/deliveries";
 import { day, fmt } from "../stock/shared";
 import { call, download, useApi } from "@/lib/http";
@@ -30,9 +31,14 @@ export function OrdersPage({ kind }: { kind: Kind }) {
   const location = useLocation();
   const confirm = useConfirm();
   const [facilityId, setFacilityId] = useFacilityParam();
-  const [openOnly, setOpenOnly] = useState(false);
-  const [semiProductId, setSemiProductId] = useState<number | null>(null);
-  const [customerId, setCustomerId] = useState<number | null>(null);
+  // In the URL, so a reload or the back button from an order keeps them.
+  const url = useUrlFilters(["openOnly", "semiProductId", "customerId"] as const);
+  const openOnly = url.values.openOnly === "true";
+  const semiProductId = url.values.semiProductId ? Number(url.values.semiProductId) : null;
+  const customerId = url.values.customerId ? Number(url.values.customerId) : null;
+  const setOpenOnly = (v: boolean) => url.set({ openOnly: v });
+  const setSemiProductId = (v: number | null) => url.set({ semiProductId: v });
+  const setCustomerId = (v: number | null) => url.set({ customerId: v });
   const [reviewing, setReviewing] = useState<ApiStockOrder | null>(null);
   const [qr, setQr] = useState<ApiStockOrder | null>(null);
   const [quoting, setQuoting] = useState(false);
@@ -74,12 +80,14 @@ export function OrdersPage({ kind }: { kind: Kind }) {
       {
         id: "deliveryTime",
         header: translate("common.fields.deliveryDate"),
+        meta: { card: "meta", icon: Truck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.deliveryTime),
       },
       {
         id: "product",
         header: translate("orders.fields.product"),
+        meta: { card: "title" },
         enableSorting: false,
         cell: ({ row }) =>
           row.original.semiProduct?.name ??
@@ -91,18 +99,21 @@ export function OrdersPage({ kind }: { kind: Kind }) {
         ? {
             id: "customer",
             header: translate("orders.fields.customer"),
+            meta: { card: "subtitle" },
             enableSorting: false,
             cell: ({ row }) => row.original.consumerCompanyCustomer?.name,
           }
         : {
             id: "client",
             header: translate("orders.fields.client"),
+            meta: { card: "subtitle" },
             enableSorting: false,
             cell: ({ row }) => row.original.facility?.company?.name,
           },
       {
         id: "orderId",
         header: translate("orders.fields.orderId"),
+        meta: { card: "meta", icon: Hash },
         enableSorting: false,
         cell: ({ row }) => row.original.productOrder?.orderId ?? row.original.orderId ?? "/",
       },
@@ -110,6 +121,7 @@ export function OrdersPage({ kind }: { kind: Kind }) {
         ? {
             id: "orderedTo",
             header: translate("orders.fields.orderedFrom"),
+            meta: { card: "meta", icon: Factory },
             enableSorting: false,
             cell: ({ row }) =>
               `${row.original.quoteFacility?.company?.name ?? ""} (${row.original.quoteFacility?.name ?? ""})`,
@@ -117,30 +129,35 @@ export function OrdersPage({ kind }: { kind: Kind }) {
         : {
             id: "toFacility",
             header: translate("orders.fields.toFacility"),
+            meta: { card: "meta", icon: Warehouse },
             enableSorting: false,
             cell: ({ row }) => row.original.facility?.name,
           },
       {
         id: "fulfilled",
         header: translate("orders.fields.orderedFilled"),
+        meta: { card: "stat", icon: Scale },
         enableSorting: false,
         cell: ({ row }) => `${fmt(row.original.totalQuantity)} / ${fmt(row.original.fulfilledQuantity)}`,
       },
       {
         id: "unit",
         header: translate("common.fields.unit"),
+        meta: { card: "meta", icon: Ruler },
         enableSorting: false,
         cell: ({ row }) => row.original.measureUnitType?.label,
       },
       {
         id: "kilos",
         header: translate("orders.fields.kg"),
+        meta: { card: "stat" },
         enableSorting: false,
         cell: ({ row }) => kgs(row.original),
       },
       {
         id: "updated",
         header: translate("orders.fields.lastChange"),
+        meta: { card: "meta", icon: History },
         enableSorting: false,
         cell: ({ row }) => row.original.updateTimestamp?.slice(0, 16).replace("T", " "),
       },
@@ -278,7 +295,7 @@ export function OrdersPage({ kind }: { kind: Kind }) {
             <Label htmlFor="open-only">{translate("orders.fields.openOnly")}</Label>
           </div>
         </Toolbar>
-        <DataTable table={table} />
+        <DataTable table={table} filterKey={permanent} />
       </Section>
       {reviewing && (
         <ReviewTransactionsDialog

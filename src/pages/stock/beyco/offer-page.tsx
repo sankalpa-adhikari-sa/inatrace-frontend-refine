@@ -11,6 +11,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { useSelectedCompany } from "@/hooks/use-session";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
+import { focusFirstError } from "@/lib/form-errors";
 import { CoffeeSection } from "./coffee-section";
 import { type OfferForm, toApi, toForm } from "./model";
 import { useBeycoToken } from "./token";
@@ -67,8 +68,11 @@ function OfferEditor({
 
   return (
     <>
-      <PageHeader title={translate("stock.beyco.titles.beycoOffer")} back="/my-stock/all-stock" />
-      <form onSubmit={handleSubmit((v) => send.mutate(v))} className="flex flex-col gap-6">
+      <PageHeader
+        title={translate("stock.beyco.titles.beycoOffer")}
+        breadcrumbs={[{ label: translate("common.fields.myStock"), to: "/my-stock" }, { label: translate("stock.fields.allStock"), to: "/my-stock/all-stock" }]}
+      />
+      <form onSubmit={handleSubmit((v) => send.mutate(v), focusFirstError)} className="flex flex-col gap-6">
         <Section title={translate("stock.beyco.titles.generalValues")}>
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
             <TextField

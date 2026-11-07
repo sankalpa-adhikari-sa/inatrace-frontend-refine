@@ -27,12 +27,14 @@ export function CompanyProcessingActions() {
       {
         id: "name",
         accessorKey: "name",
+        meta: { primary: true },
         header: translate("common.fields.name"),
         enableSorting: false,
       },
       {
         id: "type",
         header: translate("common.fields.type"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ row }) => typeLabel(row.original.type),
       },
@@ -116,7 +118,7 @@ export function CompanyProcessingActions() {
         title={translate("companies.processingActions.titles.listOfProcessingActions")}
         description={translate("common.descriptions.total", { total: table.refineCore.result.total ?? 0 })}
       >
-        <DataTable table={table} />
+        <DataTable table={table} getRowHref={(a) => `/companies/${companyId}/processingActions/${a.id}/edit`} />
       </Section>
     </>
   );

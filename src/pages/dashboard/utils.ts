@@ -43,3 +43,6 @@ export function twoYearsAgo() {
 export const EXT: Record<ExportType, string> = { EXCEL: "xlsx", PDF: "pdf", CSV: "csv" };
 
 export const nf = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+
+/** Headline figures: 1,284 / 12.9K / 4.2M. */
+export const compact = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });

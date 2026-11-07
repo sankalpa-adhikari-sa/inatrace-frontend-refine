@@ -46,9 +46,8 @@ export class FacilityFormPage {
 
   /** Adds a value chain from the "Value chains" section's picker. */
   async addValueChain(name: string) {
-    const section = this.page.locator("section").filter({
-      has: this.page.getByText(tr("companies.titles.valueChains"), { exact: true }),
-    });
+    // Form sections are labelled regions (Section with an id); the name leaves out the required "*".
+    const section = this.page.getByRole("region", { name: tr("companies.titles.valueChains"), exact: true });
     await section.getByRole("combobox").click();
     await this.page.getByRole("option", { name, exact: true }).click();
     // Added items show as chips (list items with a remove button).

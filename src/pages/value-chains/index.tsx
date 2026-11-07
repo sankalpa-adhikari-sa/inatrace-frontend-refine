@@ -17,9 +17,12 @@ import type {
 import { useConfirm } from "@/components/app/confirm";
 import { RowActions, SearchInput, SimpleSelect, StatusBadge, Toolbar } from "@/components/app/controls";
 import { EntityComboboxField, EntityListField, TextField } from "@/components/app/form-fields";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormLayout } from "@/components/app/form-layout";
+import { FormSkeleton } from "@/components/app/states";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { DataTableSorter } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
@@ -27,6 +30,7 @@ import { useIdentity } from "@/hooks/use-session";
 import { useTableFilter } from "@/hooks/use-table-filter";
 import { ep } from "@/lib/endpoints";
 import { call } from "@/lib/http";
+import { focusFirstError } from "@/lib/form-errors";
 
 export function ValueChainList() {
   const translate = useTranslate();
@@ -63,22 +67,21 @@ export function ValueChainList() {
       {
         id: "name",
         accessorKey: "name",
-        header: ({ column }) => (
-          <div className="flex items-center gap-1">
-            {translate("common.fields.name")} <DataTableSorter column={column} />
-          </div>
-        ),
+        meta: { primary: true },
+        header: sortable(translate("common.fields.name")),
       },
       {
         id: "description",
         accessorKey: "description",
         header: translate("common.fields.description"),
+        meta: { card: "body" },
         enableSorting: false,
       },
       {
         id: "valueChainStatus",
         accessorKey: "valueChainStatus",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ getValue }) => <StatusBadge status={getValue<string>()} />,
       },
@@ -178,7 +181,7 @@ export function ValueChainList() {
           onChange={setStatus}
         />
       </Toolbar>
-      <DataTable table={table} />
+      <DataTable table={table} getRowHref={(vc) => `/value-chains/${vc.id}`} />
     </>
   );
 }
@@ -235,111 +238,116 @@ export function ValueChainDetail() {
     },
   });
 
-  if (!isNew && existing.isLoading) return <PageLoader />;
+  useWarnWhenDirty(control);
+
+  if (!isNew && existing.isLoading) return <FormSkeleton sections={3} />;
 
   return (
     <>
       <PageHeader
         title={isNew ? translate("valueChains.titles.newValueChain") : existing.data?.data?.name}
-        back="/value-chains"
-        actions={status && <StatusBadge status={status} />}
+        breadcrumbs={[{ label: translate("common.fields.valueChains"), to: "/value-chains" }]}
+        badge={status && <StatusBadge status={status} />}
       />
-      <form onSubmit={handleSubmit((v) => onFinish(v))} className="flex flex-col gap-6">
-        <Section title={translate("common.titles.basicInformation")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              control={control}
-              name="name"
-              label={translate("valueChains.fields.valueChainName")}
-              rules={{
-                required: translate("valueChains.errors.valueChainNameIsRequired"),
-              }}
-            />
-            <TextField
-              control={control}
-              name="description"
-              label={translate("common.fields.description")}
-              rules={{
-                required: translate("common.errors.descriptionIsRequired"),
-              }}
-            />
-          </FieldGroup>
-        </Section>
-        <Section title={translate("valueChains.titles.productType")}>
-          <EntityComboboxField
-            control={control}
-            name="productType"
-            label={translate("valueChains.fields.valueChainProductType")}
-            items={productTypes}
-            getLabel={(p) => p.name ?? ""}
-            rules={{ required: translate("valueChains.errors.productTypeIsRequired") }}
-          />
-        </Section>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Section title={translate("valueChains.titles.facilityTypes")}>
-            <EntityListField
-              searchable
-              control={control}
-              name="facilityTypes"
-              items={facilityTypes}
-              getLabel={(t) => t.label ?? ""}
-            />
+      <form onSubmit={handleSubmit((v) => onFinish(v), focusFirstError)}>
+        <FormLayout control={control}>
+          <Section id="basic" title={translate("common.titles.basicInformation")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <TextField
+                control={control}
+                name="name"
+                label={translate("valueChains.fields.valueChainName")}
+                rules={{
+                  required: translate("valueChains.errors.valueChainNameIsRequired"),
+                }}
+              />
+              <TextField
+                control={control}
+                name="description"
+                label={translate("common.fields.description")}
+                rules={{
+                  required: translate("common.errors.descriptionIsRequired"),
+                }}
+              />
+              <EntityComboboxField
+                control={control}
+                name="productType"
+                label={translate("valueChains.fields.valueChainProductType")}
+                items={productTypes}
+                getLabel={(p) => p.name ?? ""}
+                rules={{ required: translate("valueChains.errors.productTypeIsRequired") }}
+              />
+            </FieldGroup>
           </Section>
-          <Section title={translate("valueChains.titles.measuringUnitTypes")}>
-            <EntityListField
-              searchable
-              control={control}
-              name="measureUnitTypes"
-              items={measureUnitTypes}
-              getLabel={(t) => t.label ?? ""}
-            />
-          </Section>
-          <Section
-            title={translate("valueChains.titles.processingEvidenceTypes")}
-          >
-            <EntityListField
-              searchable
-              control={control}
-              name="processingEvidenceTypes"
-              items={evidenceTypes}
-              getLabel={(t) => t.label ?? ""}
-            />
-          </Section>
-          <Section
-            title={translate("common.titles.processingEvidenceFields")}
-          >
-            <EntityListField
-              searchable
-              control={control}
-              name="processingEvidenceFields"
-              items={evidenceFields}
-              getLabel={(t) => t.label ?? ""}
-            />
-          </Section>
-          <Section
-            title={translate("valueChains.titles.semiProducts")}
-            className="lg:col-span-2"
-          >
-            <EntityListField
-              searchable
-              control={control}
-              name="semiProducts"
-              items={semiProducts}
-              getLabel={(t) => t.name ?? ""}
-            />
-          </Section>
-        </div>
-        {!readOnly && (
-          <FormActions>
-            <Button type="button" variant="outline" onClick={() => navigate("/value-chains")}>
-              {translate("buttons.cancel")}
-            </Button>
-            <Button type="submit" disabled={formLoading}>
-              {formLoading && <Spinner />}
-              {translate("buttons.save")}
-            </Button>
-          </FormActions>
-        )}
+          <div className="grid gap-6 @3xl:grid-cols-2">
+            <Section id="facility-types" title={translate("valueChains.titles.facilityTypes")}>
+              <EntityListField
+                searchable
+                control={control}
+                name="facilityTypes"
+                items={facilityTypes}
+                getLabel={(t) => t.label ?? ""}
+              />
+            </Section>
+            <Section id="measuring-units" title={translate("valueChains.titles.measuringUnitTypes")}>
+              <EntityListField
+                searchable
+                control={control}
+                name="measureUnitTypes"
+                items={measureUnitTypes}
+                getLabel={(t) => t.label ?? ""}
+              />
+            </Section>
+            <Section
+              id="evidence-types"
+              title={translate("valueChains.titles.processingEvidenceTypes")}
+            >
+              <EntityListField
+                searchable
+                control={control}
+                name="processingEvidenceTypes"
+                items={evidenceTypes}
+                getLabel={(t) => t.label ?? ""}
+              />
+            </Section>
+            <Section
+              id="evidence-fields"
+              title={translate("common.titles.processingEvidenceFields")}
+            >
+              <EntityListField
+                searchable
+                control={control}
+                name="processingEvidenceFields"
+                items={evidenceFields}
+                getLabel={(t) => t.label ?? ""}
+              />
+            </Section>
+            <Section
+              id="semi-products"
+              title={translate("valueChains.titles.semiProducts")}
+              className="@3xl:col-span-2"
+            >
+              <EntityListField
+                searchable
+                control={control}
+                name="semiProducts"
+                items={semiProducts}
+                getLabel={(t) => t.name ?? ""}
+              />
+            </Section>
+          </div>
+          {!readOnly && (
+            <FormActions sticky control={control}>
+              <Button type="button" variant="outline" disabled={formLoading} onClick={() => navigate("/value-chains")}>
+                {translate("buttons.cancel")}
+              </Button>
+              <Button type="submit" disabled={formLoading}>
+                {formLoading && <Spinner />}
+                {translate("buttons.save")}
+              </Button>
+            </FormActions>
+          )}
+        </FormLayout>
       </form>
     </>
   );

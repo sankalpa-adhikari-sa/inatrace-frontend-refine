@@ -16,7 +16,7 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -70,6 +70,10 @@ export function AppSidebar() {
   const { user } = useIdentity();
   const { company, companyId } = useSelectedCompany();
   const { pathname } = useLocation();
+  const { setOpenMobile } = useSidebar();
+
+  // The mobile sidebar is a sheet over the page: close it once a link has been followed.
+  useEffect(() => setOpenMobile(false), [pathname, setOpenMobile]);
 
   const activeUser = user?.status === "ACTIVE";
   const companyAdmin = canManageCompany(user, companyId ?? undefined);

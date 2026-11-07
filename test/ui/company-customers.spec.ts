@@ -1,6 +1,7 @@
 import type { ApiCompanyCustomer } from "@/client/types.gen";
 import { ep } from "@/lib/endpoints";
 import { companyCustomer, countries } from "../factories";
+import { tr } from "../tr";
 import { expect, test } from "./fixtures";
 import { fail, ok, paged } from "./api-mock";
 import { ConfirmDialog, toasts } from "../pages/components";
@@ -41,6 +42,24 @@ test.describe("Company customers CRUD", () => {
         db = db.filter((c) => c.id !== Number(params.id));
         return ok(null as never);
       });
+  });
+
+  test("a new search starts from the first page, and a row opens the customer", async ({ page, api }) => {
+    db = Array.from({ length: 12 }, (_, i) => companyCustomer({ id: 300 + i, name: `Roaster ${String(i + 1).padStart(2, "0")}` }));
+    const list = new CustomerListPage(page);
+    await list.goto();
+    await expect(list.table.rows).toHaveCount(10);
+
+    await page.getByRole("button", { name: tr("buttons.goToNextPage") }).click();
+    await expect(list.table.rows).toHaveCount(2);
+
+    // Three hits for "roaster 1" (10, 11, 12): all on page 1 of the new results; page 2 of them would be empty.
+    await list.search.fill("roaster 1");
+    await expect(list.table.rows).toHaveCount(3);
+    expect(api.callsTo(ep.getCompanyCustomersList).at(-1)!.url.searchParams.get("offset") ?? "0").toBe("0");
+
+    await list.table.row("Roaster 10").click();
+    await expect(page).toHaveURL(/\/my-customers\/edit\/309$/);
   });
 
   test("lists customers and keeps the search in the URL", async ({ page, api }) => {

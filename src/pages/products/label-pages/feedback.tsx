@@ -37,11 +37,12 @@ function FeedbackTable({ labelUid }: { labelUid: string }) {
   const [viewing, setViewing] = useState<ApiProductLabelFeedback | null>(null);
   const columns = useMemo<ColumnDef<ApiProductLabelFeedback>[]>(
     () => [
-      { id: "email", accessorKey: "email", header: translate("common.fields.eMail") },
+      { id: "email", accessorKey: "email", header: translate("common.fields.eMail"), meta: { card: "title" } },
       {
         id: "type",
         accessorKey: "type",
         header: translate("common.fields.type"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ getValue }) => humanize(getValue() as string),
       },
@@ -59,6 +60,7 @@ function FeedbackTable({ labelUid }: { labelUid: string }) {
         id: "feedback",
         accessorKey: "feedback",
         header: translate("products.labelPages.fields.feedback"),
+        meta: { card: "body" },
         enableSorting: false,
         cell: ({ getValue }) => <span className="line-clamp-2 max-w-md whitespace-normal">{getValue() as string}</span>,
       },

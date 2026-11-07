@@ -17,7 +17,7 @@ import { Toaster } from "./components/ui/toast";
 import "./App.css";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { PageLoader } from "./components/app/page";
+import { PageLoader, documentTitle } from "./components/app/page";
 import { lazyPage } from "./lib/lazy-page";
 import { LOCALES } from "./lib/i18n";
 import { queryClient } from "./lib/query-client";
@@ -91,6 +91,8 @@ const OrdersPage = lazyPage(() => import("./pages/orders"), "OrdersPage");
 const CustomerOrderForm = lazyPage(() => import("./pages/orders"), "CustomerOrderForm");
 const UserCustomerList = lazyPage(() => import("./pages/user-customers/list"), "UserCustomerList");
 const UserCustomerForm = lazyPage(() => import("./pages/user-customers/form"), "UserCustomerForm");
+const UserCustomerDeliveries = lazyPage(() => import("./pages/user-customers/form"), "UserCustomerDeliveries");
+const UserCustomerPayments = lazyPage(() => import("./pages/user-customers/form"), "UserCustomerPayments");
 const FarmerImport = lazyPage(() => import("./pages/user-customers/import"), "FarmerImport");
 const CustomerList = lazyPage(() => import("./pages/customers"), "CustomerList");
 const CustomerForm = lazyPage(() => import("./pages/customers"), "CustomerForm");
@@ -261,10 +263,14 @@ function App() {
                         <Route path="/my-farmers" element={<UserCustomerList type="FARMER" />} />
                         <Route path="/my-farmers/add" element={<UserCustomerForm key="farmer-new" type="FARMER" />} />
                         <Route path="/my-farmers/edit/:id" element={<UserCustomerForm type="FARMER" />} />
+                        <Route path="/my-farmers/edit/:id/deliveries" element={<UserCustomerDeliveries type="FARMER" />} />
+                        <Route path="/my-farmers/edit/:id/payments" element={<UserCustomerPayments type="FARMER" />} />
                         <Route path="/my-farmers/import" element={<FarmerImport />} />
                         <Route path="/my-collectors" element={<UserCustomerList type="COLLECTOR" />} />
                         <Route path="/my-collectors/add" element={<UserCustomerForm key="collector-new" type="COLLECTOR" />} />
                         <Route path="/my-collectors/edit/:id" element={<UserCustomerForm type="COLLECTOR" />} />
+                        <Route path="/my-collectors/edit/:id/deliveries" element={<UserCustomerDeliveries type="COLLECTOR" />} />
+                        <Route path="/my-collectors/edit/:id/payments" element={<UserCustomerPayments type="COLLECTOR" />} />
                         <Route path="/my-customers" element={<CustomerList />} />
                         <Route path="/my-customers/add" element={<CustomerForm key="new" />} />
                         <Route path="/my-customers/edit/:id" element={<CustomerForm />} />
@@ -294,7 +300,8 @@ function App() {
 
                 <RefineKbar />
                 <UnsavedChangesNotifier />
-                <DocumentTitleHandler />
+                {/* Page titles come from PageHeader (useDocumentTitle); elsewhere the tab shows the app name. */}
+                <DocumentTitleHandler handler={documentTitle} />
               </Refine>
               <DevtoolsPanel />
             </DevtoolsProvider>

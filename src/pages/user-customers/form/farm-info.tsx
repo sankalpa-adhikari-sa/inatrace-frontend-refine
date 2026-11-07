@@ -15,7 +15,7 @@ export function FarmInfoSection({ control }: { control: Control<FormValues> }) {
     (farm.farmPlantInformationList ?? []).some((p) => p.plantCultivatedArea != null);
 
   return (
-    <Section title={translate("userCustomers.titles.additionalInformationAboutTheFarm")}>
+    <Section id="farm" title={translate("userCustomers.titles.additionalInformationAboutTheFarm")}>
       <FieldGroup className="grid gap-4 sm:grid-cols-2">
         <TextField
           control={control}

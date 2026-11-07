@@ -3,19 +3,24 @@ import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import type { ApiPayment, ApiStockOrder } from "@/client/types.gen";
-import { ComboboxField, DateField, EntityComboboxField, SelectField, TextField } from "@/components/app/form-fields";
+import { ComboboxField, DateField, EntityComboboxField, SelectField, TextField, ReadOnlyField } from "@/components/app/form-fields";
 import { LastChange } from "@/components/app/last-change";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormLayout } from "@/components/app/form-layout";
+import { FormSkeleton } from "@/components/app/states";
 import { UploadField } from "@/components/app/upload-field";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { useEnabledCurrencies } from "@/hooks/use-lookups";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { useGoBack } from "@/hooks/use-go-back";
 import { day, fmt, personName, toApiDate, today, useStockPermissions, wayOfPaymentLabel } from "../shared";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
-import { PAYMENT_PURPOSES, RECEIPT_TYPES, ReadOnly, paymentTypeLabel, paymentTypes, withSuffix } from "./common";
+import { focusFirstError } from "@/lib/form-errors";
+import { PAYMENT_PURPOSES, RECEIPT_TYPES, paymentTypeLabel, paymentTypes, withSuffix } from "./common";
 
 type PaymentForm = Omit<ApiPayment, "formalCreationTime"> & { formalCreationTime: string };
 type Mode = "PURCHASE" | "CUSTOMER";
@@ -39,7 +44,7 @@ export function PaymentFormPage() {
     { enabled: stockOrderId != null, select: (r) => r }
   );
   const order = payment?.stockOrder ?? stockOrder;
-  if ((paymentId && pLoading) || (stockOrderId && soLoading) || !order) return <PageLoader />;
+  if ((paymentId && pLoading) || (stockOrderId && soLoading) || !order) return <FormSkeleton sections={3} />;
   // A delivery whose price is determined later can't take a payment yet (newPayment()).
   if (!payment && order.priceDeterminedLater) return <PriceDeterminedLater />;
   const mode: Mode = customerOrderId || type === "CUSTOMER" ? "CUSTOMER" : "PURCHASE";
@@ -62,7 +67,6 @@ function PriceDeterminedLater() {
 
 function PaymentEditor({ order, payment, mode }: { order: ApiStockOrder; payment?: ApiPayment; mode: Mode }) {
   const translate = useTranslate();
-  const navigate = useNavigate();
   const { companyId } = useSelectedCompany();
   const { canEditPayments } = useStockPermissions();
   const currencies = useEnabledCurrencies();
@@ -105,6 +109,8 @@ function PaymentEditor({ order, payment, mode }: { order: ApiStockOrder; payment
           amountPaidToTheCollector: viaCollector ? openBalance : purchase ? 0 : undefined,
         },
   });
+  const goBack = useGoBack("/my-stock/payments");
+  const release = useWarnWhenDirty(control);
 
   const amount = useWatch({ control, name: "amount" });
   const purpose = useWatch({ control, name: "paymentPurposeType" });
@@ -122,7 +128,10 @@ function PaymentEditor({ order, payment, mode }: { order: ApiStockOrder; payment
           recipientType: v.recipientCompany?.id ? "COMPANY" : v.recipientUserCustomer?.id ? "USER_CUSTOMER" : undefined,
         },
       }),
-    onSuccess: () => navigate(-1),
+    onSuccess: () => {
+      release();
+      goBack();
+    },
   });
 
   const confirmedBy = payment?.paymentConfirmedByUser;
@@ -136,7 +145,7 @@ function PaymentEditor({ order, payment, mode }: { order: ApiStockOrder; payment
             ? `${translate("stock.payments.titles.updatePayment")}${payment.receiptNumber ? ` ${payment.receiptNumber}` : ""}`
             : translate("stock.payments.titles.newPayment")
         }
-        back
+        breadcrumbs={[{ label: translate("common.fields.myStock"), to: "/my-stock" }, { label: translate("stock.fields.payments"), to: "/my-stock/payments" }]}
         actions={
           <>
             {payment && (
@@ -155,198 +164,200 @@ function PaymentEditor({ order, payment, mode }: { order: ApiStockOrder; payment
           </>
         }
       />
-      <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
-        <Section title={translate("common.titles.basicInformation")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <DateField
-              control={control}
-              name="formalCreationTime"
-              label={translate("stock.payments.fields.paymentDate")}
-              rules={{ required: translate("stock.payments.errors.paymentDateIsRequired") }}
-            />
-            <ReadOnly
-              label={translate("stock.payments.fields.payableFrom")}
-              value={order.company?.name ?? payment?.payingCompany?.name ?? ""}
-            />
-            {purchase ? (
-              <>
-                <ReadOnly
-                  label={translate("common.fields.farmer")}
-                  value={personName(payment?.recipientUserCustomer ?? order.producerUserCustomer)}
-                />
-                {collector && (
-                  <ReadOnly
-                    label={translate("common.fields.collector")}
-                    value={personName(collector)}
-                  />
-                )}
-              </>
-            ) : (
-              <EntityComboboxField
+      <form onSubmit={handleSubmit((v) => save.mutate(v), focusFirstError)}>
+        <FormLayout control={control}>
+          <Section id="basic" title={translate("common.titles.basicInformation")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <DateField
                 control={control}
-                name="recipientCompany"
-                label={translate("common.fields.company")}
-                items={connectedCompanies}
-                getLabel={(c) => c.name ?? ""}
-                rules={{
-                  required: translate("stock.payments.errors.atLeastOneOfPayable"),
-                }}
+                name="formalCreationTime"
+                label={translate("stock.payments.fields.paymentDate")}
+                rules={{ required: translate("stock.payments.errors.paymentDateIsRequired") }}
               />
-            )}
-            <ReadOnly
-              label={translate("stock.payments.fields.orderReference")}
-              value={(purchase ? order.identifier : order.internalLotNumber) ?? ""}
-            />
-            {purchase && (
-              <ReadOnly
-                label={translate("stock.payments.fields.preferredWayOfPayment")}
-                value={wayOfPaymentLabel(order.preferredWayOfPayment)}
+              <ReadOnlyField
+                label={translate("stock.payments.fields.payableFrom")}
+                value={order.company?.name ?? payment?.payingCompany?.name ?? ""}
               />
-            )}
-            <SelectField
-              control={control}
-              name="paymentPurposeType"
-              label={translate("stock.payments.fields.paymentPurpose")}
-              options={PAYMENT_PURPOSES}
-              rules={{
-                required: translate("stock.payments.errors.paymentPurposeIsRequired"),
-              }}
-            />
-            {purchase ? (
+              {purchase ? (
+                <>
+                  <ReadOnlyField
+                    label={translate("common.fields.farmer")}
+                    value={personName(payment?.recipientUserCustomer ?? order.producerUserCustomer)}
+                  />
+                  {collector && (
+                    <ReadOnlyField
+                      label={translate("common.fields.collector")}
+                      value={personName(collector)}
+                    />
+                  )}
+                </>
+              ) : (
+                <EntityComboboxField
+                  control={control}
+                  name="recipientCompany"
+                  label={translate("common.fields.company")}
+                  items={connectedCompanies}
+                  getLabel={(c) => c.name ?? ""}
+                  rules={{
+                    required: translate("stock.payments.errors.atLeastOneOfPayable"),
+                  }}
+                />
+              )}
+              <ReadOnlyField
+                label={translate("stock.payments.fields.orderReference")}
+                value={(purchase ? order.identifier : order.internalLotNumber) ?? ""}
+              />
+              {purchase && (
+                <ReadOnlyField
+                  label={translate("stock.payments.fields.preferredWayOfPayment")}
+                  value={wayOfPaymentLabel(order.preferredWayOfPayment)}
+                />
+              )}
               <SelectField
                 control={control}
-                name="paymentType"
-                label={translate("stock.payments.fields.paymentType")}
-                options={paymentTypes(!!collector)}
-                rules={{ required: translate("stock.payments.errors.paymentTypeIsRequired") }}
+                name="paymentPurposeType"
+                label={translate("stock.payments.fields.paymentPurpose")}
+                options={PAYMENT_PURPOSES}
+                rules={{
+                  required: translate("stock.payments.errors.paymentPurposeIsRequired"),
+                }}
               />
-            ) : (
-              // Customer payments are always bank transfers (readonlyPaymentType).
-              <ReadOnly
-                label={translate("stock.payments.fields.paymentType")}
-                value={paymentTypeLabel("BANK_TRANSFER")}
-              />
-            )}
+              {purchase ? (
+                <SelectField
+                  control={control}
+                  name="paymentType"
+                  label={translate("stock.payments.fields.paymentType")}
+                  options={paymentTypes(!!collector)}
+                  rules={{ required: translate("stock.payments.errors.paymentTypeIsRequired") }}
+                />
+              ) : (
+                // Customer payments are always bank transfers (readonlyPaymentType).
+                <ReadOnlyField
+                  label={translate("stock.payments.fields.paymentType")}
+                  value={paymentTypeLabel("BANK_TRANSFER")}
+                />
+              )}
 
-            {purchase && (
-              <>
-                <ReadOnly
-                  label={withSuffix(translate("stock.payments.fields.purchased"), unit)}
-                  value={fmt(order.fulfilledQuantity)}
-                />
-                <ReadOnly
-                  label={withSuffix(translate("stock.payments.fields.openBalance"), currency)}
-                  value={fmt(order.balance)}
-                />
-              </>
-            )}
-            <TextField
-              control={control}
-              name="amount"
-              type="number"
-              label={
-                purchase
-                  ? withSuffix(
-                      viaCollector
-                        ? translate("stock.payments.fields.amountAlreadyPaidByCollector")
-                        : translate("stock.payments.fields.amountPaidToTheFarmer"),
-                      currency
-                    )
-                  : translate("stock.payments.fields.amountPaid")
-              }
-              rules={{
-                required: !purchase
-                  ? translate("stock.payments.errors.amountIsRequired")
-                  : viaCollector
-                    ? translate("stock.payments.errors.amountAlreadyPaidIsRequired")
-                    : translate("stock.payments.errors.amountIsRequired"),
-                min: notNegative,
-              }}
-            />
-            {!purchase && (
-              <ComboboxField
-                control={control}
-                name="currency"
-                label={translate("common.fields.currency")}
-                options={currencies.map((c) => ({ value: c.code!, label: c.code! }))}
-                rules={{ required: translate("stock.payments.errors.currencyIsRequired") }}
-              />
-            )}
-            {purchase && viaCollector && (
+              {purchase && (
+                <>
+                  <ReadOnlyField
+                    label={withSuffix(translate("stock.payments.fields.purchased"), unit)}
+                    value={fmt(order.fulfilledQuantity)}
+                  />
+                  <ReadOnlyField
+                    label={withSuffix(translate("stock.payments.fields.openBalance"), currency)}
+                    value={fmt(order.balance)}
+                  />
+                </>
+              )}
               <TextField
                 control={control}
-                name="amountPaidToTheCollector"
+                name="amount"
                 type="number"
-                label={withSuffix(
-                  translate("stock.payments.fields.amountPaidToTheCollector"),
-                  currency
-                )}
+                label={
+                  purchase
+                    ? withSuffix(
+                        viaCollector
+                          ? translate("stock.payments.fields.amountAlreadyPaidByCollector")
+                          : translate("stock.payments.fields.amountPaidToTheFarmer"),
+                        currency
+                      )
+                    : translate("stock.payments.fields.amountPaid")
+                }
                 rules={{
-                  required: translate("stock.payments.errors.amountPaidToTheCollector"),
+                  required: !purchase
+                    ? translate("stock.payments.errors.amountIsRequired")
+                    : viaCollector
+                      ? translate("stock.payments.errors.amountAlreadyPaidIsRequired")
+                      : translate("stock.payments.errors.amountIsRequired"),
                   min: notNegative,
                 }}
               />
-            )}
-            {purchase && (
-              <ReadOnly
-                label={withSuffix(translate("stock.payments.fields.totalPaid"), currency)}
-                value={fmt(Number(amount ?? 0))}
-              />
-            )}
-          </FieldGroup>
-        </Section>
+              {!purchase && (
+                <ComboboxField
+                  control={control}
+                  name="currency"
+                  label={translate("common.fields.currency")}
+                  options={currencies.map((c) => ({ value: c.code!, label: c.code! }))}
+                  rules={{ required: translate("stock.payments.errors.currencyIsRequired") }}
+                />
+              )}
+              {purchase && viaCollector && (
+                <TextField
+                  control={control}
+                  name="amountPaidToTheCollector"
+                  type="number"
+                  label={withSuffix(
+                    translate("stock.payments.fields.amountPaidToTheCollector"),
+                    currency
+                  )}
+                  rules={{
+                    required: translate("stock.payments.errors.amountPaidToTheCollector"),
+                    min: notNegative,
+                  }}
+                />
+              )}
+              {purchase && (
+                <ReadOnlyField
+                  label={withSuffix(translate("stock.payments.fields.totalPaid"), currency)}
+                  value={fmt(Number(amount ?? 0))}
+                />
+              )}
+            </FieldGroup>
+          </Section>
 
-        <Section title={translate("stock.payments.titles.receipt")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              control={control}
-              name="receiptNumber"
-              label={translate("stock.payments.fields.receiptNumber")}
-              placeholder={translate("stock.payments.placeholders.enterReceiptNumber")}
-              rules={{ required: translate("stock.payments.errors.receiptNumberIsRequired") }}
-            />
-            {collector && purchase ? (
-              <SelectField
+          <Section id="receipt" title={translate("stock.payments.titles.receipt")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <TextField
                 control={control}
-                name="receiptDocumentType"
-                label={translate("common.fields.type")}
-                options={RECEIPT_TYPES}
+                name="receiptNumber"
+                label={translate("stock.payments.fields.receiptNumber")}
+                placeholder={translate("stock.payments.placeholders.enterReceiptNumber")}
+                rules={{ required: translate("stock.payments.errors.receiptNumberIsRequired") }}
+              />
+              {collector && purchase ? (
+                <SelectField
+                  control={control}
+                  name="receiptDocumentType"
+                  label={translate("common.fields.type")}
+                  options={RECEIPT_TYPES}
+                  rules={{
+                    required: translate("common.errors.typeIsRequired"),
+                  }}
+                />
+              ) : (
+                <ReadOnlyField
+                  label={translate("common.fields.type")}
+                  value={RECEIPT_TYPES.find((r) => r.value === "RECEIPT")!.label}
+                />
+              )}
+              <UploadField
+                control={control}
+                name="receiptDocument"
+                label={receiptLabel}
+                accept="image/png,image/jpeg,application/pdf"
                 rules={{
-                  required: translate("common.errors.typeIsRequired"),
+                  required: receiptRequired
+                    ? translate("stock.payments.errors.signedReceiptIsRequired")
+                    : false,
                 }}
+                className="sm:col-span-2"
               />
-            ) : (
-              <ReadOnly
-                label={translate("common.fields.type")}
-                value={RECEIPT_TYPES.find((r) => r.value === "RECEIPT")!.label}
-              />
-            )}
-            <UploadField
-              control={control}
-              name="receiptDocument"
-              label={receiptLabel}
-              accept="image/png,image/jpeg,application/pdf"
-              rules={{
-                required: receiptRequired
-                  ? translate("stock.payments.errors.signedReceiptIsRequired")
-                  : false,
-              }}
-              className="sm:col-span-2"
-            />
-          </FieldGroup>
-        </Section>
+            </FieldGroup>
+          </Section>
 
-        {!readOnly && (
-          <FormActions>
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              {translate("buttons.cancel")}
-            </Button>
-            <Button type="submit" disabled={save.isPending}>
-              {save.isPending && <Spinner />}
-              {translate("buttons.save")}
-            </Button>
-          </FormActions>
-        )}
+          {!readOnly && (
+            <FormActions sticky control={control}>
+              <Button type="button" variant="outline" onClick={() => goBack()}>
+                {translate("buttons.cancel")}
+              </Button>
+              <Button type="submit" disabled={save.isPending}>
+                {save.isPending && <Spinner />}
+                {translate("buttons.save")}
+              </Button>
+            </FormActions>
+          )}
+        </FormLayout>
       </form>
     </>
   );

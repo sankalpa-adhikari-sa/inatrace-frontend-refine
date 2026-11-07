@@ -1,7 +1,7 @@
 import { useDelete, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, Hash, MapPin, Plus, Upload, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type { ApiUserCustomer } from "@/client/types.gen";
@@ -10,7 +10,7 @@ import { RowActions, SearchInput, SimpleSelect, Toolbar, humanize } from "@/comp
 import { PageHeader, PageLoader, Section } from "@/components/app/page";
 import { PlotsMap, WhispDialog } from "@/components/app/plots-map";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { DataTableSorter } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Button } from "@/components/ui/button";
 import { useSelectedCompany } from "@/hooks/use-session";
 import { useTableFilter } from "@/hooks/use-table-filter";
@@ -50,14 +50,6 @@ export function formatLocation(uc: ApiUserCustomer) {
   return [a.city, a.state].filter(Boolean).join(", ");
 }
 
-const sortable = (label: string) =>
-  function Header({ column }: { column: any }) {
-    return (
-      <div className="flex items-center gap-1">
-        {label} <DataTableSorter column={column} />
-      </div>
-    );
-  };
 
 /** `/my-farmers` and `/my-collectors` */
 export function UserCustomerList({ type }: { type: UserCustomerType }) {
@@ -77,22 +69,24 @@ function UserCustomerTable({ type, companyId }: { type: UserCustomerType; compan
   const columns = useMemo<ColumnDef<ApiUserCustomer>[]>(
     () => [
       // Column ids are the backend's sortBy keys.
-      { id: "BY_NAME", accessorKey: "name", header: sortable(translate("common.fields.firstName")) },
-      { id: "BY_SURNAME", accessorKey: "surname", header: sortable(translate("common.fields.lastName")) },
+      { id: "BY_NAME", accessorKey: "name", header: sortable(translate("common.fields.firstName")), meta: { primary: true } },
+      { id: "BY_SURNAME", accessorKey: "surname", header: sortable(translate("common.fields.lastName")), meta: { card: "title" } },
       {
         id: "gender",
         accessorKey: "gender",
         header: translate("userCustomers.fields.gender"),
+        meta: { card: "meta", icon: UserRound },
         enableSorting: false,
         cell: ({ getValue }) => {
           const gender = getValue<string>();
           return GENDERS.find((g) => g.value === gender)?.label ?? humanize(gender);
         },
       },
-      { id: "BY_ID", accessorKey: "id", header: sortable(translate("userCustomers.fields.userId")) },
+      { id: "BY_ID", accessorKey: "id", header: sortable(translate("userCustomers.fields.userId")), meta: { card: "meta", icon: Hash } },
       {
         id: "location",
         header: translate("userCustomers.fields.location"),
+        meta: { card: "meta", icon: MapPin },
         enableSorting: false,
         cell: ({ row }) => formatLocation(row.original),
       },
@@ -201,7 +195,7 @@ function UserCustomerTable({ type, companyId }: { type: UserCustomerType; compan
           placeholder={kind.search}
         />
       </Toolbar>
-      <DataTable table={table} />
+      <DataTable table={table} getRowHref={(u) => `${kind.base}/edit/${u.id}`} />
       {type === "FARMER" && <CompanyPlots companyId={companyId} />}
     </>
   );

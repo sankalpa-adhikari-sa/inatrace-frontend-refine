@@ -9,8 +9,6 @@ import type {
   ApiStockOrder,
   ApiStockOrderEvidenceFieldValue,
 } from "@/client/types.gen";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { day, personName, toApiDate, today } from "../shared";
 
 export type ActionType = NonNullable<ApiProcessingAction["type"]>;
@@ -205,11 +203,3 @@ export type StockFilters = {
 };
 export const NO_STOCK_FILTERS: StockFilters = { lot: "", from: "", to: "", women: "", organic: "" };
 
-export function ReadOnly({ label, value }: { label: string; value: string }) {
-  return (
-    <Field>
-      <FieldLabel>{label}</FieldLabel>
-      <Input disabled value={value} />
-    </Field>
-  );
-}

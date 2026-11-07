@@ -2,17 +2,23 @@ import { useNotification, useTranslate } from "@refinedev/core";
 import { Plus } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import type { ApiFacility, ApiProcessingAction, ApiProcessingOrder, ApiStockOrder, ApiTransaction } from "@/client/types.gen";
-import { DateField, TextareaField } from "@/components/app/form-fields";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { DateField, TextareaField, ReadOnlyField } from "@/components/app/form-fields";
+import { useConfirm } from "@/components/app/confirm";
+import { FormLayout } from "@/components/app/form-layout";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormSkeleton } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
 import { FieldDescription, FieldError, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
+import { useGoBack } from "@/hooks/use-go-back";
 import { useIdentity, useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
 import { ApiError } from "@/lib/api";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
+import { focusFirstError } from "@/lib/form-errors";
 import { fmt, toApiDate } from "../shared";
 import { OtherDocs, RequiredDocs } from "./evidence";
 import { InputSection } from "./input";
@@ -20,7 +26,6 @@ import {
   type ActionType,
   type FormValues,
   NO_STOCK_FILTERS,
-  ReadOnly,
   type StockFilters,
   type Target,
   canClip,
@@ -59,7 +64,7 @@ export function ProcessingOrderForm() {
     { enabled: actionId != null, select: (r) => r }
   );
 
-  if ((editing && soLoading) || actionLoading || !action) return <PageLoader />;
+  if ((editing && soLoading) || actionLoading || !action) return <FormSkeleton sections={4} />;
   return (
     <Form
       key={`${action.id}-${processingOrder?.id ?? "new"}`}
@@ -106,7 +111,6 @@ function Form({
   inputFacilityId?: number;
 }) {
   const translate = useTranslate();
-  const navigate = useNavigate();
   const { open: notify } = useNotification();
   const { user } = useIdentity();
   const { companyId } = useSelectedCompany();
@@ -128,6 +132,9 @@ function Form({
     defaultValues: editing ? fromOrder(order, action) : newForm(action, outputFinal),
   });
   const targets = useFieldArray({ control, name: "targets", keyName: "key" });
+  const release = useWarnWhenDirty(control);
+  const confirm = useConfirm();
+  const goBack = useGoBack("/my-stock/processing");
   const inputFacility = useWatch({ control, name: "inputFacility" });
   const watchedTargets = (useWatch({ control, name: "targets" }) ?? []) as Target[];
 
@@ -227,7 +234,10 @@ function Form({
 
   const save = useApiMutation({
     mutationFn: (body: ApiProcessingOrder) => call(ep.createOrUpdateProcessingOrder, { body }),
-    onSuccess: () => navigate(-1),
+    onSuccess: () => {
+      release();
+      goBack();
+    },
     onError: (e) => {
       if (e instanceof ApiError) return;
       notify?.({
@@ -241,11 +251,12 @@ function Form({
   function submit(v: FormValues) {
     if (!shipment && keptTransactions.length + selectedOrders.length === 0) {
       setInputError(translate("stock.processingOrder.errors.atLeastOneInputSemi"));
+      focusFirstError();
       return;
     }
     setInputError(null);
     // Sacs must hold the whole output quantity (saveProcessingOrder → notAllOutputQuantityIsUsed).
-    if (v.targets.some((t) => notAllOutputUsed(action, t))) return;
+    if (v.targets.some((t) => notAllOutputUsed(action, t))) return focusFirstError();
 
     const productionDate = toApiDate(v.processingDate);
     const isProcessing = type === "PROCESSING" || type === "FINAL_PROCESSING" || type === "GENERATE_QR_CODE";
@@ -354,7 +365,23 @@ function Form({
           facilities={facilitiesFor(watchedTargets[i] ?? f)}
           showQuantity={showQuantity}
           showOrderId={shipment && !productOrderId}
-          onRemove={targets.fields.length > 1 ? () => targets.remove(i) : undefined}
+          numbered={targets.fields.length > 1}
+          onRemove={
+            targets.fields.length > 1
+              ? async () => {
+                  const filled = watchedTargets[i]?.totalQuantity != null || !!watchedTargets[i]?.sacs?.length;
+                  if (
+                    !filled ||
+                    (await confirm({
+                      description: translate("stock.processingOrder.descriptions.removeThisOutput"),
+                      destructive: true,
+                      confirmLabel: translate("buttons.remove"),
+                    }))
+                  )
+                    targets.remove(i);
+                }
+              : undefined
+          }
         />
       ))}
       {type === "PROCESSING" && (
@@ -407,98 +434,106 @@ function Form({
 
   return (
     <>
-      <PageHeader title={title} description={action.name} back />
-      <form onSubmit={handleSubmit(submit)} className="flex flex-col gap-6">
-        <Section
-          title={
-            shipment
-              ? translate("stock.processingOrder.titles.orderDetails")
-              : translate("stock.processingOrder.titles.chooseActivityThatYouWant")
-          }
-        >
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <ReadOnly label={translate("common.fields.processing")} value={action.name ?? ""} />
-            {type === "GENERATE_QR_CODE" && action.qrCodeForFinalProduct && (
-              <ReadOnly
-                label={translate("stock.processingOrder.fields.qrCodeForFinalProduct")}
-                value={`${action.qrCodeForFinalProduct.name} (${action.qrCodeForFinalProduct.product?.name ?? ""})`}
-              />
-            )}
-            {shipment && editing && firstTarget?.facility?.company?.name && (
-              <p className="self-center text-sm font-medium">{firstTarget.facility.company.name}</p>
-            )}
-            {shipment && productOrderId && (
-              <p className="self-center text-sm">
-                {translate("stock.processingOrder.fields.orderId2")} {productOrderId}
-              </p>
-            )}
-            <Lockable locked={outputLocked}>
-              <DateField
-                control={control}
-                name="processingDate"
-                label={
-                  shipment
-                    ? translate("stock.processingOrder.fields.orderDate")
-                    : translate("stock.processingOrder.fields.processingDate")
-                }
-                rules={{ required: translate("stock.processingOrder.errors.processingDateIsRequired") }}
-              />
-            </Lockable>
-          </FieldGroup>
-          {shipment && <Lockable locked={outputLocked}>{outputs}</Lockable>}
-        </Section>
-
-        <div className={shipment ? "flex flex-col gap-6" : "grid gap-6 xl:grid-cols-2"}>
+      <PageHeader
+        title={title}
+        description={action.name}
+        breadcrumbs={[{ label: translate("common.fields.myStock"), to: "/my-stock" }, { label: translate("common.fields.processing"), to: "/my-stock/processing" }]}
+      />
+      <form onSubmit={handleSubmit(submit, focusFirstError)}>
+        <FormLayout control={control}>
           <Section
+            id="details"
             title={
               shipment
-                ? translate("stock.processingOrder.titles.supplierDetails")
-                : translate("stock.processingOrder.titles.materialToBeRecorded")
+                ? translate("stock.processingOrder.titles.orderDetails")
+                : translate("stock.processingOrder.titles.chooseActivityThatYouWant")
             }
           >
-            <Lockable locked={inputLocked}>{input}</Lockable>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <ReadOnlyField label={translate("common.fields.processing")} value={action.name ?? ""} />
+              {type === "GENERATE_QR_CODE" && action.qrCodeForFinalProduct && (
+                <ReadOnlyField
+                  label={translate("stock.processingOrder.fields.qrCodeForFinalProduct")}
+                  value={`${action.qrCodeForFinalProduct.name} (${action.qrCodeForFinalProduct.product?.name ?? ""})`}
+                />
+              )}
+              {shipment && editing && firstTarget?.facility?.company?.name && (
+                <p className="self-center text-sm font-medium">{firstTarget.facility.company.name}</p>
+              )}
+              {shipment && productOrderId && (
+                <p className="self-center text-sm">
+                  {translate("stock.processingOrder.fields.orderId2")} {productOrderId}
+                </p>
+              )}
+              <Lockable locked={outputLocked}>
+                <DateField
+                  control={control}
+                  name="processingDate"
+                  label={
+                    shipment
+                      ? translate("stock.processingOrder.fields.orderDate")
+                      : translate("stock.processingOrder.fields.processingDate")
+                  }
+                  rules={{ required: translate("stock.processingOrder.errors.processingDateIsRequired") }}
+                />
+              </Lockable>
+            </FieldGroup>
+            {shipment && <Lockable locked={outputLocked}>{outputs}</Lockable>}
           </Section>
 
-          {!shipment && (
-            <Section title={translate("stock.processingOrder.titles.outputsOfThisProcessing")}>
-              <Lockable locked={outputLocked}>{outputs}</Lockable>
+          <div className={shipment ? "flex flex-col gap-6" : "grid gap-6 @5xl:grid-cols-2"}>
+            <Section
+              id="input"
+              title={
+                shipment
+                  ? translate("stock.processingOrder.titles.supplierDetails")
+                  : translate("stock.processingOrder.titles.materialToBeRecorded")
+              }
+            >
+              <Lockable locked={inputLocked}>{input}</Lockable>
             </Section>
-          )}
-        </div>
 
-        <Section title={translate("stock.processingOrder.titles.totalQuantities")}>
-          <Lockable locked={outputLocked}>
-            <TotalQuantities
-              action={action}
-              type={type}
-              totalInput={totalInput}
-              totalOutput={totalOutput}
-              unit={inputUnit}
-            />
-            <TextareaField
-              control={control}
-              name="comments"
-              label={translate("stock.processingOrder.fields.comments")}
-              rows={2}
-              className="mt-4"
-            />
-          </Lockable>
-        </Section>
+            {!shipment && (
+              <Section id="outputs" title={translate("stock.processingOrder.titles.outputsOfThisProcessing")}>
+                <Lockable locked={outputLocked}>{outputs}</Lockable>
+              </Section>
+            )}
+          </div>
 
-        <Section title={translate("stock.processingOrder.titles.processingEvidence")}>
-          <RequiredDocs control={control} />
-          <OtherDocs control={control} />
-        </Section>
+          <Section id="totals" title={translate("stock.processingOrder.titles.totalQuantities")}>
+            <Lockable locked={outputLocked}>
+              <TotalQuantities
+                action={action}
+                type={type}
+                totalInput={totalInput}
+                totalOutput={totalOutput}
+                unit={inputUnit}
+              />
+              <TextareaField
+                control={control}
+                name="comments"
+                label={translate("stock.processingOrder.fields.comments")}
+                rows={2}
+                className="mt-4"
+              />
+            </Lockable>
+          </Section>
 
-        <FormActions>
-          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-            {translate("buttons.cancel")}
-          </Button>
-          <Button type="submit" disabled={save.isPending}>
-            {save.isPending && <Spinner />}
-            {translate("buttons.save")}
-          </Button>
-        </FormActions>
+          <Section id="evidence" title={translate("stock.processingOrder.titles.processingEvidence")}>
+            <RequiredDocs control={control} />
+            <OtherDocs control={control} />
+          </Section>
+
+          <FormActions sticky control={control}>
+            <Button type="button" variant="outline" disabled={save.isPending} onClick={() => goBack()}>
+              {translate("buttons.cancel")}
+            </Button>
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending && <Spinner />}
+              {translate("buttons.save")}
+            </Button>
+          </FormActions>
+        </FormLayout>
       </form>
     </>
   );
@@ -532,7 +567,7 @@ function TotalQuantities({
 
   return (
     <FieldGroup className="grid gap-4 sm:grid-cols-2">
-      <ReadOnly
+      <ReadOnlyField
         label={
           shipment
             ? translate("stock.processingOrder.fields.quantityFulfilledBySupplierIn", { unit })
@@ -541,14 +576,14 @@ function TotalQuantities({
         value={totalInput ? totalInput.toFixed(2) : ""}
       />
       {withOutput && (
-        <ReadOnly
+        <ReadOnlyField
           label={translate("stock.processingOrder.fields.remainingQuantityIn", { unit })}
           value={totalInput || totalOutput ? remaining.toFixed(2) : ""}
         />
       )}
       {withOutput && (
         <div className="flex flex-col gap-1">
-          <ReadOnly
+          <ReadOnlyField
             label={
               shipment
                 ? translate("stock.processingOrder.fields.totalOrderedQuantityIn", { unit })

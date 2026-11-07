@@ -6,18 +6,16 @@ import { Section } from "@/components/app/page";
 import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { toApiDay, today } from "../stock/shared";
+import { toApiDay } from "../stock/shared";
 import { download, useApi } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
 import { useTranslate } from "@refinedev/core";
-import { ChartFrame, DataTableView, ExportButton, RangeControls } from "./controls";
-import { type Aggregation, defaultAggregation, EXT, MAX_PERFORMANCE_POINTS, nf, SERIES_1, SERIES_2, twoYearsAgo, unitLabel } from "./utils";
+import { ChartFrame, type DashboardRange, DataTableView, ExportButton, StatRow, StatTile } from "./controls";
+import { compact, EXT, MAX_PERFORMANCE_POINTS, nf, SERIES_1, SERIES_2, unitLabel } from "./utils";
 
-export function PerformancePanel({ companyId }: { companyId: number }) {
+export function PerformancePanel({ companyId, range }: { companyId: number; range: DashboardRange }) {
   const translate = useTranslate();
-  const [from, setFrom] = useState(twoYearsAgo);
-  const [to, setTo] = useState(today);
-  const [aggregation, setAggregation] = useState<Aggregation>(() => defaultAggregation(twoYearsAgo(), today()));
+  const { from, to, aggregation } = range;
   const [facilityId, setFacilityId] = useState<number | null>(null);
   const [actionId, setActionId] = useState<number | null>(null);
   const [evidence, setEvidence] = useState<Record<string, string>>({});
@@ -60,7 +58,7 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
       ),
   };
   // A POST endpoint that only reads; useCustom keys the query by its body.
-  const { data, isFetching } = useApi(
+  const { data, isFetching, isLoading, isError, refetch } = useApi(
     ep.calculateProcessingPerformanceData,
     { body },
     { enabled: facilityId != null && actionId != null }
@@ -68,9 +66,12 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
 
   const totals = data?.totals ?? [];
   const unit = data?.measureUnitType?.label ?? "";
+  const sumIn = totals.reduce((s, t) => s + (t.inputQuantity ?? 0), 0);
+  const sumOut = totals.reduce((s, t) => s + (t.outputQuantity ?? 0), 0);
   const rows = useMemo(
     () =>
-      totals.slice(0, MAX_PERFORMANCE_POINTS).map((t) => ({
+      // The latest periods when there are too many to plot (the series runs oldest → newest).
+      totals.slice(-MAX_PERFORMANCE_POINTS).map((t) => ({
         label: unitLabel(t.unit, t.year, aggregation),
         input: t.inputQuantity ?? 0,
         output: t.outputQuantity ?? 0,
@@ -109,14 +110,6 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
       }
     >
       <div className="flex flex-wrap items-center gap-2">
-        <RangeControls
-          from={from}
-          to={to}
-          setFrom={setFrom}
-          setTo={setTo}
-          aggregation={aggregation}
-          setAggregation={setAggregation}
-        />
         <SimpleCombobox
           className="w-60"
           clearable={false}
@@ -152,7 +145,21 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
         )}
       </div>
 
+      {totals.length > 0 && (
+        <StatRow>
+          <StatTile label={translate("dashboard.fields.totalInput")} value={compact.format(sumIn)} note={unit || undefined} />
+          <StatTile label={translate("dashboard.fields.totalOutput")} value={compact.format(sumOut)} note={unit || undefined} />
+          <StatTile
+            label={translate("dashboard.fields.outputInputRatio")}
+            value={sumIn ? nf.format(sumOut / sumIn) : "–"}
+            note={translate("dashboard.texts.overTheWholeRange")}
+          />
+        </StatRow>
+      )}
       <ChartFrame
+        loading={isLoading}
+        error={isError}
+        onRetry={() => void refetch()}
         empty={empty}
         truncated={totals.length > MAX_PERFORMANCE_POINTS ? MAX_PERFORMANCE_POINTS : undefined}
         table={

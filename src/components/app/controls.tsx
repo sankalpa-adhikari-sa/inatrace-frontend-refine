@@ -1,7 +1,8 @@
-import { MoreHorizontal, Search, SlidersHorizontal } from "lucide-react";
+import { Download, MoreHorizontal, Search, SlidersHorizontal } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Combobox,
   ComboboxContent,
@@ -196,6 +197,7 @@ export function SearchInput({
 const STATUS_TONE: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   ACTIVE: "default",
   ENABLED: "default",
+  PUBLISHED: "default",
   REGISTERED: "secondary",
   CONFIRMED_EMAIL: "secondary",
   UNCONFIRMED: "outline",
@@ -227,6 +229,42 @@ export type RowAction = {
   hidden?: boolean;
   separatorBefore?: boolean;
 };
+
+/**
+ * Downloads the company's whole list (the backend export takes no filters), saying so on hover so a
+ * filtered view isn't mistaken for what gets exported. Busy while the file is prepared.
+ */
+export function ExportAllButton({
+  label,
+  onExport,
+  disabled,
+}: {
+  label: ReactNode;
+  onExport: () => Promise<unknown>;
+  disabled?: boolean;
+}) {
+  const translate = useTranslate();
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={disabled || busy}
+      title={translate("common.descriptions.exportsAllRecordsFiltersDontApply")}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          await onExport();
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      {busy ? <Spinner /> : <Download />}
+      {label}
+    </Button>
+  );
+}
 
 export function RowActions({ actions }: { actions: RowAction[] }) {
   const translate = useTranslate();

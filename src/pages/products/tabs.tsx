@@ -2,7 +2,7 @@ import { useNotification, useTranslate } from "@refinedev/core";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { useConfirm } from "@/components/app/confirm";
-import { PageHeader, PageTabs } from "@/components/app/page";
+import { type Crumb, PageHeader, PageTabs } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { useIdentity } from "@/hooks/use-session";
 import { call, useApi } from "@/lib/http";
@@ -12,10 +12,14 @@ import { ep } from "@/lib/endpoints";
 export function ProductTabs({
   productId,
   title,
+  crumbs,
   actions,
 }: {
   productId: number;
+  /** Replaces the product name as the title, on a page below a tab (e.g. a label's batches). */
   title?: ReactNode;
+  /** Steps between the product and this page, for such a page's breadcrumb trail. */
+  crumbs?: Crumb[];
   actions?: ReactNode;
 }) {
   const translate = useTranslate();
@@ -47,8 +51,13 @@ export function ProductTabs({
     <>
       <PageHeader
         title={title ?? product?.name ?? translate("products.titles.product")}
-        description={product?.valueChain?.name}
-        back="/product-labels"
+        description={crumbs ? undefined : product?.valueChain?.name}
+        breadcrumbs={[
+          { label: translate("products.titles.products"), to: "/product-labels" },
+          ...(crumbs
+            ? [{ label: product?.name ?? translate("products.titles.product"), to: `${base}/product` }, ...crumbs]
+            : []),
+        ]}
         actions={
           <>
             {actions}

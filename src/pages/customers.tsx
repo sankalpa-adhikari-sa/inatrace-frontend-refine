@@ -2,7 +2,7 @@ import { useDelete, useOne, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Mail, Plus, UserRound } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 import type { ApiCompanyCustomer } from "@/client/types.gen";
@@ -17,6 +17,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { useSelectedCompany } from "@/hooks/use-session";
 import { useTableFilter } from "@/hooks/use-table-filter";
+import { focusFirstError } from "@/lib/form-errors";
 
 /** `/my-customers` */
 export function CustomerList() {
@@ -36,6 +37,7 @@ function CustomerTable({ companyId }: { companyId: number }) {
       {
         id: "name",
         accessorKey: "name",
+        meta: { primary: true },
         header: translate("common.fields.name"),
         enableSorting: false,
       },
@@ -43,12 +45,14 @@ function CustomerTable({ companyId }: { companyId: number }) {
         id: "contact",
         accessorKey: "contact",
         header: translate("customers.fields.contact"),
+        meta: { card: "meta", icon: UserRound },
         enableSorting: false,
       },
       {
         id: "email",
         accessorKey: "email",
         header: translate("common.fields.eMail"),
+        meta: { card: "meta", icon: Mail },
         enableSorting: false,
       },
       {
@@ -112,7 +116,7 @@ function CustomerTable({ companyId }: { companyId: number }) {
       <Toolbar>
         <SearchInput value={(query as string) ?? ""} onChange={setQuery} placeholder={translate("customers.placeholders.searchCustomers")} />
       </Toolbar>
-      <DataTable table={table} />
+      <DataTable table={table} getRowHref={(c) => `/my-customers/edit/${c.id}`} />
     </>
   );
 }
@@ -158,10 +162,10 @@ export function CustomerForm() {
             ? translate("customers.titles.newCustomer")
             : translate("customers.titles.editCustomer")
         }
-        back="/my-customers"
+        breadcrumbs={[{ label: translate("common.fields.myCustomers"), to: "/my-customers" }]}
       />
       <form
-        onSubmit={handleSubmit((v) => onFinish({ ...v, companyId: companyId ?? undefined }))}
+        onSubmit={handleSubmit((v) => onFinish({ ...v, companyId: companyId ?? undefined }), focusFirstError)}
         className="flex flex-col gap-6"
       >
         <Section title={translate("common.titles.basicInformation")}>

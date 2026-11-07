@@ -1,5 +1,5 @@
 import { useTranslate } from "@refinedev/core";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   type ArrayPath,
   type Control,
@@ -7,9 +7,12 @@ import {
   type FieldValues,
   type Path,
   useFieldArray,
+  useWatch,
 } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "./confirm";
 import { DateField, SelectField, TextareaField } from "./form-fields";
+import { RepeaterItem } from "./repeater-item";
 import { UploadField } from "./upload-field";
 
 const CERTIFICATION_TYPES = ["EU_ORGANIC", "RAINFOREST_ALLIANCE", "CARBON_NEUTRAL", "FAIRTRADE"] as const;
@@ -25,6 +28,22 @@ export function CertificationsField<T extends FieldValues>({
 }) {
   const translate = useTranslate();
   const { fields, append, remove } = useFieldArray({ control, name, keyName: "key" });
+  const confirm = useConfirm();
+  const values = (useWatch({ control, name: name as unknown as Path<T> }) ?? []) as Record<string, unknown>[];
+  // Ask only when something was entered; an empty item just goes.
+  const removeAt = async (i: number) => {
+    const item = values[i] ?? {};
+    const filled = Object.values(item).some((v) => v != null && v !== "");
+    if (
+      !filled ||
+      (await confirm({
+        description: translate("common.descriptions.removeThisItem"),
+        destructive: true,
+        confirmLabel: translate("buttons.remove"),
+      }))
+    )
+      remove(i);
+  };
   const p = (i: number, field: string) => `${name}.${i}.${field}` as Path<T>;
   const types = CERTIFICATION_TYPES.map((v) => ({
     value: v,
@@ -39,51 +58,48 @@ export function CertificationsField<T extends FieldValues>({
     <div className="flex flex-col gap-3">
       {fields.length === 0 && <p className="text-xs text-muted-foreground">{translate("common.texts.noCertifications")}</p>}
       {fields.map((f, i) => (
-        <div key={f.key} className="grid gap-4 border-b pb-4 last:border-b-0 last:pb-0 sm:grid-cols-2">
-          <SelectField
-            control={control}
-            name={p(i, "type")}
-            label={translate("common.fields.type")}
-            options={types}
-          />
-          <DateField
-            control={control}
-            name={p(i, "validity")}
-            label={translate("common.fields.validityDate")}
-          />
-          <TextareaField
-            control={control}
-            name={p(i, "description")}
-            label={translate("common.fields.description")}
-            description={translate("common.descriptions.listAndBrieflyDescribeThe")}
-            rows={2}
-            className="sm:col-span-2"
-            rules={{ required: translate("common.errors.descriptionIsRequired") }}
-          />
-          <UploadField
-            control={control}
-            name={p(i, "certificate")}
-            label={translate("common.fields.certificateOrStandardPdf")}
-            description={translate("common.descriptions.withEveryCertificateOrStandard")}
-            accept={CERTIFICATE_FILES}
-            className="sm:col-span-2"
-            rules={{
-              validate: (d) =>
-                !!(d as { storageKey?: string } | null)?.storageKey ||
-                translate("common.errors.documentIsRequired").trim(),
-            }}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="justify-self-end sm:col-span-2"
-            onClick={() => remove(i)}
-          >
-            <Trash2 />
-            {translate("buttons.remove")}
-          </Button>
-        </div>
+        <RepeaterItem
+          key={f.key}
+          title={translate("common.titles.certificationNumber", { number: i + 1 })}
+          onRemove={() => removeAt(i)}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SelectField
+              control={control}
+              name={p(i, "type")}
+              label={translate("common.fields.type")}
+              options={types}
+            />
+            <DateField
+              control={control}
+              name={p(i, "validity")}
+              label={translate("common.fields.validityDate")}
+            />
+            <TextareaField
+              control={control}
+              name={p(i, "description")}
+              label={translate("common.fields.description")}
+              description={translate("common.descriptions.listAndBrieflyDescribeThe")}
+              rows={2}
+              className="sm:col-span-2"
+              rules={{ required: translate("common.errors.descriptionIsRequired") }}
+            />
+            <UploadField
+              control={control}
+              name={p(i, "certificate")}
+              label={translate("common.fields.certificateOrStandardPdf")}
+              description={translate("common.descriptions.withEveryCertificateOrStandard")}
+              accept={CERTIFICATE_FILES}
+              required
+              className="sm:col-span-2"
+              rules={{
+                validate: (d) =>
+                  !!(d as { storageKey?: string } | null)?.storageKey ||
+                  translate("common.errors.documentIsRequired").trim(),
+              }}
+            />
+          </div>
+        </RepeaterItem>
       ))}
       <Button
         type="button"

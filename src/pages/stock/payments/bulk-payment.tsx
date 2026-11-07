@@ -5,8 +5,10 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router";
 import type { ApiBulkPayment, ApiPayment, ApiStockOrder, ApiUserCustomer } from "@/client/types.gen";
 import { LastChange } from "@/components/app/last-change";
-import { DateField, SelectField, TextareaField, TextField } from "@/components/app/form-fields";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { DateField, SelectField, TextareaField, TextField, ReadOnlyField } from "@/components/app/form-fields";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormLayout } from "@/components/app/form-layout";
+import { FormSkeleton } from "@/components/app/states";
 import { TableEmptyRow } from "@/components/app/table-empty-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,12 +16,15 @@ import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { useGoBack } from "@/hooks/use-go-back";
 import { ActivityProofs, PROOF_TYPES } from "../delivery-form";
 import { day, fmt, personName, toApiDate, today } from "../shared";
 import { documentUrl } from "@/lib/api";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
-import { PAYMENT_PURPOSES, purposeLabel, ReadOnly, withSuffix } from "./common";
+import { focusFirstError } from "@/lib/form-errors";
+import { PAYMENT_PURPOSES, purposeLabel, withSuffix } from "./common";
 
 type PayRow = { order: ApiStockOrder; paid: number | null };
 type BulkForm = Omit<ApiBulkPayment, "formalCreationTime" | "payments" | "additionalProofs"> & {
@@ -54,7 +59,7 @@ export function BulkPaymentPage() {
     queryOptions: { enabled: ids.length > 0 },
   });
 
-  if ((bulkPaymentId && isLoading) || (ids.length && ordersQuery.isLoading) || !company) return <PageLoader />;
+  if ((bulkPaymentId && isLoading) || (ids.length && ordersQuery.isLoading) || !company) return <FormSkeleton sections={3} />;
   if (existing) return <BulkPaymentView bulk={existing} />;
   return <BulkPaymentEditor orders={orders?.data ?? []} purchaseOrders={bulkType === "PO"} />;
 }
@@ -78,6 +83,8 @@ function BulkPaymentEditor({ orders, purchaseOrders }: { orders: ApiStockOrder[]
       activityProofs: [],
     },
   });
+  const goBack = useGoBack("/my-stock/payments");
+  const release = useWarnWhenDirty(control);
   const rows = useFieldArray({ control, name: "rows", keyName: "key" });
   const watchedRows = (useWatch({ control, name: "rows" }) ?? []) as PayRow[];
   const additionalCost = useWatch({ control, name: "additionalCost" });
@@ -119,194 +126,204 @@ function BulkPaymentEditor({ orders, purchaseOrders }: { orders: ApiStockOrder[]
         },
       });
     },
-    onSuccess: () => navigate("/my-stock/payments"),
+    onSuccess: () => {
+      release();
+      navigate("/my-stock/payments");
+    },
   });
 
   return (
     <>
-      <PageHeader title={translate("stock.payments.titles.newBulkPayment")} back />
-      <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
-        <Section title={translate("common.titles.basicInformation")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <DateField
-              control={control}
-              name="formalCreationTime"
-              label={translate("stock.payments.fields.paymentDate")}
-              rules={{
-                required: translate("stock.payments.errors.paymentDateIsRequired"),
-              }}
-            />
-            <ReadOnly
-              label={translate("stock.payments.fields.payableFrom")}
-              value={company?.name ?? ""}
-            />
-            {purchaseOrders && (
-              <ReadOnly
-                label={translate("common.fields.collector")}
+      <PageHeader
+        title={translate("stock.payments.titles.newBulkPayment")}
+        breadcrumbs={[{ label: translate("common.fields.myStock"), to: "/my-stock" }, { label: translate("stock.fields.payments"), to: "/my-stock/payments" }]}
+      />
+      <form onSubmit={handleSubmit((v) => save.mutate(v), focusFirstError)}>
+        <FormLayout control={control}>
+          <Section id="basic" title={translate("common.titles.basicInformation")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <DateField
+                control={control}
+                name="formalCreationTime"
+                label={translate("stock.payments.fields.paymentDate")}
+                rules={{
+                  required: translate("stock.payments.errors.paymentDateIsRequired"),
+                }}
+              />
+              <ReadOnlyField
+                label={translate("stock.payments.fields.payableFrom")}
+                value={company?.name ?? ""}
+              />
+              {purchaseOrders && (
+                <ReadOnlyField
+                  label={translate("common.fields.collector")}
+                  value={multiple}
+                />
+              )}
+              <ReadOnlyField
+                label={translate("common.fields.farmer")}
                 value={multiple}
               />
-            )}
-            <ReadOnly
-              label={translate("common.fields.farmer")}
-              value={multiple}
-            />
-            <SelectField
-              control={control}
-              name="paymentPurposeType"
-              label={translate("stock.payments.fields.paymentPurpose")}
-              options={PAYMENT_PURPOSES}
-              rules={{
-                required: translate("stock.payments.errors.paymentPurposeIsRequired"),
-              }}
-            />
-            <TextField
-              control={control}
-              name="receiptNumber"
-              label={translate("stock.payments.fields.receiptNumber")}
-              placeholder={translate("stock.payments.placeholders.enterReceiptNumber")}
-              rules={{
-                required: translate("stock.payments.errors.receiptNumberIsRequired"),
-              }}
-            />
-            <TextareaField
-              control={control}
-              name="paymentDescription"
-              label={translate("stock.payments.fields.paymentDescription")}
-              rules={{
-                required: translate("stock.payments.errors.paymentDescriptionIsRequired"),
-              }}
-              rows={2}
-              className="sm:col-span-2"
-            />
-            <ReadOnly
-              label={withSuffix(
-                translate("stock.payments.fields.totalAmountPaid"),
-                currency
-              )}
-              value={fmt(total)}
-            />
-            {purchaseOrders && (
-              <TextField
+              <SelectField
                 control={control}
-                name="additionalCost"
-                type="number"
-                label={withSuffix(
-                  translate("stock.payments.fields.additionalCosts"),
-                  currency
-                )}
-                placeholder={translate("stock.payments.placeholders.enterAdditionalCosts")}
-              />
-            )}
-            {purchaseOrders && additionalCost != null && String(additionalCost) !== "" && (
-              <TextField
-                control={control}
-                name="additionalCostDescription"
-                label={translate("stock.payments.fields.descriptionOfAdditionalCosts")}
+                name="paymentPurposeType"
+                label={translate("stock.payments.fields.paymentPurpose")}
+                options={PAYMENT_PURPOSES}
                 rules={{
-                  required: translate("stock.payments.errors.descriptionOfAdditionalCostsIs"),
+                  required: translate("stock.payments.errors.paymentPurposeIsRequired"),
                 }}
+              />
+              <TextField
+                control={control}
+                name="receiptNumber"
+                label={translate("stock.payments.fields.receiptNumber")}
+                placeholder={translate("stock.payments.placeholders.enterReceiptNumber")}
+                rules={{
+                  required: translate("stock.payments.errors.receiptNumberIsRequired"),
+                }}
+              />
+              <TextareaField
+                control={control}
+                name="paymentDescription"
+                label={translate("stock.payments.fields.paymentDescription")}
+                rules={{
+                  required: translate("stock.payments.errors.paymentDescriptionIsRequired"),
+                }}
+                rows={2}
                 className="sm:col-span-2"
               />
-            )}
-          </FieldGroup>
-        </Section>
-
-        <Section plain title={translate("stock.payments.titles.deliveriesToBePaid")}>
-          <div className="overflow-hidden rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{translate("common.fields.name")}</TableHead>
-                  <TableHead>
-                    {withSuffix(translate("stock.payments.fields.cost"), currency)}
-                  </TableHead>
-                  <TableHead>
-                    {withSuffix(translate("stock.payments.fields.balance"), currency)}
-                  </TableHead>
-                  <TableHead className="w-40">
-                    {withSuffix(translate("stock.payments.fields.paying"), currency)}
-                  </TableHead>
-                  <TableHead className="w-12" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.fields.length === 0 && (
-                  <TableEmptyRow colSpan={5} icon={<Banknote />} title={translate("stock.payments.titles.nothingToPay")} />
+              <ReadOnlyField
+                label={withSuffix(
+                  translate("stock.payments.fields.totalAmountPaid"),
+                  currency
                 )}
-                {rows.fields.map((r, i) => (
-                  <TableRow key={r.key}>
-                    <TableCell>{r.order.identifier}</TableCell>
-                    <TableCell>{fmt(r.order.cost)}</TableCell>
-                    <TableCell>{fmt(r.order.balance)}</TableCell>
-                    <TableCell>
-                      <TextField
-                        control={control}
-                        name={`rows.${i}.paid`}
-                        type="number"
-                        rules={{
-                          required: translate("common.errors.required"),
-                          min: { value: 0, message: translate("common.errors.mustNotBeNegative") },
-                          validate: (paid) =>
-                            paid == null ||
-                            r.order.balance == null ||
-                            Number(paid) <= r.order.balance ||
-                            translate("stock.payments.errors.shouldBeLessThanOr"),
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={translate("buttons.remove")}
-                        onClick={() => rows.remove(i)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </Section>
-
-        {unpayable.length > 0 && (
-          <Section
-            title={translate("stock.payments.titles.deliveriesCannotBePaid")}
-          >
-            <ul className="flex flex-col gap-2 text-xs">
-              {unpayable.map((o) => (
-                <li key={o.id} className="flex flex-wrap gap-x-3">
-                  <span className="font-medium">{o.identifier}</span>
-                  <MissingBankAccount order={o} />
-                </li>
-              ))}
-            </ul>
+                value={fmt(total)}
+              />
+              {purchaseOrders && (
+                <TextField
+                  control={control}
+                  name="additionalCost"
+                  type="number"
+                  label={withSuffix(
+                    translate("stock.payments.fields.additionalCosts"),
+                    currency
+                  )}
+                  placeholder={translate("stock.payments.placeholders.enterAdditionalCosts")}
+                />
+              )}
+              {purchaseOrders && additionalCost != null && String(additionalCost) !== "" && (
+                <TextField
+                  control={control}
+                  name="additionalCostDescription"
+                  label={translate("stock.payments.fields.descriptionOfAdditionalCosts")}
+                  rules={{
+                    required: translate("stock.payments.errors.descriptionOfAdditionalCostsIs"),
+                  }}
+                  className="sm:col-span-2"
+                />
+              )}
+            </FieldGroup>
           </Section>
-        )}
 
-        <Section
-          title={translate("stock.payments.titles.additionalProofs")}
-        >
-          <ActivityProofs control={control} />
-        </Section>
+          <Section plain id="deliveries" title={translate("stock.payments.titles.deliveriesToBePaid")}>
+            <div className="overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{translate("common.fields.name")}</TableHead>
+                    <TableHead>
+                      {withSuffix(translate("stock.payments.fields.cost"), currency)}
+                    </TableHead>
+                    <TableHead>
+                      {withSuffix(translate("stock.payments.fields.balance"), currency)}
+                    </TableHead>
+                    <TableHead className="w-40">
+                      {withSuffix(translate("stock.payments.fields.paying"), currency)}
+                    </TableHead>
+                    <TableHead className="w-12" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.fields.length === 0 && (
+                    <TableEmptyRow colSpan={5} icon={<Banknote />} title={translate("stock.payments.titles.nothingToPay")} />
+                  )}
+                  {rows.fields.map((r, i) => (
+                    <TableRow key={r.key}>
+                      <TableCell>{r.order.identifier}</TableCell>
+                      <TableCell>{fmt(r.order.cost)}</TableCell>
+                      <TableCell>{fmt(r.order.balance)}</TableCell>
+                      <TableCell>
+                        <TextField
+                          control={control}
+                          name={`rows.${i}.paid`}
+                          type="number"
+                          rules={{
+                            required: translate("common.errors.required"),
+                            min: { value: 0, message: translate("common.errors.mustNotBeNegative") },
+                            validate: (paid) =>
+                              paid == null ||
+                              r.order.balance == null ||
+                              Number(paid) <= r.order.balance ||
+                              translate("stock.payments.errors.shouldBeLessThanOr"),
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={translate("buttons.remove")}
+                          onClick={() => rows.remove(i)}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Section>
 
-        <FormActions>
-          {!canSave && unpayable.length > 0 && (
-            <span className="mr-auto self-center text-xs text-destructive">
-              {translate("stock.payments.texts.addTheMissingBankAccounts")}
-            </span>
+          {unpayable.length > 0 && (
+            <Section
+              id="cannot-be-paid"
+              title={translate("stock.payments.titles.deliveriesCannotBePaid")}
+            >
+              <ul className="flex flex-col gap-2 text-xs">
+                {unpayable.map((o) => (
+                  <li key={o.id} className="flex flex-wrap gap-x-3">
+                    <span className="font-medium">{o.identifier}</span>
+                    <MissingBankAccount order={o} />
+                  </li>
+                ))}
+              </ul>
+            </Section>
           )}
-          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-            {translate("buttons.cancel")}
-          </Button>
-          <Button type="submit" disabled={save.isPending || !canSave}>
-            {save.isPending && <Spinner />}
-            {translate("buttons.save")}
-          </Button>
-        </FormActions>
+
+          <Section
+            id="proofs"
+            title={translate("stock.payments.titles.additionalProofs")}
+          >
+            <ActivityProofs control={control} />
+          </Section>
+
+          <FormActions sticky control={control}>
+            {!canSave && unpayable.length > 0 && (
+              <span className="mr-auto self-center text-xs text-destructive">
+                {translate("stock.payments.texts.addTheMissingBankAccounts")}
+              </span>
+            )}
+            <Button type="button" variant="outline" onClick={() => goBack()}>
+              {translate("buttons.cancel")}
+            </Button>
+            <Button type="submit" disabled={save.isPending || !canSave}>
+              {save.isPending && <Spinner />}
+              {translate("buttons.save")}
+            </Button>
+          </FormActions>
+        </FormLayout>
       </form>
     </>
   );
@@ -339,40 +356,40 @@ function BulkPaymentView({ bulk }: { bulk: ApiBulkPayment }) {
     <>
       <PageHeader
         title={translate("stock.payments.titles.updateBulkPayment")}
-        back
+        breadcrumbs={[{ label: translate("common.fields.myStock"), to: "/my-stock" }, { label: translate("stock.fields.payments"), to: "/my-stock/payments" }]}
         actions={<LastChange user={bulk.createdBy} timestamp={bulk.creationTimestamp} />}
       />
       <Section title={translate("common.titles.basicInformation")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <ReadOnly
+          <ReadOnlyField
             label={translate("stock.payments.fields.paymentDate")}
             value={day(bulk.formalCreationTime)}
           />
-          <ReadOnly
+          <ReadOnlyField
             label={translate("stock.payments.fields.payableFrom")}
             value={bulk.payingCompany?.name ?? ""}
           />
-          <ReadOnly
+          <ReadOnlyField
             label={translate("common.fields.collector")}
             value={multiple}
           />
-          <ReadOnly
+          <ReadOnlyField
             label={translate("common.fields.farmer")}
             value={multiple}
           />
-          <ReadOnly
+          <ReadOnlyField
             label={translate("stock.payments.fields.paymentPurpose")}
             value={purposeLabel(bulk.paymentPurposeType)}
           />
-          <ReadOnly
+          <ReadOnlyField
             label={translate("stock.payments.fields.receiptNumber")}
             value={bulk.receiptNumber ?? ""}
           />
-          <ReadOnly
+          <ReadOnlyField
             label={translate("stock.payments.fields.paymentDescription")}
             value={bulk.paymentDescription ?? ""}
           />
-          <ReadOnly
+          <ReadOnlyField
             label={withSuffix(
               translate("stock.payments.fields.totalAmountPaid"),
               currency
@@ -381,14 +398,14 @@ function BulkPaymentView({ bulk }: { bulk: ApiBulkPayment }) {
           />
           {bulk.additionalCost != null && (
             <>
-              <ReadOnly
+              <ReadOnlyField
                 label={withSuffix(
                   translate("stock.payments.fields.additionalCosts"),
                   currency
                 )}
                 value={fmt(bulk.additionalCost)}
               />
-              <ReadOnly
+              <ReadOnlyField
                 label={translate("stock.payments.fields.descriptionOfAdditionalCosts")}
                 value={bulk.additionalCostDescription ?? ""}
               />

@@ -8,7 +8,7 @@ import type { ApiCompanyListResponse } from "@/client/types.gen";
 import { RowActions, SearchInput, SimpleSelect, StatusBadge, Toolbar, humanize } from "@/components/app/controls";
 import { PageHeader } from "@/components/app/page";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { DataTableSorter } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,16 +41,14 @@ export function CompanyList() {
       {
         id: "name",
         accessorKey: "name",
-        header: ({ column }) => (
-          <div className="flex items-center gap-1">
-            {translate("common.fields.name")} <DataTableSorter column={column} />
-          </div>
-        ),
+        meta: { primary: true },
+        header: sortable(translate("common.fields.name")),
       },
       {
         id: "status",
         accessorKey: "status",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ getValue }) => <StatusBadge status={getValue<string>()} />,
       },
@@ -146,7 +144,7 @@ export function CompanyList() {
           </div>
         )}
       </Toolbar>
-      <DataTable table={table} />
+      <DataTable table={table} getRowHref={(c) => `/companies/${c.id}`} />
       <MergeDialog
         company={merging}
         onClose={() => setMerging(null)}
