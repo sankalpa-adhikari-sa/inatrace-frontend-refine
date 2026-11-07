@@ -6,16 +6,21 @@ import { type Control, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useNavigate } from "react-router";
 import type { ApiProcessingAction, ApiProductOrder } from "@/client/types.gen";
 import { CheckboxField, ComboboxField, DateField, EntitySelectField, TextField } from "@/components/app/form-fields";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormLayout } from "@/components/app/form-layout";
+import { FormSkeleton } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useEnabledCurrencies } from "@/hooks/use-lookups";
 import { useIdentity, useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { useGoBack } from "@/hooks/use-go-back";
 import { toApiDate, today } from "../stock/shared";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
+import { focusFirstError } from "@/lib/form-errors";
 import { EMPTY_ITEM, type Item, itemLotName } from "./customer-order-model";
 
 type CustomerOrderForm = Omit<ApiProductOrder, "deliveryDeadline" | "items"> & {
@@ -50,6 +55,8 @@ export function CustomerOrderForm() {
   const { control, handleSubmit, setValue, getValues } = useForm<CustomerOrderForm>({
     defaultValues: { deliveryDeadline: "", requiredOrganic: false, requiredWomensOnly: false, items: [] },
   });
+  const goBack = useGoBack("/my-orders/placed-orders");
+  const release = useWarnWhenDirty(control);
   const items = useFieldArray({ control, name: "items", keyName: "key" });
   const facility = useWatch({ control, name: "facility" });
   const orderId = useWatch({ control, name: "orderId" });
@@ -102,7 +109,10 @@ export function CustomerOrderForm() {
       };
       return call(ep.createProductOrder, { body: order });
     },
-    onSuccess: () => navigate("/my-orders/placed-orders"),
+    onSuccess: () => {
+      release();
+      navigate("/my-orders/placed-orders");
+    },
   });
 
   function submit(v: CustomerOrderForm) {
@@ -115,98 +125,106 @@ export function CustomerOrderForm() {
     save.mutate(v);
   }
 
-  if (companyId == null) return <PageLoader />;
+  if (companyId == null) return <FormSkeleton sections={3} />;
 
   return (
     <>
-      <PageHeader title={translate("orders.titles.newOrder")} back="/my-orders/placed-orders" />
-      <form onSubmit={handleSubmit(submit)} className="flex flex-col gap-6">
-        <Section>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              control={control}
-              name="orderId"
-              label={translate("orders.fields.orderId")}
-              placeholder={translate("orders.placeholders.enterId")}
-              rules={{
-                required: translate("orders.errors.orderIdIsRequired"),
-              }}
-            />
-            <EntitySelectField
-              control={control}
-              name="customer"
-              label={translate("orders.fields.customer")}
-              items={customers}
-              getLabel={(c) => c.name ?? ""}
-              rules={{
-                required: translate("orders.errors.customerIsRequired"),
-              }}
-            />
-            <EntitySelectField
-              control={control}
-              name="facility"
-              label={translate("orders.fields.orderTo")}
-              items={facilities}
-              getLabel={(f) => f.name ?? ""}
-              rules={{
-                required: translate("orders.errors.outputFacilityIsRequired"),
-              }}
-            />
-            <DateField
-              control={control}
-              name="deliveryDeadline"
-              label={translate("orders.fields.latestDateOfDelivery")}
-              rules={{
-                required: translate("orders.errors.latestDeliveryDateIsRequired"),
-              }}
-            />
-            <CheckboxField
-              control={control}
-              name="requiredWomensOnly"
-              label={translate("orders.fields.womensOnly")}
-            />
-            <CheckboxField
-              control={control}
-              name="requiredOrganic"
-              label={translate("orders.fields.organicOnly")}
-            />
-          </FieldGroup>
-        </Section>
-        {facility && orderId && (
-          <Section
-            title={translate("orders.titles.listOfOrderItems")}
-            actions={
-              <Button type="button" variant="outline" size="sm" onClick={() => items.append(EMPTY_ITEM)}>
-                <Plus />
-                {translate("orders.buttons.addOrderItem")}
-              </Button>
-            }
-          >
-            {items.fields.map((f, i) => (
-              <OrderItem
-                key={f.key}
-                index={i}
+      <PageHeader
+        title={translate("orders.titles.newOrder")}
+        breadcrumbs={[
+          { label: translate("common.fields.orders"), to: "/my-orders" },
+          { label: translate("orders.fields.placedOrders"), to: "/my-orders/placed-orders" },
+        ]}
+      />
+      <form onSubmit={handleSubmit(submit, focusFirstError)}>
+        <FormLayout control={control}>
+          <Section>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <TextField
                 control={control}
-                actions={finalActions}
-                companyId={companyId}
-                orderId={orderId}
-                onRemove={() => items.remove(i)}
+                name="orderId"
+                label={translate("orders.fields.orderId")}
+                placeholder={translate("orders.placeholders.enterId")}
+                rules={{
+                  required: translate("orders.errors.orderIdIsRequired"),
+                }}
               />
-            ))}
-            {itemsError && items.fields.length === 0 && (
-              <FieldError>{translate("orders.errors.atLeastOneOrderItem")}</FieldError>
-            )}
+              <EntitySelectField
+                control={control}
+                name="customer"
+                label={translate("orders.fields.customer")}
+                items={customers}
+                getLabel={(c) => c.name ?? ""}
+                rules={{
+                  required: translate("orders.errors.customerIsRequired"),
+                }}
+              />
+              <EntitySelectField
+                control={control}
+                name="facility"
+                label={translate("orders.fields.orderTo")}
+                items={facilities}
+                getLabel={(f) => f.name ?? ""}
+                rules={{
+                  required: translate("orders.errors.outputFacilityIsRequired"),
+                }}
+              />
+              <DateField
+                control={control}
+                name="deliveryDeadline"
+                label={translate("orders.fields.latestDateOfDelivery")}
+                rules={{
+                  required: translate("orders.errors.latestDeliveryDateIsRequired"),
+                }}
+              />
+              <CheckboxField
+                control={control}
+                name="requiredWomensOnly"
+                label={translate("orders.fields.womensOnly")}
+              />
+              <CheckboxField
+                control={control}
+                name="requiredOrganic"
+                label={translate("orders.fields.organicOnly")}
+              />
+            </FieldGroup>
           </Section>
-        )}
-        <FormActions>
-          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-            {translate("buttons.cancel")}
-          </Button>
-          <Button type="submit" disabled={save.isPending}>
-            {save.isPending && <Spinner />}
-            {translate("buttons.save")}
-          </Button>
-        </FormActions>
+          {facility && orderId && (
+            <Section
+              title={translate("orders.titles.listOfOrderItems")}
+              actions={
+                <Button type="button" variant="outline" size="sm" onClick={() => items.append(EMPTY_ITEM)}>
+                  <Plus />
+                  {translate("orders.buttons.addOrderItem")}
+                </Button>
+              }
+            >
+              {items.fields.map((f, i) => (
+                <OrderItem
+                  key={f.key}
+                  index={i}
+                  control={control}
+                  actions={finalActions}
+                  companyId={companyId}
+                  orderId={orderId}
+                  onRemove={() => items.remove(i)}
+                />
+              ))}
+              {itemsError && items.fields.length === 0 && (
+                <FieldError>{translate("orders.errors.atLeastOneOrderItem")}</FieldError>
+              )}
+            </Section>
+          )}
+          <FormActions sticky control={control}>
+            <Button type="button" variant="outline" onClick={() => goBack()}>
+              {translate("buttons.cancel")}
+            </Button>
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending && <Spinner />}
+              {translate("buttons.save")}
+            </Button>
+          </FormActions>
+        </FormLayout>
       </form>
     </>
   );

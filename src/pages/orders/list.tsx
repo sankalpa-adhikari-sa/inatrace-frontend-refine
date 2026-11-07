@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useUrlFilters } from "@/hooks/use-url-state";
 import { useFacilityParam } from "../stock/deliveries";
 import { day, fmt } from "../stock/shared";
 import { call, download, useApi } from "@/lib/http";
@@ -30,9 +31,14 @@ export function OrdersPage({ kind }: { kind: Kind }) {
   const location = useLocation();
   const confirm = useConfirm();
   const [facilityId, setFacilityId] = useFacilityParam();
-  const [openOnly, setOpenOnly] = useState(false);
-  const [semiProductId, setSemiProductId] = useState<number | null>(null);
-  const [customerId, setCustomerId] = useState<number | null>(null);
+  // In the URL, so a reload or the back button from an order keeps them.
+  const url = useUrlFilters(["openOnly", "semiProductId", "customerId"] as const);
+  const openOnly = url.values.openOnly === "true";
+  const semiProductId = url.values.semiProductId ? Number(url.values.semiProductId) : null;
+  const customerId = url.values.customerId ? Number(url.values.customerId) : null;
+  const setOpenOnly = (v: boolean) => url.set({ openOnly: v });
+  const setSemiProductId = (v: number | null) => url.set({ semiProductId: v });
+  const setCustomerId = (v: number | null) => url.set({ customerId: v });
   const [reviewing, setReviewing] = useState<ApiStockOrder | null>(null);
   const [qr, setQr] = useState<ApiStockOrder | null>(null);
   const [quoting, setQuoting] = useState(false);
@@ -278,7 +284,7 @@ export function OrdersPage({ kind }: { kind: Kind }) {
             <Label htmlFor="open-only">{translate("orders.fields.openOnly")}</Label>
           </div>
         </Toolbar>
-        <DataTable table={table} />
+        <DataTable table={table} filterKey={permanent} />
       </Section>
       {reviewing && (
         <ReviewTransactionsDialog

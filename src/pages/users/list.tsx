@@ -15,7 +15,7 @@ import {
 } from "@/components/app/controls";
 import { PageHeader } from "@/components/app/page";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { DataTableSorter } from "@/components/refine-ui/data-table/data-table-sorter";
+import { SortableHeader } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useIdentity } from "@/hooks/use-session";
@@ -43,29 +43,18 @@ export function UserList() {
       {
         id: "name",
         accessorKey: "name",
-        header: ({ column }) => (
-          <div className="flex items-center gap-1">
-            {translate("common.fields.name")} <DataTableSorter column={column} />
-          </div>
-        ),
+        meta: { primary: true },
+        header: ({ column }) => <SortableHeader column={column} label={translate("common.fields.name")} />,
       },
       {
         id: "surname",
         accessorKey: "surname",
-        header: ({ column }) => (
-          <div className="flex items-center gap-1">
-            {translate("users.fields.surname")} <DataTableSorter column={column} />
-          </div>
-        ),
+        header: ({ column }) => <SortableHeader column={column} label={translate("users.fields.surname")} />,
       },
       {
         id: "email",
         accessorKey: "email",
-        header: ({ column }) => (
-          <div className="flex items-center gap-1">
-            {translate("common.fields.eMail")} <DataTableSorter column={column} />
-          </div>
-        ),
+        header: ({ column }) => <SortableHeader column={column} label={translate("common.fields.eMail")} />,
       },
       {
         id: "role",
@@ -200,7 +189,7 @@ export function UserList() {
           </div>
         )}
       </Toolbar>
-      <DataTable table={table} />
+      <DataTable table={table} getRowHref={(u) => `/users/${u.id}`} />
     </>
   );
 }

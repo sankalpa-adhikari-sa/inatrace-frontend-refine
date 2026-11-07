@@ -10,8 +10,8 @@ import { toApiDay, today } from "../stock/shared";
 import { download, useApi } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
 import { useTranslate } from "@refinedev/core";
-import { ChartFrame, DataTableView, ExportButton, RangeControls } from "./controls";
-import { type Aggregation, defaultAggregation, EXT, MAX_PERFORMANCE_POINTS, nf, SERIES_1, SERIES_2, twoYearsAgo, unitLabel } from "./utils";
+import { ChartFrame, DataTableView, ExportButton, RangeControls, StatRow, StatTile, useRangeAggregation } from "./controls";
+import { compact, type Aggregation, defaultAggregation, EXT, MAX_PERFORMANCE_POINTS, nf, SERIES_1, SERIES_2, twoYearsAgo, unitLabel } from "./utils";
 
 export function PerformancePanel({ companyId }: { companyId: number }) {
   const translate = useTranslate();
@@ -21,6 +21,7 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
   const [facilityId, setFacilityId] = useState<number | null>(null);
   const [actionId, setActionId] = useState<number | null>(null);
   const [evidence, setEvidence] = useState<Record<string, string>>({});
+  useRangeAggregation(from, to, setAggregation);
 
   const list = { requestType: "FETCH" as const, limit: 1000 };
   const { data: facilities = [] } = useApi(
@@ -60,7 +61,7 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
       ),
   };
   // A POST endpoint that only reads; useCustom keys the query by its body.
-  const { data, isFetching } = useApi(
+  const { data, isFetching, isLoading, isError, refetch } = useApi(
     ep.calculateProcessingPerformanceData,
     { body },
     { enabled: facilityId != null && actionId != null }
@@ -68,9 +69,12 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
 
   const totals = data?.totals ?? [];
   const unit = data?.measureUnitType?.label ?? "";
+  const sumIn = totals.reduce((s, t) => s + (t.inputQuantity ?? 0), 0);
+  const sumOut = totals.reduce((s, t) => s + (t.outputQuantity ?? 0), 0);
   const rows = useMemo(
     () =>
-      totals.slice(0, MAX_PERFORMANCE_POINTS).map((t) => ({
+      // The latest periods when there are too many to plot (the series runs oldest → newest).
+      totals.slice(-MAX_PERFORMANCE_POINTS).map((t) => ({
         label: unitLabel(t.unit, t.year, aggregation),
         input: t.inputQuantity ?? 0,
         output: t.outputQuantity ?? 0,
@@ -152,7 +156,21 @@ export function PerformancePanel({ companyId }: { companyId: number }) {
         )}
       </div>
 
+      {totals.length > 0 && (
+        <StatRow>
+          <StatTile label={translate("dashboard.fields.totalInput")} value={compact.format(sumIn)} note={unit || undefined} />
+          <StatTile label={translate("dashboard.fields.totalOutput")} value={compact.format(sumOut)} note={unit || undefined} />
+          <StatTile
+            label={translate("dashboard.fields.outputInputRatio")}
+            value={sumIn ? nf.format(sumOut / sumIn) : "–"}
+            note={translate("dashboard.texts.overTheWholeRange")}
+          />
+        </StatRow>
+      )}
       <ChartFrame
+        loading={isLoading}
+        error={isError}
+        onRetry={() => void refetch()}
         empty={empty}
         truncated={totals.length > MAX_PERFORMANCE_POINTS ? MAX_PERFORMANCE_POINTS : undefined}
         table={

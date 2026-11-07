@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useUrlFilters } from "@/hooks/use-url-state";
 import { BeycoControls } from "./beyco";
 import { useFacilityParam } from "./deliveries";
 import { ORDER_TYPES, day, fmt } from "./shared";
@@ -24,10 +25,16 @@ export function AllStockTab() {
   const translate = useTranslate();
   const { companyId, company } = useSelectedCompany();
   const [facilityId, setFacilityId] = useFacilityParam();
-  const [view, setView] = useState<"single" | "group">("single");
-  const [purchaseOnly, setPurchaseOnly] = useState(false);
-  const [availableOnly, setAvailableOnly] = useState(false);
-  const [semiProductId, setSemiProductId] = useState<number | null>(null);
+  // In the URL, so a reload or the back button from a stock order keeps them.
+  const url = useUrlFilters(["view", "purchaseOnly", "availableOnly", "semiProductId"] as const);
+  const view: "single" | "group" = url.values.view === "group" ? "group" : "single";
+  const purchaseOnly = url.values.purchaseOnly === "true";
+  const availableOnly = url.values.availableOnly === "true";
+  const semiProductId = url.values.semiProductId ? Number(url.values.semiProductId) : null;
+  const setView = (v: "single" | "group") => url.set({ view: v === "group" ? v : "" });
+  const setPurchaseOnly = (v: boolean) => url.set({ purchaseOnly: v });
+  const setAvailableOnly = (v: boolean) => url.set({ availableOnly: v });
+  const setSemiProductId = (v: number | null) => url.set({ semiProductId: v });
   const [total, setTotal] = useState(0);
   const [selectedGroups, setSelectedGroups] = useState<ApiGroupStockOrder[]>([]);
 
@@ -316,5 +323,5 @@ function GroupTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, items]);
 
-  return <DataTable table={table} />;
+  return <DataTable table={table} filterKey={permanent} />;
 }

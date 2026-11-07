@@ -8,6 +8,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
+import { focusFirstError } from "@/lib/form-errors";
 
 const HELPER_LINK = "PRODUCT_LABELS_HELPER_LINK";
 const UNPUBLISHED_TEXT = "UNPUBLISHED_PRODUCT_LABEL_TEXT";
@@ -50,7 +51,7 @@ export function SettingsAdditional() {
   });
 
   return (
-    <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit((v) => save.mutate(v), focusFirstError)} className="flex flex-col gap-6">
       <Section title={translate("settings.titles.additionalSettings")}>
         <FieldGroup>
           <TextField

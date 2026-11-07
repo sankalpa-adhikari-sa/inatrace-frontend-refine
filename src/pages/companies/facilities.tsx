@@ -17,18 +17,22 @@ import {
   TextField,
 } from "@/components/app/form-fields";
 import { LocationFields } from "@/components/app/location-fields";
-import { FormActions, PageLoader, Section } from "@/components/app/page";
+import { FormActions, Section } from "@/components/app/page";
+import { FormSkeleton } from "@/components/app/states";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { FormLayout } from "@/components/app/form-layout";
+import { TranslationTabs } from "@/components/app/translation-tabs";
 import { MapView } from "@/components/app/map-view";
 import { completeOnboarding } from "@/stores/onboarding";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyTabs } from "./company-tabs";
 import { call, useApi } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
 import { t } from "@/lib/i18n";
+import { focusFirstError } from "@/lib/form-errors";
 
 const LANGUAGES = ["EN", "DE", "RW", "ES"] as const;
 const YES_NO = [
@@ -56,6 +60,7 @@ export function CompanyFacilities() {
       {
         id: "name",
         accessorKey: "name",
+        meta: { primary: true },
         header: translate("common.fields.name"),
         enableSorting: false,
       },
@@ -153,7 +158,7 @@ export function CompanyFacilities() {
         title={translate("companies.titles.listOfFacilities")}
         description={translate("common.descriptions.total", { total: table.refineCore.result.total ?? 0 })}
       >
-        <DataTable table={table} />
+        <DataTable table={table} getRowHref={(f) => `/companies/${companyId}/facilities/${f.id}/edit`} />
       </Section>
       <FacilitiesMap facilities={table.refineCore.result.data} />
     </>
@@ -247,7 +252,9 @@ export function FacilityForm() {
     { enabled: chainIds.length > 0, select: (r) => r?.items ?? [] }
   );
 
-  if (!isNew && query.isLoading) return <PageLoader />;
+  useWarnWhenDirty(control);
+
+  if (!isNew && query.isLoading) return <FormSkeleton sections={4} />;
 
   function submit(v: FormValues) {
     const english = v.translations.find((t) => t.language === "EN");
@@ -265,150 +272,147 @@ export function FacilityForm() {
     <>
       <CompanyTabs
         companyId={companyId}
+        crumbs={[{ label: translate("companies.fields.facilities"), to: `/companies/${companyId}/facilities` }]}
         title={
           isNew
             ? translate("companies.titles.newFacility")
             : translate("companies.titles.editFacility", { name: existing?.name ?? "" })
         }
       />
-      <form onSubmit={handleSubmit((v) => submit(v as FormValues))} className="flex flex-col gap-6">
-        <Section title={translate("common.titles.basicInformation")}>
-          <FieldGroup>
-            <EntitySelectField
-              control={control}
-              name="facilityType"
-              label={translate("companies.fields.facilityType")}
-              items={facilityTypes?.data ?? []}
-              getLabel={(t) => t.label ?? ""}
-              rules={{
-                required: translate("companies.errors.facilityTypeIsRequired"),
-              }}
-            />
-            <Tabs defaultValue="EN" className="flex-col">
-              <TabsList>
-                {LANGUAGES.map((l) => (
-                  <TabsTrigger key={l} value={l}>
-                    {l}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {LANGUAGES.map((l, i) => (
-                <TabsContent key={l} value={l} keepMounted className="pt-2">
-                  <TextField
-                    control={control}
-                    name={`translations.${i}.name`}
-                    label={translate("companies.fields.nameOfFacility")}
-                    rules={l === "EN" ? { required: translate("companies.errors.nameOfFacilityInEnglish") } : undefined}
-                  />
-                </TabsContent>
-              ))}
-            </Tabs>
-          </FieldGroup>
-        </Section>
-
-        <Section title={translate("companies.titles.location")}>
-          <LocationFields control={control} prefix="facilityLocation" />
-        </Section>
-
-        <Section title={translate("companies.titles.additionalAttributes")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              control={control}
-              name="isCollectionFacility"
-              label={translate("companies.fields.isThisACollectionFacility")}
-              options={YES_NO}
-              rules={{ required: translate("companies.errors.thisFieldIsRequired") }}
-            />
-            <SelectField
-              control={control}
-              name="isPublic"
-              label={translate("companies.fields.containsSellableSemiProductsOr")}
-              options={YES_NO}
-              rules={{ required: translate("companies.errors.thisFieldIsRequired") }}
-            />
-          </FieldGroup>
-          <FieldGroup className="grid gap-3 sm:grid-cols-2">
-            <CheckboxField
-              control={control}
-              name="displayMayInvolveCollectors"
-              label={translate("companies.fields.mayInvolveCollectors")}
-            />
-            <CheckboxField
-              control={control}
-              name="displayOrganic"
-              label={translate("companies.fields.organic")}
-            />
-            <CheckboxField
-              control={control}
-              name="displayWomenOnly"
-              label={translate("companies.fields.womenOnly")}
-            />
-            <CheckboxField
-              control={control}
-              name="displayTare"
-              label={translate("companies.fields.tare")}
-            />
-            <CheckboxField
-              control={control}
-              name="displayPriceDeductionDamage"
-              label={translate("companies.fields.priceReductionForDamage")}
-            />
-            <CheckboxField
-              control={control}
-              name="displayWeightDeductionDamage"
-              label={translate("companies.fields.weightReductionForDamage")}
-            />
-            <CheckboxField
-              control={control}
-              name="displayPriceDeterminedLater"
-              label={translate("companies.fields.priceDeterminedLater")}
-            />
-          </FieldGroup>
-        </Section>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Section title={translate("companies.titles.valueChains")}>
-            <EntityListField
-              control={control}
-              name="facilityValueChains"
-              items={valueChains}
-              getLabel={(v) => v.name ?? ""}
-              rules={{ validate: (v) => (Array.isArray(v) && v.length > 0) || translate("companies.errors.atLeastOneValueChain") }}
-            />
+      <form onSubmit={handleSubmit((v) => submit(v as FormValues), focusFirstError)}>
+        <FormLayout control={control}>
+          <Section id="basic" title={translate("common.titles.basicInformation")}>
+            <FieldGroup>
+              <EntitySelectField
+                control={control}
+                name="facilityType"
+                label={translate("companies.fields.facilityType")}
+                items={facilityTypes?.data ?? []}
+                getLabel={(t) => t.label ?? ""}
+                rules={{
+                  required: translate("companies.errors.facilityTypeIsRequired"),
+                }}
+              />
+              <TranslationTabs languages={LANGUAGES}>
+                {(l, i) => (
+                  <>
+                    <TextField
+                      control={control}
+                      name={`translations.${i}.name`}
+                      label={translate("companies.fields.nameOfFacility")}
+                      rules={l === "EN" ? { required: translate("companies.errors.nameOfFacilityInEnglish") } : undefined}
+                    />
+                  </>
+                )}
+              </TranslationTabs>
+            </FieldGroup>
           </Section>
-          <Section title={translate("companies.titles.containedSemiProducts")}>
-            {chainIds.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{translate("companies.texts.selectAValueChainFirst")}</p>
-            ) : (
+
+          <Section id="location" title={translate("companies.titles.location")}>
+            <LocationFields control={control} prefix="facilityLocation" />
+          </Section>
+
+          <Section id="attributes" title={translate("companies.titles.additionalAttributes")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <SelectField
+                control={control}
+                name="isCollectionFacility"
+                label={translate("companies.fields.isThisACollectionFacility")}
+                options={YES_NO}
+                rules={{ required: translate("companies.errors.thisFieldIsRequired") }}
+              />
+              <SelectField
+                control={control}
+                name="isPublic"
+                label={translate("companies.fields.containsSellableSemiProductsOr")}
+                options={YES_NO}
+                rules={{ required: translate("companies.errors.thisFieldIsRequired") }}
+              />
+            </FieldGroup>
+            <FieldGroup className="grid gap-3 sm:grid-cols-2">
+              <CheckboxField
+                control={control}
+                name="displayMayInvolveCollectors"
+                label={translate("companies.fields.mayInvolveCollectors")}
+              />
+              <CheckboxField
+                control={control}
+                name="displayOrganic"
+                label={translate("companies.fields.organic")}
+              />
+              <CheckboxField
+                control={control}
+                name="displayWomenOnly"
+                label={translate("companies.fields.womenOnly")}
+              />
+              <CheckboxField
+                control={control}
+                name="displayTare"
+                label={translate("companies.fields.tare")}
+              />
+              <CheckboxField
+                control={control}
+                name="displayPriceDeductionDamage"
+                label={translate("companies.fields.priceReductionForDamage")}
+              />
+              <CheckboxField
+                control={control}
+                name="displayWeightDeductionDamage"
+                label={translate("companies.fields.weightReductionForDamage")}
+              />
+              <CheckboxField
+                control={control}
+                name="displayPriceDeterminedLater"
+                label={translate("companies.fields.priceDeterminedLater")}
+              />
+            </FieldGroup>
+          </Section>
+
+          <div className="grid gap-6 @3xl:grid-cols-3">
+            <Section id="value-chains" required title={translate("companies.titles.valueChains")}>
               <EntityListField
                 control={control}
-                name="facilitySemiProductList"
-                items={semiProducts}
-                getLabel={(s) => s.name ?? ""}
+                name="facilityValueChains"
+                items={valueChains}
+                getLabel={(v) => v.name ?? ""}
+                rules={{ validate: (v) => (Array.isArray(v) && v.length > 0) || translate("companies.errors.atLeastOneValueChain") }}
               />
-            )}
-          </Section>
-          <Section
-            title={translate("companies.titles.containedFinalProducts")}
-          >
-            <EntityListField
-              control={control}
-              name="facilityFinalProducts"
-              items={finalProducts}
-              getLabel={(f) => `${f.name}${f.product?.name ? ` (${f.product.name})` : ""}`}
-            />
-          </Section>
-        </div>
+            </Section>
+            <Section id="semi-products" title={translate("companies.titles.containedSemiProducts")}>
+              {chainIds.length === 0 ? (
+                <p className="text-xs text-muted-foreground">{translate("companies.texts.selectAValueChainFirst")}</p>
+              ) : (
+                <EntityListField
+                  control={control}
+                  name="facilitySemiProductList"
+                  items={semiProducts}
+                  getLabel={(s) => s.name ?? ""}
+                />
+              )}
+            </Section>
+            <Section
+              id="final-products"
+              title={translate("companies.titles.containedFinalProducts")}
+            >
+              <EntityListField
+                control={control}
+                name="facilityFinalProducts"
+                items={finalProducts}
+                getLabel={(f) => `${f.name}${f.product?.name ? ` (${f.product.name})` : ""}`}
+              />
+            </Section>
+          </div>
 
-        <FormActions>
-          <Button type="button" variant="outline" onClick={back}>
-            {translate("buttons.cancel")}
-          </Button>
-          <Button type="submit" disabled={formLoading} data-onboarding="facility-save">
-            {formLoading && <Spinner />}
-            {translate("buttons.save")}
-          </Button>
-        </FormActions>
+          <FormActions sticky control={control}>
+            <Button type="button" variant="outline" disabled={formLoading} onClick={back}>
+              {translate("buttons.cancel")}
+            </Button>
+            <Button type="submit" disabled={formLoading} data-onboarding="facility-save">
+              {formLoading && <Spinner />}
+              {translate("buttons.save")}
+            </Button>
+          </FormActions>
+        </FormLayout>
       </form>
     </>
   );

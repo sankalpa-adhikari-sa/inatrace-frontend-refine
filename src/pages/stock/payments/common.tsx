@@ -1,6 +1,4 @@
 import type { ApiPayment } from "@/client/types.gen";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { t } from "@/lib/i18n";
 
 export type PurposeType = NonNullable<ApiPayment["paymentPurposeType"]>;
@@ -48,11 +46,3 @@ export const RECEIPT_TYPES = [
 /** "Label (suffix)", or just the label when there's no suffix (getCurrencyString / getUnitLabelString). */
 export const withSuffix = (label: string, suffix?: string | null) => (suffix ? `${label} (${suffix})` : label);
 
-export function ReadOnly({ label, value }: { label: string; value: string }) {
-  return (
-    <Field>
-      <FieldLabel>{label}</FieldLabel>
-      <Input disabled value={value} />
-    </Field>
-  );
-}

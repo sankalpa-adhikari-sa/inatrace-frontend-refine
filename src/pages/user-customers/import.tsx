@@ -93,7 +93,10 @@ export function FarmerImport() {
 
   return (
     <>
-      <PageHeader title={translate("userCustomers.titles.importFarmers")} back="/my-farmers" />
+      <PageHeader
+        title={translate("userCustomers.titles.importFarmers")}
+        breadcrumbs={[{ label: translate("userCustomers.titles.farmers"), to: "/my-farmers" }]}
+      />
       <div className="grid gap-6 lg:grid-cols-2">
         <Section title={translate("userCustomers.titles.template")}>
           <a

@@ -10,7 +10,7 @@ import { RowActions, SearchInput, SimpleSelect, Toolbar, humanize } from "@/comp
 import { PageHeader, PageLoader, Section } from "@/components/app/page";
 import { PlotsMap, WhispDialog } from "@/components/app/plots-map";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { DataTableSorter } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Button } from "@/components/ui/button";
 import { useSelectedCompany } from "@/hooks/use-session";
 import { useTableFilter } from "@/hooks/use-table-filter";
@@ -50,14 +50,6 @@ export function formatLocation(uc: ApiUserCustomer) {
   return [a.city, a.state].filter(Boolean).join(", ");
 }
 
-const sortable = (label: string) =>
-  function Header({ column }: { column: any }) {
-    return (
-      <div className="flex items-center gap-1">
-        {label} <DataTableSorter column={column} />
-      </div>
-    );
-  };
 
 /** `/my-farmers` and `/my-collectors` */
 export function UserCustomerList({ type }: { type: UserCustomerType }) {
@@ -77,7 +69,7 @@ function UserCustomerTable({ type, companyId }: { type: UserCustomerType; compan
   const columns = useMemo<ColumnDef<ApiUserCustomer>[]>(
     () => [
       // Column ids are the backend's sortBy keys.
-      { id: "BY_NAME", accessorKey: "name", header: sortable(translate("common.fields.firstName")) },
+      { id: "BY_NAME", accessorKey: "name", header: sortable(translate("common.fields.firstName")), meta: { primary: true } },
       { id: "BY_SURNAME", accessorKey: "surname", header: sortable(translate("common.fields.lastName")) },
       {
         id: "gender",
@@ -201,7 +193,7 @@ function UserCustomerTable({ type, companyId }: { type: UserCustomerType; compan
           placeholder={kind.search}
         />
       </Toolbar>
-      <DataTable table={table} />
+      <DataTable table={table} getRowHref={(u) => `${kind.base}/edit/${u.id}`} />
       {type === "FARMER" && <CompanyPlots companyId={companyId} />}
     </>
   );

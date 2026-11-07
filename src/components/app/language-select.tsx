@@ -8,7 +8,7 @@ import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /** Each language in its own name, so it reads the same whatever the UI language is. */
-const LANGUAGE_OPTIONS: Option<Locale>[] = [
+export const LANGUAGE_OPTIONS: Option<Locale>[] = [
   { value: "en", label: "English" },
   { value: "de", label: "Deutsch" },
   { value: "es", label: "Español" },
@@ -18,12 +18,11 @@ const LANGUAGE_OPTIONS: Option<Locale>[] = [
 type ApiLanguage = "EN" | "DE" | "RW" | "ES";
 
 /**
- * Header language switcher. Switches the UI in place and saves the choice as the user's profile
- * language (the same field as My profile), which the app applies at login.
+ * Switches the UI language in place and saves the choice as the user's profile language (the same field
+ * as My profile), which the app applies at login.
  */
-export function LanguageSelect({ className }: { className?: string }) {
-  const translate = useTranslate();
-  const locale = useGetLocale()();
+export function useChangeLanguage() {
+  const locale = useGetLocale()() as Locale;
   const setLocale = useSetLocale();
   const { user } = useIdentity();
   const refreshIdentity = useRefreshIdentity();
@@ -41,16 +40,23 @@ export function LanguageSelect({ className }: { className?: string }) {
     if (user && user.language !== language) save.mutate(language);
   };
 
+  return { locale, change, pending: save.isPending };
+}
+
+/** Header language switcher. */
+export function LanguageSelect({ className }: { className?: string }) {
+  const translate = useTranslate();
+  const { locale, change, pending } = useChangeLanguage();
   const label = translate("common.fields.language");
   return (
     <div className={cn("w-36", className)} title={label}>
       <SimpleCombobox<Locale>
         options={LANGUAGE_OPTIONS}
-        value={locale as Locale}
+        value={locale}
         onChange={change}
         placeholder={label}
         clearable={false}
-        disabled={save.isPending}
+        disabled={pending}
         prefix={<Languages aria-hidden />}
       />
     </div>

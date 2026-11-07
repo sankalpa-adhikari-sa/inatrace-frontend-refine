@@ -17,7 +17,7 @@ import { Toaster } from "./components/ui/toast";
 import "./App.css";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { PageLoader } from "./components/app/page";
+import { PageLoader, documentTitle } from "./components/app/page";
 import { lazyPage } from "./lib/lazy-page";
 import { LOCALES } from "./lib/i18n";
 import { queryClient } from "./lib/query-client";
@@ -294,7 +294,8 @@ function App() {
 
                 <RefineKbar />
                 <UnsavedChangesNotifier />
-                <DocumentTitleHandler />
+                {/* Page titles come from PageHeader (useDocumentTitle); elsewhere the tab shows the app name. */}
+                <DocumentTitleHandler handler={documentTitle} />
               </Refine>
               <DevtoolsPanel />
             </DevtoolsProvider>

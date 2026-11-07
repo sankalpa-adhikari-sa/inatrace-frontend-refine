@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useTableFilter } from "@/hooks/use-table-filter";
 import { ProductTabs } from "./tabs";
 import { t } from "@/lib/i18n";
+import { focusFirstError } from "@/lib/form-errors";
 
 type BlogType = NonNullable<ApiKnowledgeBlog["type"]>;
 const BLOG_TYPES: { value: BlogType; label: string }[] = [
@@ -188,8 +189,9 @@ export function KnowledgeBlogForm() {
     <>
       <ProductTabs productId={productId} />
       <form
-        onSubmit={handleSubmit((v) =>
-          onFinish({ ...v, type: type.value, documents: v.documents?.filter((d: ApiDocument) => d?.storageKey) })
+        onSubmit={handleSubmit(
+          (v) => onFinish({ ...v, type: type.value, documents: v.documents?.filter((d: ApiDocument) => d?.storageKey) }),
+          focusFirstError
         )}
         className="flex flex-col gap-6"
       >

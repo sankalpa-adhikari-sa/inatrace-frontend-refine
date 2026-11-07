@@ -1,47 +1,51 @@
 "use client";
 
+import { useTranslate } from "@refinedev/core";
 import type { Column } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type DataTableSorterProps<TData> = {
-  column: Column<TData>;
-} & React.ComponentProps<typeof Button>;
-
-export function DataTableSorter<TData>({
+/** A column header whose whole label sorts the table (a click cycles ascending → descending → off). */
+export function SortableHeader<TData>({
   column,
+  label,
   className,
-  ...props
-}: DataTableSorterProps<TData>) {
-  const title =
-    column.getIsSorted() === "desc"
-      ? `Sort by ${column.id} as descending`
-      : column.getIsSorted() === "asc"
-      ? `Sort by ${column.id} as ascending`
-      : `Sort by ${column.id}`;
-
+}: {
+  column: Column<TData>;
+  label: string;
+  className?: string;
+}) {
+  const translate = useTranslate();
+  const sorted = column.getIsSorted();
+  const description =
+    sorted === "asc"
+      ? translate("table.texts.sortedAscending", { column: label })
+      : sorted === "desc"
+        ? translate("table.texts.sortedDescending", { column: label })
+        : translate("table.texts.sortBy", { column: label });
+  const Icon = sorted === "desc" ? ArrowDown : sorted === "asc" ? ArrowUp : ChevronsUpDown;
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <button
+      type="button"
       onClick={() => column.toggleSorting(undefined, true)}
-      title={title}
-      aria-label={title}
-      {...props}
-      className={cn("data-[state=open]:bg-accent", "w-5 h-5", className)}
-    >
-      {column.getIsSorted() === "desc" ? (
-        <ArrowDown className={cn("text-primary", "!w-3", "!h-3")} />
-      ) : column.getIsSorted() === "asc" ? (
-        <ArrowUp className={cn("text-primary", "!w-3", "!h-3")} />
-      ) : (
-        <ChevronsUpDown
-          className={cn("text-muted-foreground", "!w-3", "!h-3")}
-        />
+      aria-label={description}
+      title={description}
+      className={cn(
+        "-mx-1 inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50",
+        className
       )}
-    </Button>
+    >
+      <span className="truncate">{label}</span>
+      <Icon aria-hidden className={cn("size-3 shrink-0", sorted ? "text-primary" : "text-muted-foreground")} />
+    </button>
   );
 }
 
-DataTableSorter.displayName = "DataTableSorter";
+/**
+ * `header` for a sortable column. Pass a getter for translated labels in module-level column definitions,
+ * so the label follows a language change.
+ */
+export const sortable = (label: string | (() => string)) =>
+  function Header<TData>({ column }: { column: Column<TData> }) {
+    return <SortableHeader column={column} label={typeof label === "function" ? label() : label} />;
+  };

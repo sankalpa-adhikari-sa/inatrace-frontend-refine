@@ -67,10 +67,11 @@ export function B2cSection({ control }: { control: Control<FormValues> }) {
   );
   return (
     <Section
+      id="b2c"
       title={translate("products.productPage.titles.b2cSettings")}
       description={translate("products.productPage.descriptions.lookAndContentOfThe")}
     >
-      <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <FieldGroup className="grid gap-4 @lg:grid-cols-2 @4xl:grid-cols-4">
         <ColorField
           control={control}
           name={`${b}.primaryColor`}
@@ -107,7 +108,7 @@ export function B2cSection({ control }: { control: Control<FormValues> }) {
           label={translate("products.productPage.fields.textColor")}
         />
       </FieldGroup>
-      <FieldGroup className="grid gap-4 sm:grid-cols-2">
+      <FieldGroup className="grid gap-4 @lg:grid-cols-2">
         <UploadField
           control={control}
           name={`${b}.productFont`}
@@ -149,7 +150,7 @@ export function B2cSection({ control }: { control: Control<FormValues> }) {
           accept={IMAGE_TYPES}
         />
       </FieldGroup>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-4">
         {tab("FairPrices", translate("products.productPage.fields.fairPrices"), translate("products.productPage.fields.enableFairPricesTab"))}
         {tab("Producers", translate("products.productPage.fields.producers"), translate("products.productPage.fields.enableProducersTab"))}
         {tab("Quality", translate("common.fields.quality"), translate("products.productPage.fields.enableQualityTab"))}
@@ -168,7 +169,7 @@ export function B2cSection({ control }: { control: Control<FormValues> }) {
           }}
         />
       )}
-      <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <FieldGroup className="grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3">
         <SelectField
           control={control}
           name={`${b}.graphicPriceToProducer`}

@@ -2,13 +2,13 @@ import { useTranslate } from "@refinedev/core";
 import { Plus, Trash2 } from "lucide-react";
 import { type Control, type FieldPath, useFieldArray } from "react-hook-form";
 import type { ApiProcessingEvidenceField } from "@/client/types.gen";
-import { DateField, EntityComboboxField, TextareaField, TextField } from "@/components/app/form-fields";
+import { DateField, EntityComboboxField, TextareaField, TextField, ReadOnlyField } from "@/components/app/form-fields";
 import { UploadField } from "@/components/app/upload-field";
 import { Button } from "@/components/ui/button";
 import { FieldLabel } from "@/components/ui/field";
 import { useApi } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
-import { type FormValues, NUMERIC_FIELDS, ReadOnly } from "./model";
+import { type FormValues, NUMERIC_FIELDS } from "./model";
 
 /** One processing evidence field, typed like StockProcessingOrderFieldsComponent. */
 export function EvidenceField({
@@ -57,7 +57,7 @@ export function RequiredDocs({ control }: { control: Control<FormValues> }) {
     <div className="flex flex-col gap-3">
       {fields.map((f, i) => (
         <div key={f.key} className="grid gap-4 border-b pb-4 last:border-b-0 last:pb-0 sm:grid-cols-[1fr_1fr_2fr] sm:items-end">
-          <ReadOnly
+          <ReadOnlyField
             label={translate("common.fields.type")}
             value={`${f.label ?? ""}${f.mandatory ? " *" : ""}`}
           />

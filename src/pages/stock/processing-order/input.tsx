@@ -141,7 +141,8 @@ export function InputSection({
           onQr={setQr}
         />
       )}
-      {error && <FieldError>{error}</FieldError>}
+      {/* data-invalid: found by the form's "go to first error" and the section error marks. */}
+      {error && <FieldError data-invalid>{error}</FieldError>}
 
       {qr?.qrCodeTag && <QrCodeDialog qrCodeTag={qr.qrCodeTag} finalProduct={qr.qrCodeTagFinalProduct} onClose={() => setQr(null)} />}
     </div>

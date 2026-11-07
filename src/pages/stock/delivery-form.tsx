@@ -1,18 +1,23 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { type Control, useFieldArray, useForm, useWatch } from "react-hook-form";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import type { ApiFacility, ApiStockOrder, ApiUserCustomer } from "@/client/types.gen";
-import { CheckboxField, ComboboxField, DateField, EntityComboboxField, SelectField, TextField } from "@/components/app/form-fields";
+import { CheckboxField, ComboboxField, DateField, EntityComboboxField, SelectField, TextField, ReadOnlyField } from "@/components/app/form-fields";
 import { LastChange } from "@/components/app/last-change";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { FormLayout } from "@/components/app/form-layout";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormSkeleton } from "@/components/app/states";
 import { SearchSelectField } from "@/components/app/search-select-field";
 import { UploadField } from "@/components/app/upload-field";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { useGoBack } from "@/hooks/use-go-back";
 import { useIdentity, useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { focusFirstError } from "@/lib/form-errors";
 import { WAYS_OF_PAYMENT, type WayOfPayment, day, fmt, personName, toApiDate, today } from "./shared";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
@@ -91,7 +96,7 @@ export function DeliveryForm() {
   const { company } = useSelectedCompany();
 
   const facility = isNew ? newFacility : order?.facility;
-  if ((isNew ? facilityLoading : orderLoading) || !facility || !company) return <PageLoader />;
+  if ((isNew ? facilityLoading : orderLoading) || !facility || !company) return <FormSkeleton sections={3} />;
   return <Form key={order?.id ?? "new"} facility={facility} order={order} currency={company.currency?.code} />;
 }
 
@@ -99,9 +104,8 @@ function Form({ facility, order, currency }: { facility: ApiFacility; order?: Ap
   const translate = useTranslate();
   const isNew = order == null;
   const { user } = useIdentity();
-  const navigate = useNavigate();
   const { company, companyId } = useSelectedCompany();
-  const back = () => navigate(-1);
+  const back = useGoBack("/my-stock/deliveries");
   const semiProducts = (facility.facilitySemiProductList ?? []).filter((s) => s.buyable);
   const selectedCurrency = order?.currency ?? currency ?? "-";
 
@@ -118,6 +122,7 @@ function Form({ facility, order, currency }: { facility: ApiFacility; order?: Ap
           womenShare: facility.displayWomenOnly ? undefined : false,
         }),
   });
+  const release = useWarnWhenDirty(control);
 
   const v = useWatch({ control }) as FormValues;
   const semiProductId = v.semiProduct?.id;
@@ -205,12 +210,14 @@ function Form({ facility, order, currency }: { facility: ApiFacility; order?: Ap
       return { saved, close };
     },
     onSuccess: ({ close }, { values }) => {
-      if (close) back();
-      else reset(values);
+      if (close) {
+        release();
+        back();
+      } else reset(values);
     },
   });
 
-  const submit = (close: boolean) => handleSubmit((values) => save.mutate({ values, close }));
+  const submit = (close: boolean) => handleSubmit((values) => save.mutate({ values, close }), focusFirstError);
 
   return (
     <>
@@ -220,7 +227,7 @@ function Form({ facility, order, currency }: { facility: ApiFacility; order?: Ap
             ? translate("stock.titles.newDelivery")
             : translate("stock.titles.updateDelivery")
         }
-        back
+        breadcrumbs={[{ label: translate("common.fields.myStock"), to: "/my-stock" }, { label: translate("stock.fields.deliveries"), to: "/my-stock/deliveries" }]}
         actions={
           order && (
             <LastChange
@@ -230,249 +237,241 @@ function Form({ facility, order, currency }: { facility: ApiFacility; order?: Ap
           )
         }
       />
-      <form onSubmit={submit(true)} className="flex flex-col gap-6">
-        <Section title={translate("common.titles.basicInformation")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <DateField
-              control={control}
-              name="productionDate"
-              label={translate("common.fields.deliveryDate")}
-              rules={{
-                required: translate("stock.errors.deliveryDateIsRequired"),
-              }}
-            />
-            <Field>
-              <FieldLabel>
-                {translate("stock.fields.facilityName")}
-              </FieldLabel>
-              <Input disabled value={facility.name ?? ""} />
-            </Field>
-            <SearchSelectField<FormValues, ApiUserCustomer>
-              control={control}
-              name="producerUserCustomer"
-              label={translate("common.fields.farmer")}
-              queryKey={["farmers", companyId]}
-              search={userCustomerSearch(companyId!, "FARMER")}
-              getLabel={(u) => `${personName(u)} (${u.id})`}
-              rules={{
-                required: translate("stock.errors.farmerIsRequired"),
-              }}
-            />
-            {show.collector && (
+      <form onSubmit={submit(true)}>
+        <FormLayout control={control}>
+          <Section id="basic" title={translate("common.titles.basicInformation")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <DateField
+                control={control}
+                name="productionDate"
+                label={translate("common.fields.deliveryDate")}
+                rules={{
+                  required: translate("stock.errors.deliveryDateIsRequired"),
+                }}
+              />
+              <Field>
+                <FieldLabel>
+                  {translate("stock.fields.facilityName")}
+                </FieldLabel>
+                <Input disabled value={facility.name ?? ""} />
+              </Field>
               <SearchSelectField<FormValues, ApiUserCustomer>
                 control={control}
-                name="representativeOfProducerUserCustomer"
-                label={translate("common.fields.collector")}
-                queryKey={["collectors", companyId]}
-                search={userCustomerSearch(companyId!, "COLLECTOR")}
-                getLabel={(u) => personName(u)}
+                name="producerUserCustomer"
+                label={translate("common.fields.farmer")}
+                queryKey={["farmers", companyId]}
+                search={userCustomerSearch(companyId!, "FARMER")}
+                getLabel={(u) => `${personName(u)} (${u.id})`}
+                rules={{
+                  required: translate("stock.errors.farmerIsRequired"),
+                }}
               />
-            )}
-            <ComboboxField
-              control={control}
-              name="creatorId"
-              label={translate("stock.fields.cooperativeEmployee")}
-              options={employees}
-              rules={{ required: translate("stock.errors.employeeIsRequired") }}
-            />
-          </FieldGroup>
-        </Section>
+              {show.collector && (
+                <SearchSelectField<FormValues, ApiUserCustomer>
+                  control={control}
+                  name="representativeOfProducerUserCustomer"
+                  label={translate("common.fields.collector")}
+                  queryKey={["collectors", companyId]}
+                  search={userCustomerSearch(companyId!, "COLLECTOR")}
+                  getLabel={(u) => personName(u)}
+                />
+              )}
+              <ComboboxField
+                control={control}
+                name="creatorId"
+                label={translate("stock.fields.cooperativeEmployee")}
+                options={employees}
+                rules={{ required: translate("stock.errors.employeeIsRequired") }}
+              />
+            </FieldGroup>
+          </Section>
 
-        <Section title={translate("stock.titles.deliveryDetails")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <EntityComboboxField
-              control={control}
-              name="semiProduct"
-              label={translate("stock.fields.semiProduct")}
-              items={semiProducts}
-              getLabel={(s) => s.name ?? ""}
-              rules={{
-                required: translate("stock.errors.semiProductIsRequired"),
-              }}
-            />
-            {facility.displayPriceDeterminedLater && (
-              <CheckboxField
+          <Section id="details" title={translate("stock.titles.deliveryDetails")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <EntityComboboxField
                 control={control}
-                name="priceDeterminedLater"
-                label={translate("stock.fields.priceDeterminedLater")}
-                className="self-end"
+                name="semiProduct"
+                label={translate("stock.fields.semiProduct")}
+                items={semiProducts}
+                getLabel={(s) => s.name ?? ""}
+                rules={{
+                  required: translate("stock.errors.semiProductIsRequired"),
+                }}
               />
-            )}
-            <TextField
-              control={control}
-              name="totalGrossQuantity"
-              type="number"
-              label={withUnit(translate("common.fields.quantity"), unit)}
-              rules={{
-                required: translate("common.errors.quantityIsRequired"),
-                min: { value: 0, message: translate("common.errors.mustNotBeNegative") },
-              }}
-            />
-            {!priceLater && (
+              {facility.displayPriceDeterminedLater && (
+                <CheckboxField
+                  control={control}
+                  name="priceDeterminedLater"
+                  label={translate("stock.fields.priceDeterminedLater")}
+                  className="self-end"
+                />
+              )}
               <TextField
                 control={control}
-                name="pricePerUnit"
+                name="totalGrossQuantity"
                 type="number"
-                label={withUnit(translate("stock.fields.pricePerUnit"), perUnit)}
+                label={withUnit(translate("common.fields.quantity"), unit)}
                 rules={{
-                  required: translate("stock.errors.pricePerUnitIsRequired"),
+                  required: translate("common.errors.quantityIsRequired"),
+                  min: { value: 0, message: translate("common.errors.mustNotBeNegative") },
                 }}
               />
-            )}
-            {show.tare && (
-              <TextField
+              {!priceLater && (
+                <TextField
+                  control={control}
+                  name="pricePerUnit"
+                  type="number"
+                  label={withUnit(translate("stock.fields.pricePerUnit"), perUnit)}
+                  rules={{
+                    required: translate("stock.errors.pricePerUnitIsRequired"),
+                  }}
+                />
+              )}
+              {show.tare && (
+                <TextField
+                  control={control}
+                  name="tare"
+                  type="number"
+                  readOnly={!facility.displayTare}
+                  label={withUnit(translate("stock.fields.tare"), unit)}
+                  rules={{
+                    required: facility.displayTare
+                      ? translate("stock.errors.tareIsRequired")
+                      : false,
+                    validate: (t) =>
+                      t == null ||
+                      gross == null ||
+                      Number(t) <= gross ||
+                      translate("stock.errors.tareValueIsLargerThan"),
+                  }}
+                />
+              )}
+              {show.weightDeduction && (
+                <TextField
+                  control={control}
+                  name="damagedWeightDeduction"
+                  type="number"
+                  readOnly={!facility.displayWeightDeductionDamage}
+                  label={withUnit(
+                    translate("stock.fields.damagedWeightDeduction"),
+                    unit
+                  )}
+                  rules={{
+                    required: facility.displayWeightDeductionDamage
+                      ? translate("stock.errors.damagedWeightDeductionIsRequired")
+                      : false,
+                    validate: (d) =>
+                      d == null ||
+                      gross == null ||
+                      Number(d) <= gross - (num(v.tare) ?? 0) ||
+                      translate("stock.errors.damagedWeightDeductionIsLarger"),
+                  }}
+                />
+              )}
+              {show.priceDeduction && (
+                <TextField
+                  control={control}
+                  name="damagedPriceDeduction"
+                  type="number"
+                  label={withUnit(
+                    translate("stock.fields.damagedPriceDeduction"),
+                    perUnit
+                  )}
+                  readOnly={!facility.displayPriceDeductionDamage}
+                  rules={{
+                    required: facility.displayPriceDeductionDamage
+                      ? translate("stock.errors.damagedPriceDeductionIsRequired")
+                      : false,
+                    validate: (d) =>
+                      d == null ||
+                      price == null ||
+                      Number(d) <= price ||
+                      translate("stock.errors.damagedPriceDeductionIsLarger"),
+                  }}
+                />
+              )}
+              {(show.tare || show.weightDeduction) && (
+                <ReadOnlyField
+                  label={withUnit(translate("stock.fields.netWeight"), unit)}
+                  value={fmt(netWeight)}
+                />
+              )}
+              {show.priceDeduction && (
+                <ReadOnlyField
+                  label={withUnit(translate("stock.fields.finalPrice"), perUnit)}
+                  value={fmt(finalPrice)}
+                />
+              )}
+              <ReadOnlyField
+                label={withUnit(translate("stock.fields.basePayment"), selectedCurrency)}
+                value={fmt(v.cost)}
+              />
+              <ReadOnlyField
+                label={withUnit(translate("stock.fields.openBalance"), selectedCurrency)}
+                value={fmt(v.balance)}
+              />
+              <ComboboxField
                 control={control}
-                name="tare"
-                type="number"
-                readOnly={!facility.displayTare}
-                label={withUnit(translate("stock.fields.tare"), unit)}
+                name="preferredWayOfPayment"
+                label={translate("stock.fields.preferredWayOfPayment")}
+                options={paymentOptions}
                 rules={{
-                  required: facility.displayTare
-                    ? translate("stock.errors.tareIsRequired")
-                    : false,
-                  validate: (t) =>
-                    t == null ||
-                    gross == null ||
-                    Number(t) <= gross ||
-                    translate("stock.errors.tareValueIsLargerThan"),
+                  required: translate("stock.errors.preferredWayOfPaymentIs"),
                 }}
               />
-            )}
-            {show.weightDeduction && (
-              <TextField
-                control={control}
-                name="damagedWeightDeduction"
-                type="number"
-                readOnly={!facility.displayWeightDeductionDamage}
-                label={withUnit(
-                  translate("stock.fields.damagedWeightDeduction"),
-                  unit
-                )}
-                rules={{
-                  required: facility.displayWeightDeductionDamage
-                    ? translate("stock.errors.damagedWeightDeductionIsRequired")
-                    : false,
-                  validate: (d) =>
-                    d == null ||
-                    gross == null ||
-                    Number(d) <= gross - (num(v.tare) ?? 0) ||
-                    translate("stock.errors.damagedWeightDeductionIsLarger"),
-                }}
-              />
-            )}
-            {show.priceDeduction && (
-              <TextField
-                control={control}
-                name="damagedPriceDeduction"
-                type="number"
-                label={withUnit(
-                  translate("stock.fields.damagedPriceDeduction"),
-                  perUnit
-                )}
-                readOnly={!facility.displayPriceDeductionDamage}
-                rules={{
-                  required: facility.displayPriceDeductionDamage
-                    ? translate("stock.errors.damagedPriceDeductionIsRequired")
-                    : false,
-                  validate: (d) =>
-                    d == null ||
-                    price == null ||
-                    Number(d) <= price ||
-                    translate("stock.errors.damagedPriceDeductionIsLarger"),
-                }}
-              />
-            )}
-            {(show.tare || show.weightDeduction) && (
-              <ReadOnly
-                label={withUnit(translate("stock.fields.netWeight"), unit)}
-                value={fmt(netWeight)}
-              />
-            )}
-            {show.priceDeduction && (
-              <ReadOnly
-                label={withUnit(translate("stock.fields.finalPrice"), perUnit)}
-                value={fmt(finalPrice)}
-              />
-            )}
-            <ReadOnly
-              label={withUnit(translate("stock.fields.basePayment"), selectedCurrency)}
-              value={fmt(v.cost)}
-            />
-            <ReadOnly
-              label={withUnit(translate("stock.fields.openBalance"), selectedCurrency)}
-              value={fmt(v.balance)}
-            />
-            <ComboboxField
-              control={control}
-              name="preferredWayOfPayment"
-              label={translate("stock.fields.preferredWayOfPayment")}
-              options={paymentOptions}
-              rules={{
-                required: translate("stock.errors.preferredWayOfPaymentIs"),
-              }}
-            />
-            {show.organic && !facility.displayOrganic && (
-              <ReadOnly
-                label={translate("stock.fields.organic")}
-                value={ORGANIC_YES_NO.find((o) => o.value === v.organic)?.label ?? "-"}
-              />
-            )}
-            {show.organic && facility.displayOrganic && (
-              <SelectField
-                control={control}
-                name="organic"
-                label={translate("stock.fields.organic")}
-                options={ORGANIC_YES_NO}
-                rules={{
-                  required: translate("stock.errors.organicIsRequired"),
-                }}
-              />
-            )}
-            {show.womenOnly && (
-              <SelectField
-                control={control}
-                name="womenShare"
-                label={translate("stock.fields.womensOnly2")}
-                options={WOMEN_ONLY_YES_NO}
-                rules={{ required: translate("stock.errors.womensOnlyIsRequired2") }}
-              />
-            )}
-          </FieldGroup>
-        </Section>
+              {show.organic && !facility.displayOrganic && (
+                <ReadOnlyField
+                  label={translate("stock.fields.organic")}
+                  value={ORGANIC_YES_NO.find((o) => o.value === v.organic)?.label ?? "-"}
+                />
+              )}
+              {show.organic && facility.displayOrganic && (
+                <SelectField
+                  control={control}
+                  name="organic"
+                  label={translate("stock.fields.organic")}
+                  options={ORGANIC_YES_NO}
+                  rules={{
+                    required: translate("stock.errors.organicIsRequired"),
+                  }}
+                />
+              )}
+              {show.womenOnly && (
+                <SelectField
+                  control={control}
+                  name="womenShare"
+                  label={translate("stock.fields.womensOnly2")}
+                  options={WOMEN_ONLY_YES_NO}
+                  rules={{ required: translate("stock.errors.womensOnlyIsRequired2") }}
+                />
+              )}
+            </FieldGroup>
+          </Section>
 
-        <Section
-          title={translate("stock.titles.additionalProofs")}
-        >
-          <ActivityProofs control={control} />
-        </Section>
+          <Section id="proofs" title={translate("stock.titles.additionalProofs")}>
+            <ActivityProofs control={control} />
+          </Section>
 
-        <FormActions>
-          <Button type="button" variant="outline" onClick={back}>
-            {translate("buttons.cancel")}
-          </Button>
-          {!isNew && (
-            <Button type="button" variant="outline" disabled={save.isPending} onClick={submit(false)}>
-              {translate("buttons.save")}
+          <FormActions sticky control={control}>
+            <Button type="button" variant="outline" disabled={save.isPending} onClick={() => back()}>
+              {translate("buttons.cancel")}
             </Button>
-          )}
-          <Button type="submit" disabled={save.isPending}>
-            {save.isPending && <Spinner />}
-            {isNew ? translate("buttons.save") : translate("stock.buttons.saveClose")}
-          </Button>
-        </FormActions>
+            {!isNew && (
+              <Button type="button" variant="outline" disabled={save.isPending} onClick={submit(false)}>
+                {translate("buttons.save")}
+              </Button>
+            )}
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending && <Spinner />}
+              {isNew ? translate("buttons.save") : translate("stock.buttons.saveClose")}
+            </Button>
+          </FormActions>
+        </FormLayout>
       </form>
     </>
   );
 }
 
-function ReadOnly({ label, value }: { label: string; value: string }) {
-  return (
-    <Field>
-      <FieldLabel>{label}</FieldLabel>
-      <Input disabled value={value} />
-    </Field>
-  );
-}
 
 /** List of ApiActivityProof (AdditionalProofItemComponent). */
 export function ActivityProofs<T extends { activityProofs?: ApiStockOrder["activityProofs"] }>({

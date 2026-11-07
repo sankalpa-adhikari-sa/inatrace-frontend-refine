@@ -3,13 +3,17 @@ import { type ReactNode, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router";
 import type { ApiProduct, ApiProductLabel, ApiProductLabelContent } from "@/client/types.gen";
+import { FormLayout } from "@/components/app/form-layout";
 import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { FormSkeleton } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
 import { ep } from "@/lib/endpoints";
+import { focusFirstError } from "@/lib/form-errors";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { completeOnboarding } from "@/stores/onboarding";
 import { ProductTabs } from "../tabs";
@@ -58,7 +62,7 @@ export function ProductPage({ mode }: { mode: "create" | "product" | "labels" })
     );
   }
 
-  if (isLoading || !product) return <PageLoader />;
+  if (isLoading || !product) return <FormSkeleton sections={4} />;
   return mode === "labels" ? (
     <LabelsMode product={product} />
   ) : (
@@ -173,6 +177,7 @@ function ProductEditor({
   // registered without a value (key missing from the loaded data) counts as a change,
   // so the form is dirty as soon as it loads. `dirtyFields` compares field by field.
   const dirty = Object.keys(formState.dirtyFields).length > 0 || title !== (label?.title ?? "");
+  const release = useWarnWhenDirty(control, title !== (label?.title ?? ""));
 
   const save = useApiMutation({
     mutationFn: async (v: FormValues) => {
@@ -192,6 +197,7 @@ function ProductEditor({
       });
     },
     onSuccess: (_, v) => {
+      release();
       if (mode === "create") return navigate(completeOnboarding("product") ? "/home" : "/product-labels");
       reset(v);
       onSaved?.();
@@ -200,9 +206,10 @@ function ProductEditor({
   });
 
   const content = (
-    <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit((v) => save.mutate(v), focusFirstError)}>
+      <FormLayout control={control}>
       {mode === "labels" && (
-        <Section title={translate("products.productPage.titles.label")}>
+        <Section id="label" title={translate("products.productPage.titles.label")}>
           <Field className="max-w-md">
             <FieldLabel>{translate("products.productPage.fields.labelTitle")}</FieldLabel>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={!canEdit} maxLength={255} />
@@ -220,7 +227,7 @@ function ProductEditor({
       />
       {mode === "labels" && <MediaSection control={control} />}
       {canEdit && (
-        <FormActions>
+        <FormActions sticky control={control} dirty={dirty}>
           <Button type="button" variant="outline" disabled={!dirty} onClick={() => (reset(), setTitle(label?.title ?? ""))}>
             {translate("products.productPage.buttons.discardChanges")}
           </Button>
@@ -236,13 +243,17 @@ function ProductEditor({
           </Button>
         </FormActions>
       )}
+      </FormLayout>
     </form>
   );
 
   return (
     <LabelMode.Provider value={mode === "labels" ? { control } : null}>
       {mode === "create" ? (
-        <PageHeader title={translate("products.productPage.titles.newProduct")} back="/product-labels" />
+        <PageHeader
+          title={translate("products.productPage.titles.newProduct")}
+          breadcrumbs={[{ label: translate("products.titles.products"), to: "/product-labels" }]}
+        />
       ) : (
         <ProductTabs productId={product!.id!} />
       )}

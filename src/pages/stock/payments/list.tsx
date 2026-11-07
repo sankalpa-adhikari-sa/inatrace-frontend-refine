@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useUrlFilters } from "@/hooks/use-url-state";
 import { WAYS_OF_PAYMENT, day, fmt, personName, toApiDay, today, useStockPermissions, wayOfPaymentLabel } from "../shared";
 import { call, download, useApi, useInvalidateData } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
@@ -35,10 +36,13 @@ export function PaymentsTab() {
   const { companyId } = useSelectedCompany();
   const { canEditPayments } = useStockPermissions();
   const navigate = useNavigate();
-  const [wayOfPayment, setWayOfPayment] = useState("");
-  const [query, setQuery] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // In the URL, so a reload or the back button from a payment keeps them.
+  const url = useUrlFilters(["wayOfPayment", "query", "from", "to"] as const);
+  const { wayOfPayment, query, from, to } = url.values;
+  const setWayOfPayment = (v: string) => url.set({ wayOfPayment: v });
+  const setQuery = (v: string) => url.set({ query: v });
+  const setFrom = (v: string) => url.set({ from: v });
+  const setTo = (v: string) => url.set({ to: v });
   const [picking, setPicking] = useState(false);
   const [total, setTotal] = useState(0);
 
@@ -265,7 +269,7 @@ export function PaymentsTable({
     if (total != null) onTotal?.(total);
   }, [total, onTotal]);
 
-  return <DataTable table={table} />;
+  return <DataTable table={table} filterKey={permanent} />;
 }
 
 function BulkPayments({ companyId }: { companyId: number }) {

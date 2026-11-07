@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useSelectedCompany } from "@/hooks/use-session";
 import { ep } from "@/lib/endpoints";
 import { useApi } from "@/lib/http";
+import { focusFirstError } from "@/lib/form-errors";
 import { ProductTabs } from "./tabs";
 
 /** `/product-labels/:id/final-products` (FinalProductComponent + FinalProductListComponent) */
@@ -184,7 +185,7 @@ function FinalProductForm({
               : translate("products.titles.editFinalProduct")}
           </DialogTitle>
         </DialogHeader>
-        <form id="final-product-form" onSubmit={handleSubmit(submit)}>
+        <form id="final-product-form" onSubmit={handleSubmit(submit, focusFirstError)}>
           <FieldGroup>
             <TextField
               control={control}

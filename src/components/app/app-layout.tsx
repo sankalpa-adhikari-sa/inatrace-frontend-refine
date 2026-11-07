@@ -30,16 +30,17 @@ export function AppLayout() {
           <SessionWatcher />
           <SidebarProvider>
             <AppSidebar />
-            <SidebarInset className="min-w-0">
+            <SidebarInset className="min-w-0 bg-page">
               <AppHeader />
-              {/* Full width with a fixed gutter, so desktop pages aren't boxed in by large side margins. */}
-              <main className="flex w-full min-w-0 flex-1 flex-col gap-6 p-4 md:px-6 md:py-5">
+              {/* Full width with a fixed gutter, so desktop pages aren't boxed in by large side margins.
+                  A div, not <main>: SidebarInset already renders the main landmark. */}
+              <div className="flex w-full min-w-0 flex-1 flex-col gap-6 p-4 md:px-6 md:py-5">
                 {/* Pages are lazy-loaded (App.tsx); keep the sidebar and header while one loads. */}
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
                 </Suspense>
                 <OnboardingHints />
-              </main>
+              </div>
             </SidebarInset>
           </SidebarProvider>
         </CompanyGate>

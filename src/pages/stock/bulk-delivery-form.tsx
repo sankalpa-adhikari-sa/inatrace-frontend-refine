@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from "lucide-react";
 import { type Control, useFieldArray, useForm, useWatch } from "react-hook-form";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import type {
   ApiFacility,
   ApiPurchaseOrder,
@@ -9,19 +9,24 @@ import type {
   ApiUserCustomer,
 } from "@/client/types.gen";
 import { ComboboxField, DateField, EntityComboboxField, SelectField, TextField } from "@/components/app/form-fields";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormLayout } from "@/components/app/form-layout";
+import { FormSkeleton } from "@/components/app/states";
 import { SearchSelectField } from "@/components/app/search-select-field";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useIdentity, useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { useGoBack } from "@/hooks/use-go-back";
 import { ActivityProofs, userCustomerSearch } from "./delivery-form";
 import { WAYS_OF_PAYMENT, fmt, personName, toApiDate, today } from "./shared";
 import { call, useApi, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
 import { useTranslate } from "@refinedev/core";
 import { t } from "@/lib/i18n";
+import { focusFirstError } from "@/lib/form-errors";
 
 const YES_NO = [
   { value: "true", get label() { return t("common.fields.yes"); } },
@@ -55,13 +60,12 @@ export function BulkDeliveryForm() {
   const { facilityId } = useParams();
   const { data: facility } = useApi(ep.getFacility, { path: { id: Number(facilityId) } }, { select: (r) => r });
   const { company } = useSelectedCompany();
-  if (!facility || !company) return <PageLoader />;
+  if (!facility || !company) return <FormSkeleton sections={3} />;
   return <Form facility={facility} currency={company.currency?.code ?? "-"} />;
 }
 
 function Form({ facility, currency }: { facility: ApiFacility; currency: string }) {
   const translate = useTranslate();
-  const navigate = useNavigate();
   const { user } = useIdentity();
   const { company, companyId } = useSelectedCompany();
   const semiProducts = (facility.facilitySemiProductList ?? []).filter((s) => s.buyable);
@@ -81,6 +85,8 @@ function Form({ facility, currency }: { facility: ApiFacility; currency: string 
       activityProofs: [],
     },
   });
+  const goBack = useGoBack("/my-stock/deliveries");
+  const release = useWarnWhenDirty(control);
   const { fields, append, remove } = useFieldArray({ control, name: "farmers", keyName: "key" });
   const collector = useWatch({ control, name: "representativeOfProducerUserCustomer" });
 
@@ -115,96 +121,106 @@ function Form({ facility, currency }: { facility: ApiFacility; currency: string 
       };
       await call(ep.createPurchaseOrderBulk, { body });
     },
-    onSuccess: () => navigate(-1),
+    onSuccess: () => {
+      release();
+      goBack();
+    },
   });
 
   return (
     <>
-      <PageHeader title={translate("stock.titles.newBulkPurchaseOrder")} back />
-      <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
-        <Section title={translate("common.titles.basicInformation")}>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
-            <DateField
-              control={control}
-              name="productionDate"
-              label={translate("common.fields.deliveryDate")}
-              rules={{
-                required: translate("stock.errors.deliveryDateIsRequired"),
-              }}
-            />
-            <Field>
-              <FieldLabel>
-                {translate("common.fields.facility")}
-              </FieldLabel>
-              <Input disabled value={facility.name ?? ""} />
-            </Field>
-            {facility.displayMayInvolveCollectors && (
-              <SearchSelectField<FormValues, ApiUserCustomer>
+      <PageHeader
+        title={translate("stock.titles.newBulkPurchaseOrder")}
+        breadcrumbs={[{ label: translate("common.fields.myStock"), to: "/my-stock" }, { label: translate("stock.fields.deliveries"), to: "/my-stock/deliveries" }]}
+      />
+      <form onSubmit={handleSubmit((v) => save.mutate(v), focusFirstError)}>
+        <FormLayout control={control}>
+          <Section id="basic" title={translate("common.titles.basicInformation")}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-2">
+              <DateField
                 control={control}
-                name="representativeOfProducerUserCustomer"
-                label={translate("common.fields.collector")}
-                queryKey={["collectors", companyId]}
-                search={userCustomerSearch(companyId!, "COLLECTOR")}
-                getLabel={personName}
+                name="productionDate"
+                label={translate("common.fields.deliveryDate")}
+                rules={{
+                  required: translate("stock.errors.deliveryDateIsRequired"),
+                }}
               />
-            )}
-            <ComboboxField
-              control={control}
-              name="creatorId"
-              label={translate("stock.fields.cooperativeEmployee")}
-              options={employees}
-              rules={{ required: translate("stock.errors.employeeIsRequired") }}
-            />
-            <ComboboxField
-              control={control}
-              name="preferredWayOfPayment"
-              label={translate("stock.fields.preferredWayOfPayment")}
-              options={paymentOptions}
-              rules={{
-                required: translate("stock.errors.preferredWayOfPaymentIs"),
-              }}
-            />
-          </FieldGroup>
-        </Section>
+              <Field>
+                <FieldLabel>
+                  {translate("common.fields.facility")}
+                </FieldLabel>
+                <Input disabled value={facility.name ?? ""} />
+              </Field>
+              {facility.displayMayInvolveCollectors && (
+                <SearchSelectField<FormValues, ApiUserCustomer>
+                  control={control}
+                  name="representativeOfProducerUserCustomer"
+                  label={translate("common.fields.collector")}
+                  queryKey={["collectors", companyId]}
+                  search={userCustomerSearch(companyId!, "COLLECTOR")}
+                  getLabel={personName}
+                />
+              )}
+              <ComboboxField
+                control={control}
+                name="creatorId"
+                label={translate("stock.fields.cooperativeEmployee")}
+                options={employees}
+                rules={{ required: translate("stock.errors.employeeIsRequired") }}
+              />
+              <ComboboxField
+                control={control}
+                name="preferredWayOfPayment"
+                label={translate("stock.fields.preferredWayOfPayment")}
+                options={paymentOptions}
+                rules={{
+                  required: translate("stock.errors.preferredWayOfPaymentIs"),
+                }}
+              />
+            </FieldGroup>
+          </Section>
 
-        <Section
-          title={translate("stock.titles.farmers")}
-          actions={
-            <Button type="button" variant="outline" size="sm" onClick={() => append(emptyRow())}>
-              <Plus />
-              {translate("stock.buttons.addFarmer")}
+          <Section
+            id="farmers"
+            title={translate("stock.titles.farmers")}
+            actions={
+              <Button type="button" variant="outline" size="sm" onClick={() => append(emptyRow())}>
+                <Plus />
+                {translate("stock.buttons.addFarmer")}
+              </Button>
+            }
+          >
+            {fields.map((f, i) => (
+              <FarmerRowFields
+                key={f.key}
+                index={i}
+                control={control}
+                facility={facility}
+                semiProducts={semiProducts}
+                currency={currency}
+                companyId={companyId!}
+                onRemove={fields.length > 1 ? () => remove(i) : undefined}
+              />
+            ))}
+          </Section>
+
+          <Section
+            id="proofs"
+            title={translate("stock.titles.additionalProofs")}
+          >
+            <ActivityProofs control={control} />
+          </Section>
+
+          <FormActions sticky control={control}>
+            <Button type="button" variant="outline" onClick={() => goBack()}>
+              {translate("buttons.cancel")}
             </Button>
-          }
-        >
-          {fields.map((f, i) => (
-            <FarmerRowFields
-              key={f.key}
-              index={i}
-              control={control}
-              facility={facility}
-              semiProducts={semiProducts}
-              currency={currency}
-              companyId={companyId!}
-              onRemove={fields.length > 1 ? () => remove(i) : undefined}
-            />
-          ))}
-        </Section>
-
-        <Section
-          title={translate("stock.titles.additionalProofs")}
-        >
-          <ActivityProofs control={control} />
-        </Section>
-
-        <FormActions>
-          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-            {translate("buttons.cancel")}
-          </Button>
-          <Button type="submit" disabled={save.isPending}>
-            {save.isPending && <Spinner />}
-            {translate("buttons.save")}
-          </Button>
-        </FormActions>
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending && <Spinner />}
+              {translate("buttons.save")}
+            </Button>
+          </FormActions>
+        </FormLayout>
       </form>
     </>
   );

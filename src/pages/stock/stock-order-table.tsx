@@ -8,7 +8,7 @@ import { useConfirm } from "@/components/app/confirm";
 import { RowActions, StatusBadge } from "@/components/app/controls";
 import { QrCodeDialog } from "@/components/app/qr-code-dialog";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { DataTableSorter } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ORDER_TYPES, day, fmt, personName } from "./shared";
@@ -23,14 +23,6 @@ export type StockListMode = "PURCHASE_ORDERS" | "COMPANY_ADMIN";
 
 export type StockOrderFilters = Record<string, string | number | boolean | null | undefined>;
 
-const sortable = (label: string) =>
-  function Header({ column }: { column: any }) {
-    return (
-      <div className="flex items-center gap-1">
-        {label} <DataTableSorter column={column} />
-      </div>
-    );
-  };
 
 function canDelete(o: ApiStockOrder) {
   if (o.orderType === "GENERAL_ORDER") {
@@ -48,6 +40,8 @@ export function StockOrderTable({
   selectable,
   onSelectionChange,
   onTotal,
+  isFiltered,
+  onClearFilters,
 }: {
   mode: StockListMode;
   companyId: number;
@@ -56,6 +50,9 @@ export function StockOrderTable({
   selectable?: boolean;
   onSelectionChange?: (orders: ApiStockOrder[]) => void;
   onTotal?: (total: number) => void;
+  /** Whether the page's own filter controls narrow the list, for the "no results" state. */
+  isFiltered?: boolean;
+  onClearFilters?: () => void;
 }) {
   const translate = useTranslate();
   const navigate = useNavigate();
@@ -161,12 +158,14 @@ export function StockOrderTable({
           id: "quantity",
           header: translate("common.fields.quantity"),
           enableSorting: false,
+          meta: { align: "right" },
           cell: ({ row }) => `${fmt(row.original.totalQuantity)} ${row.original.measureUnitType?.label ?? ""}`,
         },
         {
           id: "payable",
           header: translate("stock.fields.payableBalance"),
           enableSorting: false,
+          meta: { align: "right" },
           cell: ({ row }) =>
             row.original.priceDeterminedLater ? (
               <span className="text-muted-foreground">
@@ -183,6 +182,7 @@ export function StockOrderTable({
           id: "quantity",
           header: translate("stock.fields.quantityFilledAvailable"),
           enableSorting: false,
+          meta: { align: "right" },
           cell: ({ row }) =>
             `${fmt(row.original.totalQuantity ?? 0)} / ${fmt(row.original.fulfilledQuantity ?? 0)} / ${fmt(
               row.original.availableQuantity ?? 0
@@ -310,7 +310,15 @@ export function StockOrderTable({
 
   return (
     <div className="flex flex-col gap-4">
-      <DataTable table={table} />
+      <DataTable
+        table={table}
+        filterKey={permanent}
+        isFiltered={isFiltered}
+        onClearFilters={onClearFilters}
+        getRowHref={(o) =>
+          o.orderType === "PURCHASE_ORDER" ? `/my-stock/deliveries/update/${o.id}` : `/my-stock/processing/update/${o.id}`
+        }
+      />
       <Aggregated items={items} />
       {qr?.qrCodeTag && (
         <QrCodeDialog qrCodeTag={qr.qrCodeTag} finalProduct={qr.qrCodeTagFinalProduct} onClose={() => setQr(null)} />

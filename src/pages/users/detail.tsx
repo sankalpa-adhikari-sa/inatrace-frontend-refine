@@ -1,6 +1,6 @@
 import { useInvalidate, useMany, useNotification, useOne, useTranslate, useSetLocale } from "@refinedev/core";
 import { Building2, Check, ChevronRight, MapPin, UserCog } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import type { ApiCompanyGet, ApiUserGet } from "@/client/types.gen";
@@ -16,6 +16,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { useGoBack } from "@/hooks/use-go-back";
 import { useRoleLabels } from "@/hooks/use-roles";
 import { useIdentity, useRefreshIdentity } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { focusFirstError } from "@/lib/form-errors";
 import { useCompanyStore } from "@/stores/company";
 import { call, useApiMutation } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
@@ -64,7 +66,7 @@ function UserForm({ user, adminView }: { user: ApiUserGet; adminView: boolean })
   const { open: notify } = useNotification();
   const { selectedCompanyId, select } = useCompanyStore();
 
-  const { control, handleSubmit, formState, reset } = useForm<FormValues>({
+  const { control, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: {
       name: user.name ?? "",
       surname: user.surname ?? "",
@@ -73,11 +75,8 @@ function UserForm({ user, adminView }: { user: ApiUserGet; adminView: boolean })
     },
   });
 
-  useEffect(() => {
-    const warn = (e: BeforeUnloadEvent) => formState.isDirty && e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [formState.isDirty]);
+  // Warns on in-app navigation too, not only when closing the tab.
+  const release = useWarnWhenDirty(control);
 
   // After saving: the admin view returns to the users list; your own profile to the page you came from.
   // `then` runs after the navigation has landed.
@@ -97,6 +96,7 @@ function UserForm({ user, adminView }: { user: ApiUserGet; adminView: boolean })
     },
     onSuccess: async (_, v) => {
       reset(v);
+      release();
       if (adminView) {
         await invalidate({ resource: "users", invalidates: ["detail", "list"], id: user.id });
       } else {
@@ -151,7 +151,8 @@ function UserForm({ user, adminView }: { user: ApiUserGet; adminView: boolean })
             ? translate("users.titles.editUserProfile")
             : translate("users.titles.editMyProfile")
         }
-        back={adminView ? "/users" : true}
+        back={!adminView}
+        breadcrumbs={adminView ? [{ label: translate("common.fields.users"), to: "/users" }] : undefined}
         actions={
           <div className="flex items-center gap-2">
             <Badge variant="outline">{humanize(user.role)}</Badge>
@@ -159,7 +160,7 @@ function UserForm({ user, adminView }: { user: ApiUserGet; adminView: boolean })
           </div>
         }
       />
-      <form onSubmit={handleSubmit((v) => save.mutate(v))} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit((v) => save.mutate(v), focusFirstError)} className="flex flex-col gap-6">
         {/* Below lg the grid dissolves (`contents`) so the companies section can move after the actions. */}
         <div className="contents lg:grid lg:grid-cols-3 lg:gap-6">
           <Section

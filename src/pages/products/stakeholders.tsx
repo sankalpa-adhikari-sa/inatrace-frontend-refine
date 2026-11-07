@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { useIdentity, useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
+import { focusFirstError } from "@/lib/form-errors";
 import { ep } from "@/lib/endpoints";
 import { cn } from "@/lib/utils";
 import { call, useApi, useApiMutation } from "@/lib/http";
@@ -433,6 +435,7 @@ function DataSharingAgreements({ product, onSaved }: { product: ApiProduct; onSa
     disabled: !isOwner,
   });
   const { fields, append, remove } = useFieldArray({ control, name: "dataSharingAgreements", keyName: "key" });
+  useWarnWhenDirty(control);
 
   const save = useApiMutation({
     mutationFn: (v: Pick<ApiProduct, "dataSharingAgreements">) =>
@@ -445,7 +448,7 @@ function DataSharingAgreements({ product, onSaved }: { product: ApiProduct; onSa
   });
 
   return (
-    <form onSubmit={handleSubmit((v) => save.mutate(v))}>
+    <form onSubmit={handleSubmit((v) => save.mutate(v), focusFirstError)}>
       <Section
         plain
         title={translate("products.titles.dataSharingAgreements")}

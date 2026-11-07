@@ -13,6 +13,7 @@ import type {
   ApiSemiProduct,
 } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
+import { TranslationTabs } from "@/components/app/translation-tabs";
 import { RowActions, humanize } from "@/components/app/controls";
 import { CheckboxField, ComboboxField, EntityComboboxField, EntitySelectField, TextField } from "@/components/app/form-fields";
 import { Section } from "@/components/app/page";
@@ -22,9 +23,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FieldDescription, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIdentity } from "@/hooks/use-session";
 import { t } from "@/lib/i18n";
+import { focusFirstError } from "@/lib/form-errors";
 
 type TypeKey =
   | "semi-products"
@@ -372,7 +373,7 @@ function TypeDialog({
         <DialogHeader>
           <DialogTitle>{record ? config.editTitle : config.addTitle}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(submit)} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(submit, focusFirstError)} className="flex flex-col gap-4">
           <FieldGroup>
             {(key === "facility-types" || key === "measurement-unit-types" || key === "processing-evidence-types") && (
               <TextField
@@ -430,43 +431,34 @@ function TypeDialog({
             {config.translations && (
               <div className="flex flex-col gap-2">
                 <FieldDescription>{translate("settings.descriptions.fillInTheTranslationsEnglish")}</FieldDescription>
-                <Tabs defaultValue="EN" className="flex-col">
-                  <TabsList>
-                    {LANGUAGES.map((l) => (
-                      <TabsTrigger key={l} value={l}>
-                        {l}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  {LANGUAGES.map((l, i) => (
-                    <TabsContent key={l} value={l} keepMounted className="flex flex-col gap-3 pt-2">
-                      {config.translations === "label" ? (
+                <TranslationTabs languages={LANGUAGES}>
+                  {(l, i) =>
+                    config.translations === "label" ? (
+                      <TextField
+                        control={control}
+                        name={`translations.${i}.label`}
+                        label={translate("common.fields.label")}
+                        rules={l === "EN" ? englishRequired("label") : undefined}
+                        required={l === "EN"}
+                      />
+                    ) : (
+                      <>
                         <TextField
                           control={control}
-                          name={`translations.${i}.label`}
-                          label={translate("common.fields.label")}
-                          rules={l === "EN" ? englishRequired("label") : undefined}
+                          name={`translations.${i}.name`}
+                          label={translate("common.fields.name")}
+                          rules={l === "EN" ? englishRequired("name") : undefined}
                           required={l === "EN"}
                         />
-                      ) : (
-                        <>
-                          <TextField
-                            control={control}
-                            name={`translations.${i}.name`}
-                            label={translate("common.fields.name")}
-                            rules={l === "EN" ? englishRequired("name") : undefined}
-                            required={l === "EN"}
-                          />
-                          <TextField
-                            control={control}
-                            name={`translations.${i}.description`}
-                            label={translate("common.fields.description")}
-                          />
-                        </>
-                      )}
-                    </TabsContent>
-                  ))}
-                </Tabs>
+                        <TextField
+                          control={control}
+                          name={`translations.${i}.description`}
+                          label={translate("common.fields.description")}
+                        />
+                      </>
+                    )
+                  }
+                </TranslationTabs>
               </div>
             )}
 

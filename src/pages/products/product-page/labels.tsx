@@ -69,6 +69,15 @@ export function LabelBar({
     onChanged?.();
   }
 
+  /** Switching or creating a label remounts the editor: ask before dropping unsaved edits. */
+  const discardOk = async () =>
+    !dirty ||
+    confirm({
+      description: translate("common.descriptions.youHaveUnsavedChangesDiscard"),
+      destructive: true,
+      confirmLabel: translate("products.productPage.buttons.discardChanges"),
+    });
+
   async function remove() {
     if (!current) return;
     if (
@@ -87,12 +96,21 @@ export function LabelBar({
     <Section plain title={translate("products.productPage.titles.qrLabels")}>
       <div className="flex items-stretch gap-3 overflow-x-auto pb-1">
         {labels.map((l) => (
-          <LabelCard key={l.id} label={l} selected={l.id === current?.id} onSelect={() => onSelect?.(l.id!)} />
+          <LabelCard
+            key={l.id}
+            label={l}
+            selected={l.id === current?.id}
+            onSelect={async () => {
+              if (l.id !== current?.id && (await discardOk())) onSelect?.(l.id!);
+            }}
+          />
         ))}
         {isOwner && (
           <button
             type="button"
-            onClick={() => setCreating(true)}
+            onClick={async () => {
+              if (await discardOk()) setCreating(true);
+            }}
             className="flex w-40 shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed text-xs text-muted-foreground hover:border-primary hover:text-foreground"
           >
             <Plus className="size-5" />

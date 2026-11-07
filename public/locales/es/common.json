@@ -148,7 +148,6 @@
     "addLocation": "Agregar ubicación",
     "addProductionRecord": "Agregar registro de producción",
     "addVideo": "Agregar video",
-    "apply": "Aplicar",
     "back": "Volver",
     "bold": "Negrita",
     "bulletList": "Lista con viñetas",
@@ -164,6 +163,7 @@
     "delete": "Eliminar",
     "done": "Hecho",
     "edit": "Editar",
+    "goToFirstError": "Ir al primer error",
     "goToFirstPage": "Ir a la primera página",
     "goToLastPage": "Ir a la última página",
     "goToNextPage": "Ir a la página siguiente",
@@ -171,7 +171,6 @@
     "heading": "Encabezado",
     "italic": "Cursiva",
     "logOut": "Cerrar sesión",
-    "logout": "Cerrar sesión",
     "map": "Mapa",
     "myProfile": "Mi perfil",
     "next": "Siguiente",
@@ -184,6 +183,7 @@
     "remove": "Quitar",
     "removeLocation": "Quitar ubicación",
     "reset": "Restablecer",
+    "retry": "Reintentar",
     "satellite": "Satélite",
     "save": "Guardar",
     "select": "Seleccionar",
@@ -202,9 +202,11 @@
       "noRecordsMatchYourSearch": "Ningún registro coincide con su búsqueda o filtros.",
       "performanceCookies": "Cookies de rendimiento.",
       "requestCouldNotBeCompleted": "No se ha podido completar la solicitud. Revise los datos introducidos e inténtelo de nuevo.",
+      "theDataCouldNotBeLoaded": "No se pudieron cargar los datos. Compruebe su conexión e inténtelo de nuevo.",
       "thisTableIsEmptyFor": "Esta tabla está vacía por el momento.",
       "total": "{{total}} en total",
-      "withEveryCertificateOrStandard": "Con cada uno de los certificados o estándares enumerados anteriormente, suba pruebas en pdf o imágenes de que está en posesión de esos certificados y de que cumple los estándares (asegúrese de no subir información confidencial)"
+      "withEveryCertificateOrStandard": "Con cada uno de los certificados o estándares enumerados anteriormente, suba pruebas en pdf o imágenes de que está en posesión de esos certificados y de que cumple los estándares (asegúrese de no subir información confidencial)",
+      "youHaveUnsavedChangesDiscard": "Tiene cambios sin guardar. ¿Descartarlos?"
     },
     "errors": {
       "atMost1000Characters": "Como máximo 1000 caracteres",
@@ -249,7 +251,6 @@
       "crop": "Cultivo",
       "currencies": "Moneda",
       "currency": "Moneda",
-      "dark": "Oscuro",
       "dashboard": "Panel",
       "date": "Fecha",
       "delete": "Eliminar",
@@ -277,7 +278,6 @@
       "language": "Idioma",
       "lastName": "Apellido",
       "latitude": "Latitud",
-      "light": "Claro",
       "link": "Link",
       "linkUrl": "URL del enlace",
       "longitude": "Longitud",
@@ -338,6 +338,7 @@
       "addCornerHere": "Agregar una esquina aquí"
     },
     "placeholders": {
+      "jumpTo": "Ir a",
       "nothingLeftToAdd": "No queda nada por agregar",
       "pickADate": "Elige una fecha",
       "searchByName": "Buscar por nombre",
@@ -357,16 +358,17 @@
       "current": "Actual",
       "euOrganic": "UE Ecológica",
       "fairtrade": "Fairtrade",
+      "fieldsToFix": "Campos por corregir: {{count}}",
       "filters": "Filtros",
+      "hasErrors": "Tiene errores",
       "inaTrace": "INATrace",
       "last12Months": "Últimos 12 meses",
       "last2Years": "Últimos 2 años",
       "last30Days": "Últimos 30 días",
       "last3Months": "Últimos 3 meses",
-      "loggingOut": "Cerrando sesión...",
+      "loading": "Cargando…",
       "makeAgriculturalSupplyChainsTransparent": "Haga que las cadenas de suministro agrícolas sean transparentes y justas con INATrace",
       "manager": "Gerente",
-      "more": "más",
       "noAddress": "Sin dirección",
       "noCertifications": "Sin certificaciones",
       "noCompaniesMatch": "Ninguna empresa coincide con “{{search}}”.",
@@ -389,6 +391,7 @@
       "theWebsiteUsesCookiesFor": "El sitio web utiliza cookies con diversos fines. Algunas son esenciales para el funcionamiento de los servicios en línea. Sin embargo, las cookies de análisis y de sus preferencias ofrecen una mejor experiencia de usuario y un uso más sencillo del sitio. Puede leer más sobre las cookies y modificar su configuración en la",
       "thisYear": "Este año",
       "typeToSearch": "Escriba para buscar…",
+      "unsavedChanges": "Cambios sin guardar",
       "updatedAt": "{{user}} updated {{date}} at {{time}}",
       "user": "Usuario",
       "yourEMailIsConfirmed": "Su correo electrónico está confirmado. Un administrador aún debe activar su cuenta antes de que pueda usar INATrace."
@@ -404,9 +407,11 @@
       "filters": "Filtros",
       "noDataToDisplay": "No hay datos para mostrar",
       "noResultsFound": "No se encontraron resultados",
+      "onThisPage": "En esta página",
       "orderItemQrCode": "Artículo de pedido Código QR",
       "processingEvidenceFields": "Campos de prueba de procesamiento",
       "selectCompany": "Seleccione empresa",
+      "somethingWentWrong": "Algo salió mal",
       "switchCompany": "Cambiar de empresa",
       "whisp": "Whisp {{geoId}}",
       "whisp2": "Whisp - {{geoId}}"
@@ -575,7 +580,6 @@
     "titles": {
       "additionalAttributes": "Características adicionales",
       "baseCurrency": "Divisa base",
-      "beycoIntegration": "Integración Beyco",
       "certification": "Certificación",
       "companies": "Empresas",
       "company": "Empresa",
@@ -596,6 +600,7 @@
       "socialMedia": "Redes sociales",
       "usersWithCompanyRoles": "Usuarios con roles de la empresa",
       "valueChains": "Cadenas de valor",
+      "valueChainsAndTrade": "Cadenas de valor y comercio",
       "videos": "Videos"
     }
   },
@@ -662,6 +667,8 @@
       "inputAndOutputQuantitiesOf": "Cantidades de entrada y salida de una acción de procesamiento, y su relación"
     },
     "fields": {
+      "averagePerPeriod": "Promedio por período",
+      "busiestPeriod": "Período con más entregas",
       "delivered": "Entregado{{unit}}",
       "input": "Entrada ({{unit}})",
       "organic": "Organico",
@@ -671,6 +678,9 @@
       "productInDeposit": "Producto en depósito",
       "ratio": "Relación",
       "semiProduct": "Semiproducto",
+      "totalDelivered": "Total entregado",
+      "totalInput": "Entrada total",
+      "totalOutput": "Salida total",
       "week": "Semana {{week}}",
       "womensOnly": "Sólo de mujeres"
     },
@@ -679,8 +689,10 @@
       "allFarmers": "Todos los agricultores"
     },
     "texts": {
+      "noCollectingFacilitiesYet": "Esta empresa aún no tiene centros de acopio, así que no hay entregas que mostrar.",
       "noDataForTheSelected": "No hay datos para los filtros seleccionados.",
-      "onlyTheFirstValuesAre": "Solo se muestran los primeros {{truncated}} valores."
+      "onlyTheLatestPeriodsAre": "Solo se muestran los últimos {{truncated}} períodos. Elija un rango de fechas más corto o una agrupación más amplia para verlos todos.",
+      "overTheWholeRange": "En todo el rango de fechas"
     },
     "titles": {
       "dashboard": "Panel",
@@ -758,7 +770,8 @@
     },
     "titles": {
       "myProducts": "Mis productos",
-      "noProducts": "Sin productos"
+      "noProducts": "Sin productos",
+      "welcomeName": "Bienvenido/a, {{name}}"
     }
   },
   "notifications": {
@@ -990,7 +1003,6 @@
     },
     "labelPages": {
       "buttons": {
-        "backToLabel": "Volver a la etiqueta",
         "downloadEMails": "Descargar correos electrónicos",
         "newBatch": "Lote nuevo",
         "prefillLocationsFromProduct": "Prefill locations from product",
@@ -1236,7 +1248,6 @@
         "settings": "Configuración",
         "socialResponsibility": "Responsabilidad social",
         "untitled": "Sin título",
-        "valueChain": "Cadena de valor",
         "videos": "Videos"
       }
     },
@@ -1658,13 +1669,14 @@
       "buttons": {
         "addAdditionalOutput": "Agregar salida adicional",
         "addDocument": "Añadir documento",
+        "addSac": "Añadir saco",
         "clearFilters": "Borrar filtros",
         "prefill": "Rellenar",
-        "sacNumber": "Número del saco",
         "tryAgain": "Intentar de nuevo"
       },
       "descriptions": {
-        "expectedOutputQuantityRange": "Rango de cantidad de salida estimada"
+        "expectedOutputQuantityRange": "Rango de cantidad de salida estimada",
+        "removeThisOutput": "¿Eliminar esta salida y las cantidades introducidas?"
       },
       "errors": {
         "atLeastOneInputSemi": "Se requiere al menos una entrada de semiproducto",
@@ -1741,6 +1753,7 @@
         "materialToBeRecorded": "Material a registrar",
         "orderDetails": "Detalles de pedido",
         "organicCoffee": "Café orgánico",
+        "outputNumber": "Salida {{number}}",
         "outputsOfThisProcessing": "Salidas de este proceso",
         "placeNewOrder": "Nuevo pedido",
         "processingEvidence": "Prueba del procesamiento",
@@ -1791,53 +1804,6 @@
       "processingEvidenceDocuments": "Documentos de prueba para procesos",
       "processingInformation": "Información de procesamiento",
       "updateDelivery": "Actualizar la entrega"
-    }
-  },
-  "table": {
-    "filter": {
-      "combobox": {
-        "noResults": "No se encontraron resultados.",
-        "placeholder": "Seleccionar...",
-        "search": "Buscar..."
-      },
-      "numeric": {
-        "placeholder": "Filtrar por..."
-      },
-      "operator": {
-        "between": "Entre",
-        "contains": "Contiene",
-        "containss": "Contiene (distingue mayúsculas)",
-        "endswith": "Termina con",
-        "endswiths": "Termina con (distingue mayúsculas)",
-        "eq": "Igual a",
-        "eqs": "Igual a (distingue mayúsculas)",
-        "gt": "Mayor que",
-        "gte": "Mayor o igual que",
-        "in": "Incluido en la lista",
-        "ina": "Incluido en la lista (distingue mayúsculas)",
-        "lt": "Menor que",
-        "lte": "Menor o igual que",
-        "nbetween": "No entre",
-        "ncontains": "No contiene",
-        "ncontainss": "No contiene (distingue mayúsculas)",
-        "ne": "Distinto de",
-        "nendswith": "No termina con",
-        "nendswiths": "No termina con (distingue mayúsculas)",
-        "nes": "Distinto de (distingue mayúsculas)",
-        "nin": "No incluido en la lista",
-        "nina": "No incluido en la lista (distingue mayúsculas)",
-        "nnull": "No está vacío",
-        "noResults": "No se encontró ningún operador.",
-        "nstartswith": "No empieza por",
-        "nstartswiths": "No empieza por (distingue mayúsculas)",
-        "null": "Está vacío",
-        "placeholder": "Buscar operador...",
-        "startswith": "Empieza por",
-        "startswiths": "Empieza por (distingue mayúsculas)"
-      },
-      "text": {
-        "placeholder": "Filtrar por..."
-      }
     }
   },
   "userCustomers": {
@@ -2112,9 +2078,15 @@
       "measuringUnitTypes": "Tipos de unidad de medida",
       "newValueChain": "Cadena de valor nueva",
       "processingEvidenceTypes": "Tipos de evidencia de procesamiento",
-      "productType": "Tipo de producto",
       "semiProducts": "Semiproductos",
       "valueChains": "Cadenas de valor"
+    }
+  },
+  "table": {
+    "texts": {
+      "sortBy": "Ordenar por {{column}}",
+      "sortedAscending": "{{column}}: orden ascendente",
+      "sortedDescending": "{{column}}: orden descendente"
     }
   }
 }

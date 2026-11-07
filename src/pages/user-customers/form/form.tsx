@@ -14,14 +14,18 @@ import {
 } from "@/components/app/form-fields";
 import { CertificationsField } from "@/components/app/certifications-field";
 import { LocationFields } from "@/components/app/location-fields";
-import { FormActions, PageHeader, PageLoader, Section } from "@/components/app/page";
+import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormSkeleton } from "@/components/app/states";
+import { FormLayout } from "@/components/app/form-layout";
 import { UserCustomerCard } from "@/components/app/user-customer-card";
 import { Button } from "@/components/ui/button";
 import { FieldDescription, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { useSelectedCompany } from "@/hooks/use-session";
+import { useWarnWhenDirty } from "@/hooks/use-warn-when-dirty";
 import { ep } from "@/lib/endpoints";
 import { useApi } from "@/lib/http";
+import { focusFirstError } from "@/lib/form-errors";
 import { completeOnboarding } from "@/stores/onboarding";
 import { KIND, type UserCustomerType } from "../list";
 import { FarmInfoSection } from "./farm-info";
@@ -33,7 +37,7 @@ import { GeoDataActions, Plots } from "./plots";
 /** `/my-farmers/add`, `/my-farmers/edit/:id` and the collector equivalents. */
 export function UserCustomerForm({ type }: { type: UserCustomerType }) {
   const { company, companyId } = useSelectedCompany();
-  if (!company || companyId == null) return <PageLoader />;
+  if (!company || companyId == null) return <FormSkeleton sections={4} />;
   return <Form type={type} companyId={companyId} companyName={company.name ?? ""} />;
 }
 
@@ -110,7 +114,9 @@ function Form({ type, companyId, companyName }: { type: UserCustomerType; compan
     NonNullable<FormValues["location"]>["address"],
   ];
 
-  if (!isNew && query.isLoading) return <PageLoader />;
+  useWarnWhenDirty(control);
+
+  if (!isNew && query.isLoading) return <FormSkeleton sections={4} />;
 
   function submit(v: FormValues) {
     const visible = v.location?.publiclyVisible;
@@ -135,169 +141,172 @@ function Form({ type, companyId, companyName }: { type: UserCustomerType; compan
               ? translate("userCustomers.titles.newCollector")
               : translate("userCustomers.titles.editCollector")
         }
-        back={kind.base}
+        breadcrumbs={[{ label: kind.title, to: kind.base }]}
       />
-      <form onSubmit={handleSubmit((v) => submit(v as FormValues))} className="flex flex-col gap-6">
-        <Section title={translate("common.titles.basicInformation")}>
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-            <FieldGroup className="grid flex-1 gap-4 sm:grid-cols-2">
-              <TextField
-                control={control}
-                name="name"
-                label={translate("common.fields.firstName")}
-                placeholder={translate("userCustomers.placeholders.enterFirstName")}
-                rules={{ required: translate("common.errors.firstNameIsRequired") }}
-              />
-              <TextField
-                control={control}
-                name="surname"
-                label={translate("common.fields.lastName")}
-                placeholder={translate("userCustomers.placeholders.enterLastName")}
-                rules={{ required: translate("common.errors.lastNameIsRequired") }}
-              />
-              <SelectField
-                control={control}
-                name="gender"
-                label={translate("userCustomers.fields.gender")}
-                options={GENDERS}
-                rules={{ required: translate("userCustomers.errors.genderIsRequired") }}
-              />
+      <form onSubmit={handleSubmit((v) => submit(v as FormValues), focusFirstError)}>
+        <FormLayout control={control}>
+          <Section id="basic" title={translate("common.titles.basicInformation")}>
+            <div className="flex flex-col gap-6 @3xl:flex-row @3xl:items-start">
+              <FieldGroup className="grid flex-1 gap-4 sm:grid-cols-2">
+                <TextField
+                  control={control}
+                  name="name"
+                  label={translate("common.fields.firstName")}
+                  placeholder={translate("userCustomers.placeholders.enterFirstName")}
+                  rules={{ required: translate("common.errors.firstNameIsRequired") }}
+                />
+                <TextField
+                  control={control}
+                  name="surname"
+                  label={translate("common.fields.lastName")}
+                  placeholder={translate("userCustomers.placeholders.enterLastName")}
+                  rules={{ required: translate("common.errors.lastNameIsRequired") }}
+                />
+                <SelectField
+                  control={control}
+                  name="gender"
+                  label={translate("userCustomers.fields.gender")}
+                  options={GENDERS}
+                  rules={{ required: translate("userCustomers.errors.genderIsRequired") }}
+                />
+                {!isNew && (
+                  <TextField
+                    control={control}
+                    name="id"
+                    label={translate("userCustomers.fields.userId")}
+                    disabled
+                  />
+                )}
+                {isFarmer && (
+                  <TextField
+                    control={control}
+                    name="farmerCompanyInternalId"
+                    label={translate("userCustomers.fields.companyInternalFarmerId")}
+                    placeholder={translate("userCustomers.placeholders.enterCompanyInternalFarmerId")}
+                  />
+                )}
+              </FieldGroup>
               {!isNew && (
-                <TextField
-                  control={control}
-                  name="id"
-                  label={translate("userCustomers.fields.userId")}
-                  disabled
+                <UserCustomerCard
+                  id={Number(id)}
+                  name={cardName}
+                  surname={cardSurname}
+                  village={cardAddress?.village}
+                  cell={cardAddress?.cell}
+                  sector={cardAddress?.sector}
                 />
               )}
-              {isFarmer && (
+            </div>
+          </Section>
+
+          <Section id="address" title={translate("userCustomers.titles.address")}>
+            <LocationFields control={control} prefix="location" variant="person" showPin={false} />
+          </Section>
+
+          {isFarmer && (
+            <Section
+              id="plots"
+              title={translate("userCustomers.titles.plots")}
+              actions={existing && <GeoDataActions farmer={existing} onUploaded={() => query.refetch()} />}
+            >
+              <Plots control={control} productTypes={productTypes} farmerId={existing?.id} />
+            </Section>
+          )}
+
+          <div className="grid gap-6 @3xl:grid-cols-2">
+            <Section id="contact" title={translate("userCustomers.titles.additionalInformationAboutUser")}>
+              <FieldGroup>
                 <TextField
                   control={control}
-                  name="farmerCompanyInternalId"
-                  label={translate("userCustomers.fields.companyInternalFarmerId")}
-                  placeholder={translate("userCustomers.placeholders.enterCompanyInternalFarmerId")}
+                  name="phone"
+                  type="tel"
+                  label={translate("userCustomers.fields.phoneNumber")}
+                  placeholder={translate("userCustomers.placeholders.enterPhoneNumber")}
                 />
-              )}
-            </FieldGroup>
-            {!isNew && (
-              <UserCustomerCard
-                id={Number(id)}
-                name={cardName}
-                surname={cardSurname}
-                village={cardAddress?.village}
-                cell={cardAddress?.cell}
-                sector={cardAddress?.sector}
-              />
-            )}
+                <TextField
+                  control={control}
+                  name="email"
+                  type="email"
+                  label={translate("common.fields.eMail")}
+                  placeholder={translate("userCustomers.placeholders.enterEMailAddress")}
+                  rules={{ pattern: EMAIL_PATTERN }}
+                />
+                <CheckboxField control={control} name="hasSmartphone" label={translate("userCustomers.fields.smartPhone")} />
+              </FieldGroup>
+            </Section>
+            <Section id="bank" title={translate("userCustomers.titles.bankInformation")}>
+              <FieldGroup>
+                <TextField
+                  control={control}
+                  name="bank.accountHolderName"
+                  label={translate("userCustomers.fields.accountHoldersName")}
+                  placeholder={translate("userCustomers.placeholders.enterAccountHoldersName")}
+                />
+                <TextField
+                  control={control}
+                  name="bank.accountNumber"
+                  label={translate("userCustomers.fields.accountNumber")}
+                  placeholder={translate("userCustomers.placeholders.enterAccountNumber")}
+                />
+                <TextField
+                  control={control}
+                  name="bank.bankName"
+                  label={translate("userCustomers.fields.bankName")}
+                  placeholder={translate("userCustomers.placeholders.enterBankName")}
+                />
+                <TextareaField
+                  control={control}
+                  name="bank.additionalInformation"
+                  label={translate("userCustomers.fields.additionalInformation")}
+                  placeholder={translate("userCustomers.placeholders.enterAdditionalInformation")}
+                  rows={2}
+                />
+              </FieldGroup>
+            </Section>
           </div>
-        </Section>
 
-        <Section title={translate("userCustomers.titles.address")}>
-          <LocationFields control={control} prefix="location" variant="person" showPin={false} />
-        </Section>
-
-        {isFarmer && (
-          <Section
-            title={translate("userCustomers.titles.plots")}
-            actions={existing && <GeoDataActions farmer={existing} onUploaded={() => query.refetch()} />}
-          >
-            <Plots control={control} productTypes={productTypes} farmerId={existing?.id} />
-          </Section>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Section title={translate("userCustomers.titles.additionalInformationAboutUser")}>
-            <FieldGroup>
-              <TextField
-                control={control}
-                name="phone"
-                type="tel"
-                label={translate("userCustomers.fields.phoneNumber")}
-                placeholder={translate("userCustomers.placeholders.enterPhoneNumber")}
-              />
-              <TextField
-                control={control}
-                name="email"
-                type="email"
-                label={translate("common.fields.eMail")}
-                placeholder={translate("userCustomers.placeholders.enterEMailAddress")}
-                rules={{ pattern: EMAIL_PATTERN }}
-              />
-              <CheckboxField control={control} name="hasSmartphone" label={translate("userCustomers.fields.smartPhone")} />
-            </FieldGroup>
-          </Section>
-          <Section title={translate("userCustomers.titles.bankInformation")}>
-            <FieldGroup>
-              <TextField
-                control={control}
-                name="bank.accountHolderName"
-                label={translate("userCustomers.fields.accountHoldersName")}
-                placeholder={translate("userCustomers.placeholders.enterAccountHoldersName")}
-              />
-              <TextField
-                control={control}
-                name="bank.accountNumber"
-                label={translate("userCustomers.fields.accountNumber")}
-                placeholder={translate("userCustomers.placeholders.enterAccountNumber")}
-              />
-              <TextField
-                control={control}
-                name="bank.bankName"
-                label={translate("userCustomers.fields.bankName")}
-                placeholder={translate("userCustomers.placeholders.enterBankName")}
-              />
-              <TextareaField
-                control={control}
-                name="bank.additionalInformation"
-                label={translate("userCustomers.fields.additionalInformation")}
-                placeholder={translate("userCustomers.placeholders.enterAdditionalInformation")}
-                rows={2}
-              />
-            </FieldGroup>
-          </Section>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Section title={translate("userCustomers.titles.companies")}>
-            <FieldDescription>{translate("userCustomers.descriptions.supplierOf")}</FieldDescription>
-            <Cooperatives control={control} companyId={companyId} companyName={companyName} type={type} />
-          </Section>
-          <Section title={translate("userCustomers.titles.associations")}>
-            <Associations control={control} associations={associations} />
-          </Section>
-        </div>
-
-        {isFarmer && (
-          <>
-            <Section title={translate("userCustomers.titles.productTypes")}>
-              {!company?.valueChains?.length && (
-                <p className="text-xs text-muted-foreground italic">
-                  {translate("userCustomers.texts.pleaseSelectAtLeastOne")}
-                </p>
-              )}
-              <EntityListField
-                control={control}
-                name="productTypes"
-                items={productTypes}
-                getLabel={(p) => p.name ?? ""}
-              />
+          <div className="grid gap-6 @3xl:grid-cols-2">
+            <Section id="companies" title={translate("userCustomers.titles.companies")}>
+              <FieldDescription>{translate("userCustomers.descriptions.supplierOf")}</FieldDescription>
+              <Cooperatives control={control} companyId={companyId} companyName={companyName} type={type} />
             </Section>
-            <FarmInfoSection control={control} />
-            <Section title={translate("userCustomers.titles.certification")}>
-              <CertificationsField control={control} name="certifications" />
+            <Section id="associations" title={translate("userCustomers.titles.associations")}>
+              <Associations control={control} associations={associations} />
             </Section>
-          </>
-        )}
+          </div>
 
-        <FormActions>
-          <Button type="button" variant="outline" onClick={back}>
-            {translate("buttons.cancel")}
-          </Button>
-          <Button type="submit" disabled={formLoading} data-onboarding={isFarmer ? "farmer-save" : undefined}>
-            {formLoading && <Spinner />}
-            {translate("buttons.save")}
-          </Button>
-        </FormActions>
+          {isFarmer && (
+            <>
+              <Section id="product-types" title={translate("userCustomers.titles.productTypes")}>
+                {!company?.valueChains?.length && (
+                  <p className="text-xs text-muted-foreground italic">
+                    {translate("userCustomers.texts.pleaseSelectAtLeastOne")}
+                  </p>
+                )}
+                <EntityListField
+                  control={control}
+                  name="productTypes"
+                  items={productTypes}
+                  getLabel={(p) => p.name ?? ""}
+                />
+              </Section>
+              <FarmInfoSection control={control} />
+              <Section id="certification" title={translate("userCustomers.titles.certification")}>
+                <CertificationsField control={control} name="certifications" />
+              </Section>
+            </>
+          )}
+
+          <FormActions sticky control={control}>
+            <Button type="button" variant="outline" onClick={back}>
+              {translate("buttons.cancel")}
+            </Button>
+            <Button type="submit" disabled={formLoading} data-onboarding={isFarmer ? "farmer-save" : undefined}>
+              {formLoading && <Spinner />}
+              {translate("buttons.save")}
+            </Button>
+          </FormActions>
+        </FormLayout>
       </form>
       {!isNew && <OrdersAndPayments type={type} companyId={companyId} userCustomerId={Number(id)} />}
     </>

@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useId } from "react";
 import { type Control, type FieldPath, type FieldValues, type RegisterOptions, useController } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -21,6 +21,20 @@ type BaseProps<T extends FieldValues> = {
   disabled?: boolean;
   className?: string;
 };
+
+/**
+ * A computed or fixed value shown in a form (totals, net weight, balance, …). Unlike a disabled input it
+ * isn't dimmed and can be focused and copied; numbers line up (tabular figures).
+ */
+export function ReadOnlyField({ label, value, className }: { label: ReactNode; value: string; className?: string }) {
+  const id = useId();
+  return (
+    <Field className={className}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input id={id} readOnly value={value} className="border-dashed bg-muted/40 tabular-nums focus-visible:ring-0" />
+    </Field>
+  );
+}
 
 /** Field label that marks required fields with a red asterisk. */
 export function FormFieldLabel({

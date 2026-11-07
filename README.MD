@@ -261,6 +261,43 @@ Deliberate differences from the original Angular frontend:
   Angular showed it even when nothing would load.
 - The B2C "Producers" tab skips the "Learn more about…" heading and the producer-organization heading when
   there is nothing under them (Angular always rendered them empty).
+- Long forms (company, facility, processing action, value chain, farmer / collector, product and QR label,
+  processing order, bulk payment) list their sections in an "On this page" rail beside the form, or a sticky
+  "Jump to" menu on narrower screens. Sections with errors are marked there, and each section can be linked
+  directly (`…/company#certification`). Enter in a single-line field no longer submits these forms.
+- On those forms and the delivery, bulk delivery, payment and customer order forms, Save and Cancel stay in a
+  bar at the bottom of the screen, which shows unsaved changes and, after a failed save, how many fields need
+  fixing. On every in-app form, a failed save scrolls to and focuses the first invalid field, including selects, lists, uploads, an error in another language tab (which is opened) and the
+  processing order's input / sac checks (Angular only showed the errors).
+- Language tabs for translated fields (facility, processing action, settings codebooks) mark the language
+  that has an error.
+- Leaving a form with unsaved changes asks first on every edit form, including deliveries, processing orders,
+  payments, customer orders, the product page and user profiles, and also after adding or removing list items
+  (certifications, documents, …). Switching or creating a QR label with unsaved changes asks before discarding
+  them (they used to be dropped).
+- Cancel on stock, payment and order forms returns to the matching list when the page was opened directly
+  (it used to leave the app).
+- Computed values (totals, net weight, balance, …) are shown as read-only fields that can be selected and
+  copied, instead of dimmed disabled inputs.
+- Fewer single-field cards: the company form groups value chains, base currency and Beyco export into one
+  "Value chains and trade" section; the value chain's product type and the product's value chain sit in the
+  first section.
+- On phones, the sidebar closes after you pick a page, and the language can be changed from the account menu.
+- Pages below a list show a breadcrumb trail (e.g. Companies › Cooperative › Facilities) instead of a lone back
+  arrow; on phones it shortens to a link to the page above. Sub-pages keep the company or product they belong to
+  in the trail. The browser tab shows the page title.
+- Page tabs that don't fit on a phone scroll with a fade at the cut edge and bring the current tab into view.
+  A disabled tab explains why on hover or tap (Angular used a tooltip only).
+- Lists: changing a search or filter goes back to page 1 (it used to keep the page, which could show an
+  empty list). A failed load shows an error with Retry instead of an empty table, and the old rows dim while
+  new ones load. Clicking a row opens it (as its Edit action does), and the whole column header sorts.
+  Quantities and amounts are right-aligned.
+- Deliveries, payments, orders and all-stock filters are kept in the URL, so they survive a reload or the back
+  button from a record (Angular kept them in memory).
+- Dashboard: each panel leads with headline figures (total, average and busiest period for deliveries; total
+  input, output and ratio for processing). When there are more periods than fit, the latest are shown
+  (Angular showed the oldest). Changing the date range picks a fitting grouping again. Loading shows a
+  placeholder, a failed load can be retried, and a company without collecting facilities is told so.
 
 ## License
 

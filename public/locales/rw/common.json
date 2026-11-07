@@ -148,7 +148,6 @@
     "addLocation": "Ongeraho ahantu",
     "addProductionRecord": "Ongeraho inyandiko y'umusaruro",
     "addVideo": "Ongeraho videwo",
-    "apply": "Emeza",
     "back": "Inyuma",
     "bold": "Inyuguti zibyibushye",
     "bulletList": "Urutonde rw'utudomo",
@@ -171,7 +170,6 @@
     "heading": "Umutwe",
     "italic": "Inyuguti ziberamye",
     "logOut": "Sohoka",
-    "logout": "Gusohoka",
     "map": "Ikarita",
     "myProfile": "Umwirondoro wanjye",
     "next": "Ibikurikira",
@@ -249,7 +247,6 @@
       "crop": "Crop",
       "currencies": "Ubwoko bw'amafaranga",
       "currency": "Ifaranga",
-      "dark": "Umwijima",
       "dashboard": "Imbonerahamwe",
       "date": "Itariki",
       "delete": "Gusiba",
@@ -277,7 +274,6 @@
       "language": "Ururimi",
       "lastName": "Irindi zina",
       "latitude": "Ubutambike",
-      "light": "Urumuri",
       "link": "Link",
       "linkUrl": "Aderesi y'ihuza",
       "longitude": "Uburebure",
@@ -362,10 +358,8 @@
       "last2Years": "Imyaka 2 ishize",
       "last30Days": "Iminsi 30 ishize",
       "last3Months": "Amezi 3 ashize",
-      "loggingOut": "Gusohoka...",
       "makeAgriculturalSupplyChainsTransparent": "Gira iminyururu y'ubuhinzi iboneye kandi itabera ukoresheje INATrace",
       "manager": "Umuyobozi mukuru",
-      "more": "ibindi",
       "noAddress": "Nta aderesi",
       "noCertifications": "Nta seritifika",
       "noCompaniesMatch": "Nta kompanyi ihuye na “{{search}}”.",
@@ -574,7 +568,6 @@
     "titles": {
       "additionalAttributes": "Ibindi bibyerekeyo",
       "baseCurrency": "Base currency",
-      "beycoIntegration": "Guhererekanya amakuru na Beyco",
       "certification": "Seritifika",
       "companies": "Kompanyi",
       "company": "Kompanyi",
@@ -678,8 +671,7 @@
       "allFarmers": "Abahinzi bose"
     },
     "texts": {
-      "noDataForTheSelected": "Nta makuru ku mayunguruzo yatoranyijwe.",
-      "onlyTheFirstValuesAre": "Hagaragazwa gusa indangagaciro {{truncated}} za mbere."
+      "noDataForTheSelected": "Nta makuru ku mayunguruzo yatoranyijwe."
     },
     "titles": {
       "dashboard": "Imbonerahamwe",
@@ -989,7 +981,6 @@
     },
     "labelPages": {
       "buttons": {
-        "backToLabel": "Subira ku karango",
         "downloadEMails": "Kuramo imeri",
         "newBatch": "Icyiciro cy'umusaruro gishya",
         "prefillLocationsFromProduct": "Banza wuzuze aho igicuruzwa giherereye",
@@ -1235,7 +1226,6 @@
         "settings": "Igenamiterere",
         "socialResponsibility": "Inshingano mbonezamubano",
         "untitled": "Nta mutwe",
-        "valueChain": "Uruhererekane nyongeragaciro",
         "videos": "Amavidewo"
       }
     },
@@ -1659,7 +1649,6 @@
         "addDocument": "Kongeraho ibishyashya",
         "clearFilters": "Kuraho amayunguruzo",
         "prefill": "Ibyinjizwa mbere",
-        "sacNumber": "Inomero y'umufuka",
         "tryAgain": "Try again"
       },
       "descriptions": {
@@ -1790,53 +1779,6 @@
       "processingEvidenceDocuments": "Inyandiko z'ibihamya by'igikorwa",
       "processingInformation": "Amakuru yo gutunganya",
       "updateDelivery": "Kuvugura igikorwa cyo kwakira umusaruro"
-    }
-  },
-  "table": {
-    "filter": {
-      "combobox": {
-        "noResults": "Nta bisubizo byabonetse.",
-        "placeholder": "Hitamo...",
-        "search": "Shakisha..."
-      },
-      "numeric": {
-        "placeholder": "Yungurura ukoresheje..."
-      },
-      "operator": {
-        "between": "Hagati ya",
-        "contains": "Kirimo",
-        "containss": "Kirimo (inyuguti nkuru n'into)",
-        "endswith": "Kirangira na",
-        "endswiths": "Kirangira na (inyuguti nkuru n'into)",
-        "eq": "Bingana na",
-        "eqs": "Bingana na (inyuguti nkuru n'into)",
-        "gt": "Biruta",
-        "gte": "Biruta cyangwa bingana na",
-        "in": "Biri ku rutonde",
-        "ina": "Biri ku rutonde (inyuguti nkuru n'into)",
-        "lt": "Biri munsi ya",
-        "lte": "Biri munsi cyangwa bingana na",
-        "nbetween": "Ntibiri hagati ya",
-        "ncontains": "Ntikirimo",
-        "ncontainss": "Ntikirimo (inyuguti nkuru n'into)",
-        "ne": "Ntibingana na",
-        "nendswith": "Ntikirangira na",
-        "nendswiths": "Ntikirangira na (inyuguti nkuru n'into)",
-        "nes": "Ntibingana na (inyuguti nkuru n'into)",
-        "nin": "Ntibiri ku rutonde",
-        "nina": "Ntibiri ku rutonde (inyuguti nkuru n'into)",
-        "nnull": "Ntibirimo ubusa",
-        "noResults": "Nta buryo bwabonetse.",
-        "nstartswith": "Ntigitangira na",
-        "nstartswiths": "Ntigitangira na (inyuguti nkuru n'into)",
-        "null": "Birimo ubusa",
-        "placeholder": "Shakisha uburyo...",
-        "startswith": "Gitangira na",
-        "startswiths": "Gitangira na (inyuguti nkuru n'into)"
-      },
-      "text": {
-        "placeholder": "Yungurura ukoresheje..."
-      }
     }
   },
   "userCustomers": {
@@ -2111,7 +2053,6 @@
       "measuringUnitTypes": "Ubwoko bw'ingero zipimishwa",
       "newValueChain": "Uruhererekane nyongeragaciro rushya",
       "processingEvidenceTypes": "Ibimenyetso byo gutunganya ikawa",
-      "productType": "Ubwoko bw'igicuruzwa",
       "semiProducts": "Igicuruzwa kigitunganywa",
       "valueChains": "Uruhererekane nyongeragaciro"
     }

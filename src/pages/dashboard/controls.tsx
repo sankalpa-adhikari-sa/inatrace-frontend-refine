@@ -1,14 +1,16 @@
 import { ChevronDown, Download, Table2 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { DateRangePicker } from "@/components/app/date-range-picker";
+import { ErrorState } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { today } from "../stock/shared";
 import { useTranslate } from "@refinedev/core";
-import { type Aggregation, type ExportType } from "./utils";
+import { type Aggregation, defaultAggregation, type ExportType } from "./utils";
 
 export function RangeControls({
   from,
@@ -87,16 +89,55 @@ export function ExportButton({ onExport }: { onExport: (type: ExportType) => Pro
   );
 }
 
-/** Chart with a table-view toggle (the accessible alternative to the plot). */
+/**
+ * The grouping follows the date range: picking a new range regroups it (days for a week, months for a
+ * year, …), so the chart neither shows two bars nor hundreds. The user can still change it afterwards.
+ */
+export function useRangeAggregation(from: string, to: string, setAggregation: (a: Aggregation) => void) {
+  const range = `${from}|${to}`;
+  const last = useRef(range);
+  useEffect(() => {
+    if (last.current === range) return;
+    last.current = range;
+    if (from && to) setAggregation(defaultAggregation(from, to));
+  }, [range, from, to, setAggregation]);
+}
+
+/** One headline figure above a chart: label, value and an optional note (unit, period). */
+export function StatTile({ label, value, note }: { label: ReactNode; value: ReactNode; note?: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-foreground/8 bg-muted/30 px-3 py-2.5">
+      <span className="truncate text-xs text-muted-foreground">{label}</span>
+      <span className="truncate text-xl leading-tight font-semibold text-foreground">{value}</span>
+      {note && <span className="truncate text-xs text-muted-foreground">{note}</span>}
+    </div>
+  );
+}
+
+export function StatRow({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{children}</div>;
+}
+
+/** Chart with a table-view toggle (the accessible alternative to the plot), and its loading / error / empty states. */
 export function ChartFrame({
   children,
   table,
   empty,
+  emptyText,
+  loading,
+  error,
+  onRetry,
   truncated,
 }: {
   children: ReactNode;
   table: ReactNode;
   empty: boolean;
+  /** Why there's nothing to show, when it's more specific than "no data for these filters". */
+  emptyText?: ReactNode;
+  /** First load: a placeholder of the chart's size instead of an empty frame. */
+  loading?: boolean;
+  error?: boolean;
+  onRetry?: () => void;
   truncated?: number;
 }) {
   const translate = useTranslate();
@@ -109,9 +150,13 @@ export function ChartFrame({
           {asTable ? translate("dashboard.buttons.showChart") : translate("dashboard.buttons.showTable")}
         </Button>
       </div>
-      {empty ? (
+      {error ? (
+        <ErrorState onRetry={onRetry} />
+      ) : loading ? (
+        <Skeleton className="h-72 w-full" aria-label={translate("common.texts.loading")} />
+      ) : empty ? (
         <p className="py-10 text-center text-xs text-muted-foreground">
-          {translate("dashboard.texts.noDataForTheSelected")}
+          {emptyText ?? translate("dashboard.texts.noDataForTheSelected")}
         </p>
       ) : asTable ? (
         table
@@ -120,7 +165,7 @@ export function ChartFrame({
       )}
       {truncated != null && (
         <p className="text-xs text-muted-foreground italic">
-          {translate("dashboard.texts.onlyTheFirstValuesAre", { truncated })}
+          {translate("dashboard.texts.onlyTheLatestPeriodsAre", { truncated })}
         </p>
       )}
     </div>
