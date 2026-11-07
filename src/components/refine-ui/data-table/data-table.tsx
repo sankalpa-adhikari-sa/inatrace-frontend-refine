@@ -93,6 +93,7 @@ export function DataTable<TData extends BaseRecord>({
     reactTable: { getHeaderGroups, getRowModel, getAllColumns },
     refineCore: {
       tableQuery,
+      sorters,
       currentPage,
       setCurrentPage,
       pageCount,
@@ -111,9 +112,9 @@ export function DataTable<TData extends BaseRecord>({
       (f) => hasValue(f.value) && !initialFilters.current.some((i) => JSON.stringify(i) === JSON.stringify(f))
     );
 
-  // A new filter or search starts again from the first page; otherwise page 3 of the old results can be
-  // past the end of the new ones and look empty.
-  const filterSignature = JSON.stringify([filters, filterKey ?? null]);
+  // A new filter, search or sort starts again from the first page; otherwise page 3 of the old results can
+  // be past the end of the new ones (or an arbitrary slice of the new order).
+  const filterSignature = JSON.stringify([filters, filterKey ?? null, sorters]);
   const lastSignature = useRef(filterSignature);
   useEffect(() => {
     if (lastSignature.current === filterSignature) return;

@@ -5,7 +5,12 @@ import type { Column, ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** A column header whose whole label sorts the table (a click cycles ascending → descending → off). */
+/**
+ * A column header whose whole label sorts the table by that column alone: the first click sorts ascending,
+ * then each click flips the direction. Single-column on purpose: the backend list endpoints take one
+ * `sortBy`, and the data provider sends only the first sorter, so a multi-sort would show an active arrow
+ * on a column that isn't sorting anything. There's no "unsorted" step, so a list always has an order.
+ */
 export function SortableHeader<TData>({
   column,
   label,
@@ -27,7 +32,7 @@ export function SortableHeader<TData>({
   return (
     <button
       type="button"
-      onClick={() => column.toggleSorting(undefined, true)}
+      onClick={() => column.toggleSorting(sorted === "asc", false)}
       aria-label={description}
       title={description}
       className={cn(
