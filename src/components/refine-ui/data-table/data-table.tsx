@@ -2,9 +2,9 @@
 
 import type { HttpError, BaseRecord } from "@refinedev/core";
 import type { UseTableReturnType } from "@refinedev/react-table";
-import type { Cell, Column, RowData } from "@tanstack/react-table";
+import type { Cell, Column, ColumnDef, Row, RowData } from "@tanstack/react-table";
 import { flexRender } from "@tanstack/react-table";
-import { Inbox, SearchX } from "lucide-react";
+import { Columns3, Inbox, SearchX } from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -17,8 +17,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/refine-ui/data-table/data-table-pagination";
+import { headerLabel, isSortableHeader } from "@/components/refine-ui/data-table/data-table-sorter";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ErrorState } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -49,7 +59,18 @@ type DataTableProps<TData extends BaseRecord> = {
   getRowHref?: (row: TData) => string | undefined;
   /** Replaces the default "this table is empty" state, e.g. with a create button. */
   empty?: { title?: ReactNode; description?: ReactNode; action?: ReactNode };
+  /** On phones each row is a card (label: value) instead of a sideways-scrolling table row. Default on. */
+  cards?: boolean;
+  /**
+   * Offer a "Columns" menu to hide columns, remembered in this browser under this key. For wide tables;
+   * the selection, actions and primary columns can't be hidden.
+   */
+  columnsKey?: string;
 };
+
+/** Columns that aren't data: they keep their place in the card's corners, without a label. */
+const SELECT = "select";
+const ACTIONS = "actions";
 
 /** Clicks on these inside a row act on their own, not as "open the row". */
 const INTERACTIVE = "a, button, input, select, textarea, label, [role=checkbox], [role=menuitem], [role=combobox]";
@@ -61,8 +82,12 @@ export function DataTable<TData extends BaseRecord>({
   onClearFilters,
   getRowHref,
   empty,
+  cards = true,
+  columnsKey,
 }: DataTableProps<TData>) {
   const translate = useTranslate();
+  const asCards = useIsMobile() && cards;
+  useStoredColumnVisibility(table, columnsKey);
   const navigate = useNavigate();
   const {
     reactTable: { getHeaderGroups, getRowModel, getAllColumns },
@@ -141,7 +166,7 @@ export function DataTable<TData extends BaseRecord>({
     };
   }, [tableQuery.data?.data, pageSize]);
 
-  const openRow = (e: MouseEvent<HTMLTableRowElement>, href: string | undefined) => {
+  const openRow = (e: MouseEvent<HTMLElement>, href: string | undefined) => {
     if (!href || (e.target as HTMLElement).closest(INTERACTIVE)) return;
     // Text selection in a row shouldn't navigate.
     if (window.getSelection()?.toString()) return;
@@ -149,14 +174,14 @@ export function DataTable<TData extends BaseRecord>({
     else navigate(href);
   };
 
-  const renderCell = (cell: Cell<TData, unknown>, href: string | undefined) => {
+  const renderCell = (cell: Cell<TData, unknown>, href: string | undefined, inCard = false) => {
     const meta = cell.column.columnDef.meta;
     const content = flexRender(cell.column.columnDef.cell, cell.getContext());
     const value = cell.getValue();
     // Cells are truncated to keep rows one line high: show the full text on hover.
     const title = typeof value === "string" || typeof value === "number" ? String(value) : undefined;
     return (
-      <div className={cn("truncate", meta?.align === "right" && "text-right tabular-nums")} title={title}>
+      <div className={cn("truncate", meta?.align === "right" && !inCard && "text-right tabular-nums")} title={title}>
         {meta?.primary && href ? (
           <Link to={href} className="font-medium hover:underline">
             {content}
@@ -172,8 +197,71 @@ export function DataTable<TData extends BaseRecord>({
     return <ErrorState onRetry={() => void tableQuery.refetch()} />;
   }
 
+  const clearFilters = onClearFilters ?? (() => setFilters(initialFilters.current, "replace"));
+  const pagination = !isLoading && (rows.length > 0 || currentPage > 1) && (
+    <DataTablePagination
+      currentPage={currentPage}
+      pageCount={pageCount}
+      setCurrentPage={setCurrentPage}
+      pageSize={pageSize}
+      setPageSize={setPageSize}
+      total={tableQuery.data?.total}
+    />
+  );
+
+  if (asCards) {
+    const sortHeaders = getHeaderGroups()[0]?.headers.filter((h) =>
+      isSortableHeader(h.column.columnDef as ColumnDef<unknown, unknown>)
+    );
+    return (
+      <div className="flex flex-col gap-3">
+        {!!sortHeaders?.length && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {sortHeaders.map((h) => (
+              <span key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</span>
+            ))}
+          </div>
+        )}
+        <div
+          className={cn("relative overflow-hidden rounded-md border bg-card", isRefetching && "opacity-60")}
+          aria-busy={tableQuery.isFetching || undefined}
+        >
+          {isLoading ? (
+            <ul aria-hidden className="divide-y">
+              {Array.from({ length: 4 }, (_, i) => (
+                <li key={i} className="flex flex-col gap-2 p-3">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-2/3" />
+                </li>
+              ))}
+            </ul>
+          ) : rows.length ? (
+            <ul className="divide-y">
+              {rows.map((row) => (
+                <RowCard
+                  key={row.original?.id ?? row.id}
+                  row={row}
+                  href={getRowHref?.(row.original)}
+                  renderCell={renderCell}
+                  onOpen={openRow}
+                />
+              ))}
+            </ul>
+          ) : (
+            <div className="py-10">
+              <NoDataContent isFiltered={isFiltered} onClearFilters={clearFilters} empty={empty} />
+            </div>
+          )}
+        </div>
+        {pagination}
+      </div>
+    );
+  }
+
   return (
     <div className={cn("flex", "flex-col", "flex-1", "gap-4")}>
+      {columnsKey && <ColumnsMenu table={table} />}
       <div ref={tableContainerRef} className={cn("relative overflow-hidden rounded-md border bg-card")}>
         {isRefetching && (
           <div
@@ -264,7 +352,7 @@ export function DataTable<TData extends BaseRecord>({
                 isOverflowing={isOverflowing}
                 columnsLength={columns.length}
                 isFiltered={isFiltered}
-                onClearFilters={onClearFilters ?? (() => setFilters(initialFilters.current, "replace"))}
+                onClearFilters={clearFilters}
                 empty={empty}
               />
             )}
@@ -272,16 +360,7 @@ export function DataTable<TData extends BaseRecord>({
         </Table>
       </div>
       {/* Also when a page past the end comes back empty, so there's a way back. */}
-      {!isLoading && (rows.length > 0 || currentPage > 1) && (
-        <DataTablePagination
-          currentPage={currentPage}
-          pageCount={pageCount}
-          setCurrentPage={setCurrentPage}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          total={tableQuery.data?.total}
-        />
-      )}
+      {pagination}
     </div>
   );
 }
@@ -299,7 +378,6 @@ function DataTableNoData({
   onClearFilters: () => void;
   empty?: DataTableProps<BaseRecord>["empty"];
 }) {
-  const translate = useTranslate();
   return (
     <TableRow className="hover:bg-transparent">
       <TableCell
@@ -326,36 +404,156 @@ function DataTableNoData({
             minWidth: "300px",
           }}
         >
-          {isFiltered ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <SearchX />
-                </EmptyMedia>
-                <EmptyTitle>{translate("common.titles.noResultsFound")}</EmptyTitle>
-                <EmptyDescription>{translate("common.descriptions.noRecordsMatchYourSearch")}</EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button variant="outline" size="sm" onClick={onClearFilters}>
-                  {translate("buttons.clearFilters")}
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Inbox />
-                </EmptyMedia>
-                <EmptyTitle>{empty?.title ?? translate("common.titles.noDataToDisplay")}</EmptyTitle>
-                <EmptyDescription>{empty?.description ?? translate("common.descriptions.thisTableIsEmptyFor")}</EmptyDescription>
-              </EmptyHeader>
-              {empty?.action && <EmptyContent>{empty.action}</EmptyContent>}
-            </Empty>
-          )}
+          <NoDataContent isFiltered={isFiltered} onClearFilters={onClearFilters} empty={empty} />
         </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+function NoDataContent({
+  isFiltered,
+  onClearFilters,
+  empty,
+}: {
+  isFiltered: boolean;
+  onClearFilters: () => void;
+  empty?: DataTableProps<BaseRecord>["empty"];
+}) {
+  const translate = useTranslate();
+  return isFiltered ? (
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <SearchX />
+        </EmptyMedia>
+        <EmptyTitle>{translate("common.titles.noResultsFound")}</EmptyTitle>
+        <EmptyDescription>{translate("common.descriptions.noRecordsMatchYourSearch")}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button variant="outline" size="sm" onClick={onClearFilters}>
+          {translate("buttons.clearFilters")}
+        </Button>
+      </EmptyContent>
+    </Empty>
+  ) : (
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Inbox />
+        </EmptyMedia>
+        <EmptyTitle>{empty?.title ?? translate("common.titles.noDataToDisplay")}</EmptyTitle>
+        <EmptyDescription>{empty?.description ?? translate("common.descriptions.thisTableIsEmptyFor")}</EmptyDescription>
+      </EmptyHeader>
+      {empty?.action && <EmptyContent>{empty.action}</EmptyContent>}
+    </Empty>
+  );
+}
+
+/** One row on a phone: its main cell as the title, the other columns as label / value pairs. */
+function RowCard<TData>({
+  row,
+  href,
+  renderCell,
+  onOpen,
+}: {
+  row: Row<TData>;
+  href: string | undefined;
+  renderCell: (cell: Cell<TData, unknown>, href: string | undefined, inCard?: boolean) => ReactNode;
+  onOpen: (e: MouseEvent<HTMLElement>, href: string | undefined) => void;
+}) {
+  const cells = row.getVisibleCells();
+  const select = cells.find((c) => c.column.id === SELECT);
+  const actions = cells.find((c) => c.column.id === ACTIONS);
+  const data = cells.filter((c) => c !== select && c !== actions);
+  const primary = data.find((c) => c.column.columnDef.meta?.primary) ?? data[0];
+  const rest = data.filter((c) => c !== primary);
+  return (
+    <li
+      data-state={row.getIsSelected() ? "selected" : undefined}
+      className={cn("flex items-start gap-3 p-3 data-[state=selected]:bg-primary/5", href && "cursor-pointer")}
+      onClick={href ? (e) => onOpen(e, href) : undefined}
+    >
+      {select && <div className="pt-0.5">{flexRender(select.column.columnDef.cell, select.getContext())}</div>}
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        {primary && <div className="text-sm font-medium">{renderCell(primary, href, true)}</div>}
+        {rest.length > 0 && (
+          <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
+            {rest.map((c) => (
+              <div key={c.id} className="contents">
+                <dt className="truncate text-muted-foreground">{headerLabel(c.column.columnDef as ColumnDef<TData, unknown>)}</dt>
+                <dd className="min-w-0">{renderCell(c, undefined, true)}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+      {actions && <div className="-my-1">{flexRender(actions.column.columnDef.cell, actions.getContext())}</div>}
+    </li>
+  );
+}
+
+const hideable = <TData,>(column: Column<TData>) =>
+  column.id !== SELECT && column.id !== ACTIONS && !column.columnDef.meta?.primary && column.getCanHide();
+
+const storageKey = (key: string) => `inatrace.columns.${key}`;
+
+/** Restores the hidden columns saved for this table, and saves changes. Storage may be unavailable. */
+function useStoredColumnVisibility<TData extends BaseRecord>(
+  table: UseTableReturnType<TData, HttpError>,
+  key: string | undefined
+) {
+  const visibility = table.reactTable.getState().columnVisibility;
+  const restored = useRef(false);
+  useEffect(() => {
+    if (!key || restored.current) return;
+    restored.current = true;
+    try {
+      const saved = localStorage.getItem(storageKey(key));
+      if (saved) table.reactTable.setColumnVisibility(JSON.parse(saved));
+    } catch {
+      // No storage (private window, blocked): all columns stay visible.
+    }
+  }, [key, table.reactTable]);
+  useEffect(() => {
+    if (!key || !restored.current) return;
+    try {
+      localStorage.setItem(storageKey(key), JSON.stringify(visibility));
+    } catch {
+      // Not remembered; the choice still applies on this page.
+    }
+  }, [key, visibility]);
+}
+
+function ColumnsMenu<TData extends BaseRecord>({ table }: { table: UseTableReturnType<TData, HttpError> }) {
+  const translate = useTranslate();
+  const columns = table.reactTable.getAllLeafColumns().filter(hideable);
+  const hidden = columns.filter((c) => !c.getIsVisible()).length;
+  return (
+    <div className="-mb-2 hidden justify-end md:flex">
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+          <Columns3 />
+          {translate("table.buttons.columns")}
+          {hidden > 0 && <span className="text-muted-foreground">({translate("table.texts.hiddenCount", { count: hidden })})</span>}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{translate("table.texts.showColumns")}</DropdownMenuLabel>
+            {columns.map((c) => (
+              <DropdownMenuCheckboxItem
+                key={c.id}
+                checked={c.getIsVisible()}
+                onCheckedChange={(v) => c.toggleVisibility(!!v)}
+                closeOnClick={false}
+              >
+                {headerLabel(c.columnDef as ColumnDef<TData, unknown>) ?? c.id}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 

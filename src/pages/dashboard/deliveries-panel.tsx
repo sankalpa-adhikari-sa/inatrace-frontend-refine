@@ -7,18 +7,16 @@ import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } f
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
-import { personName, toApiDay, today } from "../stock/shared";
+import { personName, toApiDay } from "../stock/shared";
 import { download, useApi } from "@/lib/http";
 import { ep } from "@/lib/endpoints";
 import { useTranslate } from "@refinedev/core";
-import { ChartFrame, DataTableView, ExportButton, RangeControls, StatRow, StatTile, useRangeAggregation } from "./controls";
-import { type Aggregation, compact, defaultAggregation, EXT, MAX_DELIVERY_POINTS, nf, SERIES_1, twoYearsAgo, unitLabel } from "./utils";
+import { ChartFrame, type DashboardRange, MultiPick, DataTableView, ExportButton, StatRow, StatTile } from "./controls";
+import { compact, EXT, MAX_DELIVERY_POINTS, nf, SERIES_1, unitLabel } from "./utils";
 
-export function DeliveriesPanel({ companyId }: { companyId: number }) {
+export function DeliveriesPanel({ companyId, range }: { companyId: number; range: DashboardRange }) {
   const translate = useTranslate();
-  const [from, setFrom] = useState(twoYearsAgo);
-  const [to, setTo] = useState(today);
-  const [aggregation, setAggregation] = useState<Aggregation>(() => defaultAggregation(twoYearsAgo(), today()));
+  const { from, to, aggregation } = range;
   const [facilityIds, setFacilityIds] = useState<number[] | null>(null);
   const [semiProductId, setSemiProductId] = useState<number | null>(null);
   const [farmerId, setFarmerId] = useState<number | null>(null);
@@ -26,7 +24,6 @@ export function DeliveriesPanel({ companyId }: { companyId: number }) {
   const [organic, setOrganic] = useState(false);
   const [womenOnly, setWomenOnly] = useState(false);
   const [inDeposit, setInDeposit] = useState(false);
-  useRangeAggregation(from, to, setAggregation);
 
   const list = { requestType: "FETCH" as const, limit: 1000 };
   const { data: facilities = [], isSuccess: facilitiesLoaded } = useApi(
@@ -102,23 +99,17 @@ export function DeliveriesPanel({ companyId }: { companyId: number }) {
       }
     >
       <div className="flex flex-wrap items-center gap-2">
-        <RangeControls
-          from={from}
-          to={to}
-          setFrom={setFrom}
-          setTo={setTo}
-          aggregation={aggregation}
-          setAggregation={setAggregation}
-        />
-        <SimpleCombobox
-          className="w-60"
-          clearable={false}
+        <MultiPick
           prefix={translate("common.fields.facility")}
           options={facilities.map((f) => ({ value: f.id!, label: f.name ?? "" }))}
-          value={facilityIds?.[0] ?? null}
-          onChange={(id) => {
-            setFacilityIds(id ? [id] : []);
-            setSemiProductId(facilities.find((f) => f.id === id)?.facilitySemiProductList?.[0]?.id ?? null);
+          value={facilityIds ?? []}
+          onChange={(ids) => {
+            setFacilityIds(ids);
+            // Keep the semi-product if one of the chosen facilities still handles it.
+            const offered = facilities
+              .filter((f) => ids.includes(f.id!))
+              .flatMap((f) => f.facilitySemiProductList ?? []);
+            if (!offered.some((s) => s.id === semiProductId)) setSemiProductId(offered[0]?.id ?? null);
           }}
         />
         <SimpleCombobox

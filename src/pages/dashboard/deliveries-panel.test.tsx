@@ -5,7 +5,10 @@ import { ep } from "@/lib/endpoints";
 import { ok, on, paged, server } from "../../../test/msw";
 import { renderWithRefine } from "../../../test/render";
 import { tr } from "../../../test/tr";
+import type { DashboardRange } from "./controls";
 import { DeliveriesPanel } from "./deliveries-panel";
+
+const RANGE: DashboardRange = { from: "2024-01-01", to: "2026-06-30", aggregation: "MONTH" };
 
 const facility = {
   id: 5,
@@ -27,7 +30,7 @@ describe("DeliveriesPanel", () => {
       on(ep.getUserCustomersForCompanyAndType, () => paged([])),
       on(ep.getDeliveriesAggregatedData, () => ok({ unitType: "MONTH", totals })),
     );
-    const { user } = renderWithRefine(<DeliveriesPanel companyId={1} />, { companyId: null });
+    const { user } = renderWithRefine(<DeliveriesPanel companyId={1} range={RANGE} />, { companyId: null });
 
     // 100 + 200 + … + 3000 = 46,500 kg over 30 months.
     const total = await screen.findByText(tr("dashboard.fields.totalDelivered"));
@@ -48,7 +51,7 @@ describe("DeliveriesPanel", () => {
       on(ep.listCollectingFacilitiesByCompany, () => paged([])),
       on(ep.getUserCustomersForCompanyAndType, () => paged([])),
     );
-    renderWithRefine(<DeliveriesPanel companyId={1} />, { companyId: null });
+    renderWithRefine(<DeliveriesPanel companyId={1} range={RANGE} />, { companyId: null });
     expect(await screen.findByText(tr("dashboard.texts.noCollectingFacilitiesYet"))).toBeInTheDocument();
   });
 });

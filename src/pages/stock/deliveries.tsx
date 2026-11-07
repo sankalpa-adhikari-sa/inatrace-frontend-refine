@@ -1,9 +1,9 @@
 import { format } from "date-fns";
-import { Banknote, ChevronDown, Download, Layers, Plus, Truck } from "lucide-react";
+import { Banknote, ChevronDown, Layers, Plus, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ApiFacility, ApiStockOrder } from "@/client/types.gen";
-import { FilterPopover, SearchInput, SimpleCombobox, SimpleSelect, Toolbar } from "@/components/app/controls";
+import { FilterPopover, SearchInput, SimpleCombobox, SimpleSelect, Toolbar, ExportAllButton } from "@/components/app/controls";
 import { DateRangePicker } from "@/components/app/date-range-picker";
 import { PageLoader, Section } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
@@ -80,8 +80,8 @@ export function DeliveriesTab() {
   const setFrom = (v: string) => url.set({ from: v });
   const setTo = (v: string) => url.set({ to: v });
   const [selected, setSelected] = useState<ApiStockOrder[]>([]);
+  const [selectionReset, setSelectionReset] = useState(0);
   const [total, setTotal] = useState(0);
-  const [exporting, setExporting] = useState(false);
 
   const { data: facilities = [] } = useApi(
     ep.listCollectingFacilitiesByCompany,
@@ -118,22 +118,11 @@ export function DeliveriesTab() {
       description={translate("stock.descriptions.listOfPurchaseOrdersTotal", { total })}
       actions={
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={total < 1 || exporting}
-            onClick={async () => {
-              setExporting(true);
-              try {
-                await download(ep.exportDeliveriesByCompany, { path: { companyId } }, "deliveries.xlsx");
-              } finally {
-                setExporting(false);
-              }
-            }}
-          >
-            <Download />
-            {translate("stock.buttons.export")}
-          </Button>
+          <ExportAllButton
+            label={translate("stock.buttons.export")}
+            disabled={total < 1}
+            onExport={() => download(ep.exportDeliveriesByCompany, { path: { companyId } }, "deliveries.xlsx")}
+          />
           <AddDeliveryMenu facilities={facilities} facilityId={facilityId} />
         </div>
       }
@@ -219,9 +208,11 @@ export function DeliveriesTab() {
               {translate("stock.texts.withThePriceDeterminedLater", { payableCount: selected.length - payable.length })}
             </span>
           )}
+          <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelectionReset((k) => k + 1)}>
+            {translate("stock.buttons.clearSelection")}
+          </Button>
           <Button
             size="sm"
-            className="ml-auto"
             disabled={payable.length === 0}
             onClick={() =>
               navigate(`/my-stock/payments/deliveries/bulk-payment/${payable.map((o) => o.id).join(",")}/new/PO`)
@@ -249,6 +240,7 @@ export function DeliveriesTab() {
           onSelectionChange={setSelected}
           onTotal={setTotal}
           isFiltered={url.active}
+          selectionResetKey={selectionReset}
           onClearFilters={url.clear}
         />
       </div>

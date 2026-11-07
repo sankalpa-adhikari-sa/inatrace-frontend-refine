@@ -1,7 +1,7 @@
 import { type CrudFilter, useNotification, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
 import type { ApiStockOrder } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
@@ -42,6 +42,7 @@ export function StockOrderTable({
   onTotal,
   isFiltered,
   onClearFilters,
+  selectionResetKey,
 }: {
   mode: StockListMode;
   companyId: number;
@@ -53,6 +54,8 @@ export function StockOrderTable({
   /** Whether the page's own filter controls narrow the list, for the "no results" state. */
   isFiltered?: boolean;
   onClearFilters?: () => void;
+  /** Changing it clears the selection. */
+  selectionResetKey?: number;
 }) {
   const translate = useTranslate();
   const navigate = useNavigate();
@@ -163,7 +166,7 @@ export function StockOrderTable({
         },
         {
           id: "payable",
-          header: translate("stock.fields.payableBalance"),
+          header: translate("stock.fields.payable"),
           enableSorting: false,
           meta: { align: "right" },
           cell: ({ row }) =>
@@ -172,21 +175,39 @@ export function StockOrderTable({
                 {translate("stock.fields.priceDeterminedLater")}
               </span>
             ) : (
-              `${fmt(row.original.cost)} / ${fmt(row.original.balance)}`
+              fmt(row.original.cost)
             ),
+        },
+        {
+          id: "balance",
+          header: translate("stock.fields.balance"),
+          enableSorting: false,
+          meta: { align: "right" },
+          cell: ({ row }) => (row.original.priceDeterminedLater ? "" : fmt(row.original.balance)),
         }
       );
     } else {
       cols.push(
         {
           id: "quantity",
-          header: translate("stock.fields.quantityFilledAvailable"),
+          header: translate("common.fields.quantity"),
           enableSorting: false,
           meta: { align: "right" },
-          cell: ({ row }) =>
-            `${fmt(row.original.totalQuantity ?? 0)} / ${fmt(row.original.fulfilledQuantity ?? 0)} / ${fmt(
-              row.original.availableQuantity ?? 0
-            )}`,
+          cell: ({ row }) => fmt(row.original.totalQuantity ?? 0),
+        },
+        {
+          id: "filled",
+          header: translate("stock.fields.filled"),
+          enableSorting: false,
+          meta: { align: "right" },
+          cell: ({ row }) => fmt(row.original.fulfilledQuantity ?? 0),
+        },
+        {
+          id: "available",
+          header: translate("stock.fields.available"),
+          enableSorting: false,
+          meta: { align: "right" },
+          cell: ({ row }) => fmt(row.original.availableQuantity ?? 0),
         },
         {
           id: "unit",
@@ -303,16 +324,31 @@ export function StockOrderTable({
     if (total != null) onTotal?.(total);
   }, [total, onTotal]);
 
+  // Selection is kept by id across pages; remember each order seen so ticks on other pages still count.
+  const seen = useRef(new Map<string, ApiStockOrder>());
   useEffect(() => {
-    onSelectionChange?.(items.filter((o) => selection[String(o.id)]));
+    for (const o of items) seen.current.set(String(o.id), o);
+    onSelectionChange?.(
+      Object.keys(selection)
+        .filter((id) => selection[id])
+        .map((id) => seen.current.get(id))
+        .filter((o): o is ApiStockOrder => !!o)
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, items]);
+
+  // The page's "Clear selection".
+  useEffect(() => {
+    if (selectionResetKey) table.reactTable.resetRowSelection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionResetKey]);
 
   return (
     <div className="flex flex-col gap-4">
       <DataTable
         table={table}
         filterKey={permanent}
+        columnsKey={purchases ? "deliveries" : "stock-orders"}
         isFiltered={isFiltered}
         onClearFilters={onClearFilters}
         getRowHref={(o) =>

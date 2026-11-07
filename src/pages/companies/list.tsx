@@ -8,7 +8,7 @@ import type { ApiCompanyListResponse } from "@/client/types.gen";
 import { RowActions, SearchInput, SimpleSelect, StatusBadge, Toolbar, humanize } from "@/components/app/controls";
 import { PageHeader } from "@/components/app/page";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { SortableHeader } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,7 +42,7 @@ export function CompanyList() {
         id: "name",
         accessorKey: "name",
         meta: { primary: true },
-        header: ({ column }) => <SortableHeader column={column} label={translate("common.fields.name")} />,
+        header: sortable(translate("common.fields.name")),
       },
       {
         id: "status",

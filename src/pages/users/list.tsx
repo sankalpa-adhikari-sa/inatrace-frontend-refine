@@ -15,7 +15,7 @@ import {
 } from "@/components/app/controls";
 import { PageHeader } from "@/components/app/page";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { SortableHeader } from "@/components/refine-ui/data-table/data-table-sorter";
+import { sortable } from "@/components/refine-ui/data-table/data-table-sorter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useIdentity } from "@/hooks/use-session";
@@ -44,17 +44,17 @@ export function UserList() {
         id: "name",
         accessorKey: "name",
         meta: { primary: true },
-        header: ({ column }) => <SortableHeader column={column} label={translate("common.fields.name")} />,
+        header: sortable(translate("common.fields.name")),
       },
       {
         id: "surname",
         accessorKey: "surname",
-        header: ({ column }) => <SortableHeader column={column} label={translate("users.fields.surname")} />,
+        header: sortable(translate("users.fields.surname")),
       },
       {
         id: "email",
         accessorKey: "email",
-        header: ({ column }) => <SortableHeader column={column} label={translate("common.fields.eMail")} />,
+        header: sortable(translate("common.fields.eMail")),
       },
       {
         id: "role",

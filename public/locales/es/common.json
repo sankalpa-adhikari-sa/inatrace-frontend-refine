@@ -197,10 +197,12 @@
       "chooseWhichOptionalCookiesThis": "Elija qué cookies opcionales puede usar este sitio.",
       "currentlyYouHaveNoCompanies": "Por el momento usted no tiene empresas asignadas. Contacte a su administrador",
       "customerSupportWithLiveChat": "Atención al cliente por chat en vivo.",
+      "exportsAllRecordsFiltersDontApply": "Exporta todos los registros de la empresa; los filtros de arriba no se aplican.",
       "inaTrace": "INATrace",
       "listAndBrieflyDescribeThe": "Indique y describa brevemente los certificados que posee actualmente y los estándares que sigue. (Por ejemplo, ecológico: uso de plántulas orgánicas, fertilizantes orgánicos, Fair Trade: compensación justa a los agricultores y otros miembros de la cadena de suministro...)",
       "noRecordsMatchYourSearch": "Ningún registro coincide con su búsqueda o filtros.",
       "performanceCookies": "Cookies de rendimiento.",
+      "removeThisItem": "¿Eliminar este elemento y lo que se introdujo en él?",
       "requestCouldNotBeCompleted": "No se ha podido completar la solicitud. Revise los datos introducidos e inténtelo de nuevo.",
       "theDataCouldNotBeLoaded": "No se pudieron cargar los datos. Compruebe su conexión e inténtelo de nuevo.",
       "thisTableIsEmptyFor": "Esta tabla está vacía por el momento.",
@@ -401,6 +403,7 @@
       "accountNotActiveYet": "La cuenta aún no está activa",
       "areYouSure": "¿Está seguro?",
       "basicInformation": "Información básica",
+      "certificationNumber": "Certificación {{number}}",
       "cookiesSettings": "Configuraciones de cookies",
       "copyToClipboard": "Copiar al portapapeles",
       "deliveries": "Entregas",
@@ -689,10 +692,12 @@
       "allFarmers": "Todos los agricultores"
     },
     "texts": {
+      "allCount": "Todas ({{count}})",
       "noCollectingFacilitiesYet": "Esta empresa aún no tiene centros de acopio, así que no hay entregas que mostrar.",
       "noDataForTheSelected": "No hay datos para los filtros seleccionados.",
       "onlyTheLatestPeriodsAre": "Solo se muestran los últimos {{truncated}} períodos. Elija un rango de fechas más corto o una agrupación más amplia para verlos todos.",
-      "overTheWholeRange": "En todo el rango de fechas"
+      "overTheWholeRange": "En todo el rango de fechas",
+      "selectedCount": "{{count}} seleccionadas"
     },
     "titles": {
       "dashboard": "Panel",
@@ -1436,6 +1441,7 @@
       "addPayments": "Agregar pagos ({{payableCount}})",
       "addProof": "Agregar comprobante",
       "chooseAFacilityToContinue": "Elija un área para continuar",
+      "clearSelection": "Borrar selección",
       "export": "Exportar",
       "groupView": "Vista Grupal",
       "removeFarmer": "Quitar agricultor",
@@ -1478,6 +1484,7 @@
       "anyWayOfPayment": "Cualquier forma de pago",
       "available": "Disponible",
       "availableOnly": "Sólo disponibles",
+      "balance": "Saldo",
       "basePayment": "Pago inicial",
       "comment": "Comentario",
       "cooperativeEmployee": "Empleado de la cooperativa",
@@ -1502,7 +1509,7 @@
       "openBalanceOnly": "Solo saldo pendiente",
       "orderType": "Tipo de pedido",
       "organic": "Organico",
-      "payableBalance": "A pagar / Saldo",
+      "payable": "A pagar",
       "payment": "Pago",
       "paymentList": "Lista de pagos",
       "paymentOrderApproved": "Pedido de pago aprobado",
@@ -1803,6 +1810,7 @@
       "processingActions": "Acciones de procesamiento",
       "processingEvidenceDocuments": "Documentos de prueba para procesos",
       "processingInformation": "Información de procesamiento",
+      "proofNumber": "Comprobante {{number}}",
       "updateDelivery": "Actualizar la entrega"
     }
   },
@@ -2084,9 +2092,14 @@
   },
   "table": {
     "texts": {
+      "hiddenCount": "{{count}} ocultas",
+      "showColumns": "Mostrar columnas",
       "sortBy": "Ordenar por {{column}}",
       "sortedAscending": "{{column}}: orden ascendente",
       "sortedDescending": "{{column}}: orden descendente"
+    },
+    "buttons": {
+      "columns": "Columnas"
     }
   }
 }

@@ -7,7 +7,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import type { ApiBulkPayment, ApiPayment, ApiStockOrder, ApiUserCustomer } from "@/client/types.gen";
 import { useConfirm } from "@/components/app/confirm";
-import { RowActions, SearchInput, SimpleSelect, Toolbar } from "@/components/app/controls";
+import { RowActions, SearchInput, SimpleSelect, Toolbar, ExportAllButton } from "@/components/app/controls";
 import { DateRangePicker } from "@/components/app/date-range-picker";
 import { PageLoader, Section } from "@/components/app/page";
 import { SearchSelectField } from "@/components/app/search-select-field";
@@ -66,14 +66,10 @@ export function PaymentsTab() {
         description={translate("stock.payments.descriptions.listOfPaymentsTotal", { total })}
         actions={
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => download(ep.exportPaymentsByCompany, { path: { id: companyId } }, "payments.xlsx")}
-            >
-              <Download />
-              {translate("stock.payments.buttons.exportData")}
-            </Button>
+            <ExportAllButton
+              label={translate("stock.payments.buttons.exportData")}
+              onExport={() => download(ep.exportPaymentsByCompany, { path: { id: companyId } }, "payments.xlsx")}
+            />
             {canEditPayments && (
               <Button size="sm" data-onboarding="add-payment" onClick={() => setPicking(true)}>
                 <Plus />
@@ -269,7 +265,7 @@ export function PaymentsTable({
     if (total != null) onTotal?.(total);
   }, [total, onTotal]);
 
-  return <DataTable table={table} filterKey={permanent} />;
+  return <DataTable table={table} filterKey={permanent} columnsKey="payments" />;
 }
 
 function BulkPayments({ companyId }: { companyId: number }) {

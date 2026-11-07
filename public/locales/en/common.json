@@ -197,10 +197,12 @@
       "chooseWhichOptionalCookiesThis": "Choose which optional cookies this site may use.",
       "currentlyYouHaveNoCompanies": "Currently you have no companies assigned. Contact your administrator.",
       "customerSupportWithLiveChat": "Customer support with live chat.",
+      "exportsAllRecordsFiltersDontApply": "Exports all of the company's records; the filters above don't apply.",
       "inaTrace": "INATrace",
       "listAndBrieflyDescribeThe": "List and briefly describe the certificates you are currently holding and standards you are following.",
       "noRecordsMatchYourSearch": "No records match your search or filters.",
       "performanceCookies": "Performance cookies.",
+      "removeThisItem": "Remove this item and what was entered for it?",
       "requestCouldNotBeCompleted": "Request could not be completed. Please review the entered data and try again.",
       "theDataCouldNotBeLoaded": "The data could not be loaded. Check your connection and try again.",
       "thisTableIsEmptyFor": "This table is empty for the time being.",
@@ -401,6 +403,7 @@
       "accountNotActiveYet": "Account not active yet",
       "areYouSure": "Are you sure?",
       "basicInformation": "Basic information",
+      "certificationNumber": "Certification {{number}}",
       "cookiesSettings": "Cookies settings",
       "copyToClipboard": "Copy to clipboard",
       "deliveries": "Deliveries",
@@ -689,10 +692,12 @@
       "allFarmers": "All farmers"
     },
     "texts": {
+      "allCount": "All ({{count}})",
       "noCollectingFacilitiesYet": "This company has no collecting facilities yet, so there are no deliveries to show.",
       "noDataForTheSelected": "No data for the selected filters.",
       "onlyTheLatestPeriodsAre": "Only the latest {{truncated}} periods are shown. Choose a shorter date range or a longer grouping to see them all.",
-      "overTheWholeRange": "Over the whole date range"
+      "overTheWholeRange": "Over the whole date range",
+      "selectedCount": "{{count}} selected"
     },
     "titles": {
       "dashboard": "Dashboard",
@@ -1436,6 +1441,7 @@
       "addPayments": "Add payments ({{payableCount}})",
       "addProof": "Add proof",
       "chooseAFacilityToContinue": "Choose a facility to continue",
+      "clearSelection": "Clear selection",
       "export": "Export",
       "groupView": "Group view",
       "removeFarmer": "Remove farmer",
@@ -1478,6 +1484,7 @@
       "anyWayOfPayment": "Any way of payment",
       "available": "Available",
       "availableOnly": "Available only",
+      "balance": "Balance",
       "basePayment": "Base payment",
       "comment": "Comment",
       "cooperativeEmployee": "Cooperative employee",
@@ -1502,7 +1509,7 @@
       "openBalanceOnly": "Open balance only",
       "orderType": "Order type",
       "organic": "Organic",
-      "payableBalance": "Payable / Balance",
+      "payable": "Payable",
       "payment": "Payment",
       "paymentList": "Payment list",
       "paymentOrderApproved": "Payment order approved",
@@ -1803,6 +1810,7 @@
       "processingActions": "Processing actions",
       "processingEvidenceDocuments": "Processing evidence documents",
       "processingInformation": "Processing information",
+      "proofNumber": "Proof {{number}}",
       "updateDelivery": "Update delivery"
     }
   },
@@ -2084,9 +2092,14 @@
   },
   "table": {
     "texts": {
+      "hiddenCount": "{{count}} hidden",
+      "showColumns": "Show columns",
       "sortBy": "Sort by {{column}}",
       "sortedAscending": "{{column}}: sorted ascending",
       "sortedDescending": "{{column}}: sorted descending"
+    },
+    "buttons": {
+      "columns": "Columns"
     }
   }
 }

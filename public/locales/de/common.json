@@ -197,10 +197,12 @@
       "chooseWhichOptionalCookiesThis": "Wählen Sie, welche optionalen Cookies diese Website verwenden darf.",
       "currentlyYouHaveNoCompanies": "Derzeit sind Ihnen keine Unternehmen zugeordnet. Kontaktieren Sie Ihren Administrator.",
       "customerSupportWithLiveChat": "Kundensupport per Live-Chat.",
+      "exportsAllRecordsFiltersDontApply": "Exportiert alle Datensätze des Unternehmens; die Filter oben gelten nicht.",
       "inaTrace": "INATrace",
       "listAndBrieflyDescribeThe": "Führen Sie Ihre derzeitigen Zertifikate und Standards auf und beschreiben Sie diese kurz (z. B. Bio - Verwendung von Bio-Sämlingen, Bio-Düngemitteln, Fairer Handel - Faire Bezahlung von Landwirt*innen und anderen Akteuren innerhalb der Lieferkette…)",
       "noRecordsMatchYourSearch": "Keine Einträge entsprechen Ihrer Suche oder Ihren Filtern.",
       "performanceCookies": "Leistungs-Cookies.",
+      "removeThisItem": "Diesen Eintrag und die dazu eingegebenen Angaben entfernen?",
       "requestCouldNotBeCompleted": "Die Anfrage konnte nicht abgeschlossen werden. Bitte überprüfen Sie die eingegebenen Daten und versuchen Sie es erneut.",
       "theDataCouldNotBeLoaded": "Die Daten konnten nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
       "thisTableIsEmptyFor": "Diese Tabelle ist derzeit leer.",
@@ -401,6 +403,7 @@
       "accountNotActiveYet": "Konto noch nicht aktiv",
       "areYouSure": "Sind Sie sicher?",
       "basicInformation": "Allgemeine Information",
+      "certificationNumber": "Zertifizierung {{number}}",
       "cookiesSettings": "Cookie-Einstellungen",
       "copyToClipboard": "In die Zwischenablage kopieren",
       "deliveries": "Lieferungen",
@@ -689,10 +692,12 @@
       "allFarmers": "Alle Landwirt*innen"
     },
     "texts": {
+      "allCount": "Alle ({{count}})",
       "noCollectingFacilitiesYet": "Dieses Unternehmen hat noch keine Sammelstellen, daher gibt es keine Lieferungen anzuzeigen.",
       "noDataForTheSelected": "Keine Daten für die ausgewählten Filter.",
       "onlyTheLatestPeriodsAre": "Nur die letzten {{truncated}} Zeiträume werden angezeigt. Wählen Sie einen kürzeren Zeitraum oder eine gröbere Gruppierung, um alle zu sehen.",
-      "overTheWholeRange": "Über den gesamten Zeitraum"
+      "overTheWholeRange": "Über den gesamten Zeitraum",
+      "selectedCount": "{{count}} ausgewählt"
     },
     "titles": {
       "dashboard": "Dashboard",
@@ -1436,6 +1441,7 @@
       "addPayments": "Zahlungen hinzufügen ({{payableCount}})",
       "addProof": "Nachweis hinzufügen",
       "chooseAFacilityToContinue": "Wählen Sie eine Anlage, um fortzufahren",
+      "clearSelection": "Auswahl aufheben",
       "export": "Exportieren",
       "groupView": "Group view",
       "removeFarmer": "Landwirt*in entfernen",
@@ -1478,6 +1484,7 @@
       "anyWayOfPayment": "Beliebige Zahlungsart",
       "available": "Verfügbar",
       "availableOnly": "Nur verfügbare",
+      "balance": "Saldo",
       "basePayment": "Basiszahlung",
       "comment": "Kommentar",
       "cooperativeEmployee": "Mitarbeiter*in der Kooperative",
@@ -1502,7 +1509,7 @@
       "openBalanceOnly": "Nur offener Saldo",
       "orderType": "Bestellart",
       "organic": "Bio",
-      "payableBalance": "Gesamtbetrag /Offener Betrag",
+      "payable": "Zu zahlen",
       "payment": "Zahlung",
       "paymentList": "Zahlungsliste",
       "paymentOrderApproved": "Zahlungsvorgang genehmigt",
@@ -1803,6 +1810,7 @@
       "processingActions": "Verarbeitungsvorgänge",
       "processingEvidenceDocuments": "Verarbeitung von Nachweisdokumenten",
       "processingInformation": "Verarbeitungsinformation",
+      "proofNumber": "Nachweis {{number}}",
       "updateDelivery": "Lieferung aktualisieren"
     }
   },
@@ -2084,9 +2092,14 @@
   },
   "table": {
     "texts": {
+      "hiddenCount": "{{count}} ausgeblendet",
+      "showColumns": "Spalten anzeigen",
       "sortBy": "Nach {{column}} sortieren",
       "sortedAscending": "{{column}}: aufsteigend sortiert",
       "sortedDescending": "{{column}}: absteigend sortiert"
+    },
+    "buttons": {
+      "columns": "Spalten"
     }
   }
 }

@@ -294,6 +294,18 @@ Deliberate differences from the original Angular frontend:
   Quantities and amounts are right-aligned.
 - Deliveries, payments, orders and all-stock filters are kept in the URL, so they survive a reload or the back
   button from a record (Angular kept them in memory).
+- On phones, lists show each row as a card (its name, then label / value pairs) with the sort options above,
+  instead of a table that scrolls sideways.
+- Wide stock tables (deliveries, processing, payments, all stock) have a Columns menu to hide columns, remembered
+  in the browser. Combined values are split into their own columns (Payable, Balance; Quantity, Filled,
+  Available).
+- Deliveries ticked for a bulk payment stay ticked across pages (they used to be dropped when the page
+  changed), and the selection can be cleared. Export buttons say on hover that they export all records:
+  the backend exports ignore the list filters.
+- Repeated certifications, delivery proofs and processing outputs are numbered cards; removing one that has
+  data asks first.
+- Dashboard: one date range and grouping for both panels, kept in the URL. Deliveries can be shown for
+  several collecting facilities at once.
 - Dashboard: each panel leads with headline figures (total, average and busiest period for deliveries; total
   input, output and ratio for processing). When there are more periods than fit, the latest are shown
   (Angular showed the oldest). Changing the date range picks a fitting grouping again. Loading shows a

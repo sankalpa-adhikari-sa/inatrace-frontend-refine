@@ -1,11 +1,13 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { type Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useParams } from "react-router";
 import type { ApiFacility, ApiStockOrder, ApiUserCustomer } from "@/client/types.gen";
 import { CheckboxField, ComboboxField, DateField, EntityComboboxField, SelectField, TextField, ReadOnlyField } from "@/components/app/form-fields";
 import { LastChange } from "@/components/app/last-change";
+import { useConfirm } from "@/components/app/confirm";
 import { FormLayout } from "@/components/app/form-layout";
+import { RepeaterItem } from "@/components/app/repeater-item";
 import { FormActions, PageHeader, Section } from "@/components/app/page";
 import { FormSkeleton } from "@/components/app/states";
 import { SearchSelectField } from "@/components/app/search-select-field";
@@ -482,41 +484,48 @@ export function ActivityProofs<T extends { activityProofs?: ApiStockOrder["activ
   const translate = useTranslate();
   const c = control as unknown as Control<{ activityProofs: NonNullable<ApiStockOrder["activityProofs"]> }>;
   const { fields, append, remove } = useFieldArray({ control: c, name: "activityProofs", keyName: "key" });
+  const values = useWatch({ control: c, name: "activityProofs" }) ?? [];
+  const confirm = useConfirm();
+  // Ask only when a document was attached; an empty proof just goes.
+  const removeAt = async (i: number) => {
+    if (
+      !values[i]?.document ||
+      (await confirm({
+        description: translate("common.descriptions.removeThisItem"),
+        destructive: true,
+        confirmLabel: translate("buttons.remove"),
+      }))
+    )
+      remove(i);
+  };
   return (
     <div className="flex flex-col gap-3">
       {fields.length === 0 && <p className="text-xs text-muted-foreground">{translate("stock.texts.noAdditionalProofs")}</p>}
       {fields.map((f, i) => (
-        <div key={f.key} className="grid gap-4 border-b pb-4 last:border-b-0 last:pb-0 sm:grid-cols-[1fr_1fr_2fr_auto] sm:items-end">
-          <DateField
-            control={c}
-            name={`activityProofs.${i}.formalCreationDate`}
-            label={translate("common.fields.date")}
-            rules={{ required: translate("stock.errors.dateIsRequired") }}
-          />
-          <ComboboxField
-            control={c}
-            name={`activityProofs.${i}.type`}
-            label={translate("common.fields.type")}
-            options={PROOF_TYPES}
-            rules={{ required: translate("common.errors.typeIsRequired") }}
-          />
-          <UploadField
-            control={c}
-            name={`activityProofs.${i}.document`}
-            label={translate("stock.fields.documentJpgPngPdf")}
-            accept="image/png,image/jpeg,application/pdf"
-            rules={{ required: translate("common.errors.documentIsRequired") }}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={translate("buttons.remove")}
-            onClick={() => remove(i)}
-          >
-            <Trash2 />
-          </Button>
-        </div>
+        <RepeaterItem key={f.key} title={translate("stock.titles.proofNumber", { number: i + 1 })} onRemove={() => removeAt(i)}>
+          <div className="grid gap-4 sm:grid-cols-[1fr_1fr_2fr] sm:items-start">
+            <DateField
+              control={c}
+              name={`activityProofs.${i}.formalCreationDate`}
+              label={translate("common.fields.date")}
+              rules={{ required: translate("stock.errors.dateIsRequired") }}
+            />
+            <ComboboxField
+              control={c}
+              name={`activityProofs.${i}.type`}
+              label={translate("common.fields.type")}
+              options={PROOF_TYPES}
+              rules={{ required: translate("common.errors.typeIsRequired") }}
+            />
+            <UploadField
+              control={c}
+              name={`activityProofs.${i}.document`}
+              label={translate("stock.fields.documentJpgPngPdf")}
+              accept="image/png,image/jpeg,application/pdf"
+              rules={{ required: translate("common.errors.documentIsRequired") }}
+            />
+          </div>
+        </RepeaterItem>
       ))}
       <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => append({ formalCreationDate: today() })}>
         <Plus />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslate } from "@refinedev/core";
-import type { Column } from "@tanstack/react-table";
+import type { Column, ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +45,22 @@ export function SortableHeader<TData>({
  * `header` for a sortable column. Pass a getter for translated labels in module-level column definitions,
  * so the label follows a language change.
  */
-export const sortable = (label: string | (() => string)) =>
+export const sortable = (label: string | (() => string)) => {
+  const text = () => (typeof label === "function" ? label() : label);
   function Header<TData>({ column }: { column: Column<TData> }) {
-    return <SortableHeader column={column} label={typeof label === "function" ? label() : label} />;
-  };
+    return <SortableHeader column={column} label={text()} />;
+  }
+  return Object.assign(Header, { label: text });
+};
+
+/** A column's header as plain text (for card layouts), when it has one. */
+export function headerLabel<TData>(def: ColumnDef<TData, unknown>): string | undefined {
+  const header = def.header as unknown;
+  if (typeof header === "string") return header || undefined;
+  if (typeof header === "function" && "label" in header) return (header as { label: () => string }).label();
+  return undefined;
+}
+
+/** Whether a header is a `sortable(...)` one (rendered as sort buttons above the card layout). */
+export const isSortableHeader = (def: ColumnDef<unknown, unknown>) =>
+  typeof def.header === "function" && "label" in (def.header as object);

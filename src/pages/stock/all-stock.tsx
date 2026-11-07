@@ -323,5 +323,5 @@ function GroupTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, items]);
 
-  return <DataTable table={table} filterKey={permanent} />;
+  return <DataTable table={table} filterKey={permanent} columnsKey="all-stock" />;
 }
