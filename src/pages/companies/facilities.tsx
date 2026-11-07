@@ -2,7 +2,7 @@ import { useList, useNotification, useOne, useTranslate } from "@refinedev/core"
 import { useForm } from "@refinedev/react-hook-form";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import { useMemo } from "react";
 import { useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
@@ -67,6 +67,7 @@ export function CompanyFacilities() {
       {
         id: "type",
         header: translate("common.fields.type"),
+        meta: { card: "subtitle" },
         enableSorting: false,
         cell: ({ row }) => row.original.facilityType?.label,
       },
@@ -79,12 +80,14 @@ export function CompanyFacilities() {
       {
         id: "location",
         header: translate("companies.fields.location"),
+        meta: { card: "meta", icon: MapPin },
         enableSorting: false,
         cell: ({ row }) => locationName(row.original),
       },
       {
         id: "status",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ row }) => <StatusBadge status={row.original.deactivated ? "DEACTIVATED" : "ACTIVE"} />,
       },

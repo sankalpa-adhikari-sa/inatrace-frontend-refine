@@ -63,6 +63,11 @@ export function headerLabel<TData>(def: ColumnDef<TData, unknown>): string | und
   const header = def.header as unknown;
   if (typeof header === "string") return header || undefined;
   if (typeof header === "function" && "label" in header) return (header as { label: () => string }).label();
+  // `header: () => t("…")`: a translated label read at render (headers taking the context render controls).
+  if (typeof header === "function" && header.length === 0) {
+    const text = (header as () => unknown)();
+    if (typeof text === "string") return text || undefined;
+  }
   return undefined;
 }
 

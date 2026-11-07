@@ -48,6 +48,7 @@ export function CompanyList() {
         id: "status",
         accessorKey: "status",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ getValue }) => <StatusBadge status={getValue<string>()} />,
       },

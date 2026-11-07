@@ -1,7 +1,7 @@
 import { useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Factory, Hash, History, Plus, Ruler, Scale, Truck, Warehouse } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import type { ApiStockOrder } from "@/client/types.gen";
@@ -80,12 +80,14 @@ export function OrdersPage({ kind }: { kind: Kind }) {
       {
         id: "deliveryTime",
         header: translate("common.fields.deliveryDate"),
+        meta: { card: "meta", icon: Truck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.deliveryTime),
       },
       {
         id: "product",
         header: translate("orders.fields.product"),
+        meta: { card: "title" },
         enableSorting: false,
         cell: ({ row }) =>
           row.original.semiProduct?.name ??
@@ -97,18 +99,21 @@ export function OrdersPage({ kind }: { kind: Kind }) {
         ? {
             id: "customer",
             header: translate("orders.fields.customer"),
+            meta: { card: "subtitle" },
             enableSorting: false,
             cell: ({ row }) => row.original.consumerCompanyCustomer?.name,
           }
         : {
             id: "client",
             header: translate("orders.fields.client"),
+            meta: { card: "subtitle" },
             enableSorting: false,
             cell: ({ row }) => row.original.facility?.company?.name,
           },
       {
         id: "orderId",
         header: translate("orders.fields.orderId"),
+        meta: { card: "meta", icon: Hash },
         enableSorting: false,
         cell: ({ row }) => row.original.productOrder?.orderId ?? row.original.orderId ?? "/",
       },
@@ -116,6 +121,7 @@ export function OrdersPage({ kind }: { kind: Kind }) {
         ? {
             id: "orderedTo",
             header: translate("orders.fields.orderedFrom"),
+            meta: { card: "meta", icon: Factory },
             enableSorting: false,
             cell: ({ row }) =>
               `${row.original.quoteFacility?.company?.name ?? ""} (${row.original.quoteFacility?.name ?? ""})`,
@@ -123,30 +129,35 @@ export function OrdersPage({ kind }: { kind: Kind }) {
         : {
             id: "toFacility",
             header: translate("orders.fields.toFacility"),
+            meta: { card: "meta", icon: Warehouse },
             enableSorting: false,
             cell: ({ row }) => row.original.facility?.name,
           },
       {
         id: "fulfilled",
         header: translate("orders.fields.orderedFilled"),
+        meta: { card: "stat", icon: Scale },
         enableSorting: false,
         cell: ({ row }) => `${fmt(row.original.totalQuantity)} / ${fmt(row.original.fulfilledQuantity)}`,
       },
       {
         id: "unit",
         header: translate("common.fields.unit"),
+        meta: { card: "meta", icon: Ruler },
         enableSorting: false,
         cell: ({ row }) => row.original.measureUnitType?.label,
       },
       {
         id: "kilos",
         header: translate("orders.fields.kg"),
+        meta: { card: "stat" },
         enableSorting: false,
         cell: ({ row }) => kgs(row.original),
       },
       {
         id: "updated",
         header: translate("orders.fields.lastChange"),
+        meta: { card: "meta", icon: History },
         enableSorting: false,
         cell: ({ row }) => row.original.updateTimestamp?.slice(0, 16).replace("T", " "),
       },

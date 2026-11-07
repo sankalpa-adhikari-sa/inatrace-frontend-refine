@@ -1,7 +1,7 @@
 import { useDelete, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Download, Plus, Venus } from "lucide-react";
+import { Banknote, CalendarCheck, CreditCard, Download, Plus, Truck, Venus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
@@ -149,48 +149,56 @@ export function PaymentsTable({
       {
         id: "purpose",
         header: translate("stock.payments.fields.purpose"),
+        meta: { card: "subtitle" },
         enableSorting: false,
         cell: ({ row }) => purposeLabel(row.original.paymentPurposeType),
       },
       {
         id: "amount",
         header: translate("stock.payments.fields.amount"),
+        meta: { card: "stat", icon: Banknote },
         enableSorting: false,
         cell: ({ row }) => `${fmt(row.original.amount)} ${row.original.currency ?? ""}`,
       },
       {
         id: "recipient",
         header: translate("common.fields.farmer"),
+        meta: { card: "title" },
         enableSorting: false,
         cell: ({ row }) => personName(row.original.recipientUserCustomer),
       },
       {
         id: "company",
         header: translate("common.fields.company"),
+        meta: { card: "title" },
         enableSorting: false,
         cell: ({ row }) => row.original.recipientCompany?.name,
       },
       {
         id: "productionDate",
         header: translate("common.fields.deliveryDate"),
+        meta: { card: "meta", icon: Truck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.productionDate),
       },
       {
         id: "formalCreationTime",
         header: translate("stock.payments.fields.paymentDate"),
+        meta: { card: "meta", icon: CalendarCheck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.formalCreationTime),
       },
       {
         id: "way",
         header: translate("stock.payments.fields.wayOfPayment"),
+        meta: { card: "meta", icon: CreditCard },
         enableSorting: false,
         cell: ({ row }) => wayOfPaymentLabel(row.original.preferredWayOfPayment),
       },
       {
         id: "status",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ row }) =>
           row.original.paymentStatus === "CONFIRMED" ? (
@@ -276,23 +284,27 @@ function BulkPayments({ companyId }: { companyId: number }) {
       {
         accessorKey: "receiptNumber",
         header: translate("stock.payments.fields.receiptNumber"),
+        meta: { card: "title" },
         enableSorting: false,
       },
       {
         id: "purpose",
         header: translate("stock.payments.fields.purpose"),
+        meta: { card: "subtitle" },
         enableSorting: false,
         cell: ({ row }) => purposeLabel(row.original.paymentPurposeType),
       },
       {
         id: "total",
         header: translate("stock.payments.fields.totalAmount"),
+        meta: { card: "stat", icon: Banknote },
         enableSorting: false,
         cell: ({ row }) => `${fmt(row.original.totalAmount)} ${row.original.currency ?? ""}`,
       },
       {
         id: "date",
         header: translate("stock.payments.fields.paymentDate"),
+        meta: { card: "meta", icon: CalendarCheck },
         enableSorting: false,
         cell: ({ row }) => day(row.original.formalCreationTime),
       },

@@ -14,7 +14,7 @@ import {
 } from "@/components/app/form-fields";
 import { CertificationsField } from "@/components/app/certifications-field";
 import { LocationFields } from "@/components/app/location-fields";
-import { FormActions, PageHeader, Section } from "@/components/app/page";
+import { FormActions, Section } from "@/components/app/page";
 import { FormSkeleton } from "@/components/app/states";
 import { FormLayout } from "@/components/app/form-layout";
 import { UserCustomerCard } from "@/components/app/user-customer-card";
@@ -31,7 +31,7 @@ import { KIND, type UserCustomerType } from "../list";
 import { FarmInfoSection } from "./farm-info";
 import { Associations, Cooperatives } from "./memberships";
 import { type FormValues, GENDERS, toForm } from "./model";
-import { OrdersAndPayments } from "./orders-and-payments";
+import { UserCustomerHeader } from "./orders-and-payments";
 import { GeoDataActions, Plots } from "./plots";
 
 /** `/my-farmers/add`, `/my-farmers/edit/:id` and the collector equivalents. */
@@ -131,18 +131,7 @@ function Form({ type, companyId, companyName }: { type: UserCustomerType; compan
 
   return (
     <>
-      <PageHeader
-        title={
-          isFarmer
-            ? isNew
-              ? translate("userCustomers.titles.newFarmer")
-              : translate("userCustomers.titles.editFarmer")
-            : isNew
-              ? translate("userCustomers.titles.newCollector")
-              : translate("userCustomers.titles.editCollector")
-        }
-        breadcrumbs={[{ label: kind.title, to: kind.base }]}
-      />
+      <UserCustomerHeader type={type} id={isNew ? undefined : Number(id)} />
       <form onSubmit={handleSubmit((v) => submit(v as FormValues), focusFirstError)}>
         <FormLayout control={control}>
           <Section id="basic" title={translate("common.titles.basicInformation")}>
@@ -308,7 +297,6 @@ function Form({ type, companyId, companyName }: { type: UserCustomerType; compan
           </FormActions>
         </FormLayout>
       </form>
-      {!isNew && <OrdersAndPayments type={type} companyId={companyId} userCustomerId={Number(id)} />}
     </>
   );
 }

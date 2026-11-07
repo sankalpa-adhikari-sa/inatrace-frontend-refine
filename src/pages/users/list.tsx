@@ -1,6 +1,7 @@
 import { useNotification, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Mail } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type { ApiUserBase, ApiUserGet } from "@/client/types.gen";
@@ -50,16 +51,19 @@ export function UserList() {
         id: "surname",
         accessorKey: "surname",
         header: sortable(translate("users.fields.surname")),
+        meta: { card: "title" },
       },
       {
         id: "email",
         accessorKey: "email",
         header: sortable(translate("common.fields.eMail")),
+        meta: { card: "meta", icon: Mail },
       },
       {
         id: "role",
         accessorKey: "role",
         header: translate("users.fields.role"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ getValue }) => humanize(getValue<string>()),
       },
@@ -67,6 +71,7 @@ export function UserList() {
         id: "status",
         accessorKey: "status",
         header: translate("common.fields.status"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ getValue }) => <StatusBadge status={getValue<string>()} />,
       },

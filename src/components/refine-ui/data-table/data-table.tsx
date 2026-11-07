@@ -4,7 +4,7 @@ import type { HttpError, BaseRecord } from "@refinedev/core";
 import type { UseTableReturnType } from "@refinedev/react-table";
 import type { Cell, Column, ColumnDef, Row, RowData } from "@tanstack/react-table";
 import { flexRender } from "@tanstack/react-table";
-import { Columns3, Inbox, SearchX } from "lucide-react";
+import { ArrowDownUp, ChevronRight, Columns3, Inbox, type LucideIcon, SearchX } from "lucide-react";
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -20,6 +20,7 @@ import { DataTablePagination } from "@/components/refine-ui/data-table/data-tabl
 import { headerLabel, isSortableHeader } from "@/components/refine-ui/data-table/data-table-sorter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ErrorState } from "@/components/app/states";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,8 +42,28 @@ declare module "@tanstack/react-table" {
     align?: "right";
     /** The row's main cell: rendered as the link to the row (with `getRowHref`). */
     primary?: boolean;
+    /**
+     * Where the cell goes in the phone card (see `CardRole`). Default: `title` for the primary cell, `stat`
+     * for right-aligned ones, `field` otherwise. Card cells are called as plain functions (to leave out empty
+     * ones), so a column's `cell` must not call hooks; render a component from it instead.
+     */
+    card?: CardRole;
+    /** The cell's icon in the phone card: in front of a `meta` value (instead of its label) or a `stat`'s label. */
+    icon?: LucideIcon;
   }
 }
+
+/**
+ * - `title`: the card's heading (several are joined with spaces, e.g. first and last name)
+ * - `subtitle`: muted line under the title (also the heading when the title cell is empty)
+ * - `badge`: top right; plain text is shown as a badge
+ * - `meta`: icon + value in a wrapping line (dates, places); the label is the tooltip
+ * - `stat`: label over a prominent value in a tinted strip (quantities, amounts)
+ * - `body`: a paragraph of longer text
+ * - `field`: label over value in a two-column grid
+ * - `hidden`: left out of the card
+ */
+export type CardRole = "title" | "subtitle" | "badge" | "meta" | "stat" | "body" | "field" | "hidden";
 
 type DataTableProps<TData extends BaseRecord> = {
   table: UseTableReturnType<TData, HttpError>;
@@ -175,14 +196,14 @@ export function DataTable<TData extends BaseRecord>({
     else navigate(href);
   };
 
-  const renderCell = (cell: Cell<TData, unknown>, href: string | undefined, inCard = false) => {
+  const renderCell = (cell: Cell<TData, unknown>, href: string | undefined) => {
     const meta = cell.column.columnDef.meta;
     const content = flexRender(cell.column.columnDef.cell, cell.getContext());
     const value = cell.getValue();
     // Cells are truncated to keep rows one line high: show the full text on hover.
     const title = typeof value === "string" || typeof value === "number" ? String(value) : undefined;
     return (
-      <div className={cn("truncate", meta?.align === "right" && !inCard && "text-right tabular-nums")} title={title}>
+      <div className={cn("truncate", meta?.align === "right" && "text-right tabular-nums")} title={title}>
         {meta?.primary && href ? (
           <Link to={href} className="font-medium hover:underline">
             {content}
@@ -218,39 +239,34 @@ export function DataTable<TData extends BaseRecord>({
       <div className="flex flex-col gap-3">
         {!!sortHeaders?.length && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <ArrowDownUp aria-hidden className="size-3.5" />
             {sortHeaders.map((h) => (
               <span key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</span>
             ))}
           </div>
         )}
-        <div
-          className={cn("relative overflow-hidden rounded-md border bg-card", isRefetching && "opacity-60")}
-          aria-busy={tableQuery.isFetching || undefined}
-        >
+        <div className={cn("transition-opacity", isRefetching && "opacity-60")} aria-busy={tableQuery.isFetching || undefined}>
           {isLoading ? (
-            <ul aria-hidden className="divide-y">
+            <ul aria-hidden className="flex flex-col gap-2">
               {Array.from({ length: 4 }, (_, i) => (
-                <li key={i} className="flex flex-col gap-2 p-3">
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-3 w-3/4" />
+                <li key={i} className="flex flex-col gap-2.5 rounded-xl border bg-card p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-14 rounded-full" />
+                  </div>
                   <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="h-11 w-full rounded-lg" />
                 </li>
               ))}
             </ul>
           ) : rows.length ? (
-            <ul className="divide-y">
+            <ul className="flex flex-col gap-2">
               {rows.map((row) => (
-                <RowCard
-                  key={row.original?.id ?? row.id}
-                  row={row}
-                  href={getRowHref?.(row.original)}
-                  renderCell={renderCell}
-                  onOpen={openRow}
-                />
+                <RowCard key={row.original?.id ?? row.id} row={row} href={getRowHref?.(row.original)} onOpen={openRow} />
               ))}
             </ul>
           ) : (
-            <div className="py-10">
+            <div className="rounded-xl border bg-card py-10">
               <NoDataContent isFiltered={isFiltered} onClearFilters={clearFilters} empty={empty} />
             </div>
           )}
@@ -451,45 +467,171 @@ function NoDataContent({
   );
 }
 
-/** One row on a phone: its main cell as the title, the other columns as label / value pairs. */
+/** A cell's content for the card, or undefined when there's nothing to show. */
+function cardContent<TData>(cell: Cell<TData, unknown>): ReactNode | undefined {
+  const def = cell.column.columnDef;
+  const content = (typeof def.cell === "function" ? def.cell(cell.getContext()) : (def.cell ?? cell.getValue())) as ReactNode;
+  if (content == null || typeof content === "boolean") return undefined;
+  if (typeof content === "string" && !content.trim()) return undefined;
+  return content;
+}
+
+function cardRole<TData>(cell: Cell<TData, unknown>): CardRole {
+  const meta = cell.column.columnDef.meta;
+  return meta?.card ?? (meta?.primary ? "title" : meta?.align === "right" ? "stat" : "field");
+}
+
+const STAT_COLUMNS = ["", "grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-2"];
+
+/**
+ * One row on a phone: a card with the row's title (and subtitle) and badges at the top, then icon-led meta
+ * (dates, places), the figures as stats, and anything else as label / value fields. Columns choose their
+ * place with `meta.card`; empty cells are left out.
+ */
 function RowCard<TData>({
   row,
   href,
-  renderCell,
   onOpen,
 }: {
   row: Row<TData>;
   href: string | undefined;
-  renderCell: (cell: Cell<TData, unknown>, href: string | undefined, inCard?: boolean) => ReactNode;
   onOpen: (e: MouseEvent<HTMLElement>, href: string | undefined) => void;
 }) {
   const cells = row.getVisibleCells();
   const select = cells.find((c) => c.column.id === SELECT);
   const actions = cells.find((c) => c.column.id === ACTIONS);
   const data = cells.filter((c) => c !== select && c !== actions);
-  const primary = data.find((c) => c.column.columnDef.meta?.primary) ?? data[0];
-  const rest = data.filter((c) => c !== primary);
+  // Without a title column, a subtitle becomes the heading (below); failing that, the first column.
+  const hasTitle = data.some((c) => cardRole(c) === "title" || cardRole(c) === "subtitle");
+  const parts = data
+    .map((cell, i) => ({
+      cell,
+      role: !hasTitle && i === 0 && cardRole(cell) !== "hidden" ? ("title" as const) : cardRole(cell),
+      content: cardContent(cell),
+      label: headerLabel(cell.column.columnDef as ColumnDef<TData, unknown>) ?? "",
+      Icon: cell.column.columnDef.meta?.icon,
+    }))
+    .filter((p) => p.role !== "hidden" && p.content !== undefined);
+  const of = (role: CardRole) => parts.filter((p) => p.role === role);
+  let titles = of("title");
+  let subtitles = of("subtitle");
+  // An empty title (a payment to a company has no farmer) gives way to the subtitle.
+  if (!titles.length && subtitles.length) [titles, subtitles] = [subtitles.slice(0, 1), subtitles.slice(1)];
+  const badges = of("badge");
+  const metas = of("meta");
+  const stats = of("stat");
+  const bodies = of("body");
+  const fields = of("field");
+
+  const title = titles.map((p, i) => (
+    <span key={p.cell.id}>
+      {i > 0 && " "}
+      {p.content}
+    </span>
+  ));
+
   return (
     <li
       data-state={row.getIsSelected() ? "selected" : undefined}
-      className={cn("flex items-start gap-3 p-3 data-[state=selected]:bg-primary/5", href && "cursor-pointer")}
+      className={cn(
+        "flex items-start gap-3 rounded-xl border bg-card p-3 shadow-xs transition-colors",
+        "data-[state=selected]:border-primary/50 data-[state=selected]:bg-primary/5",
+        href && "cursor-pointer active:bg-muted/60"
+      )}
       onClick={href ? (e) => onOpen(e, href) : undefined}
     >
       {select && <div className="pt-0.5">{flexRender(select.column.columnDef.cell, select.getContext())}</div>}
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        {primary && <div className="text-sm font-medium">{renderCell(primary, href, true)}</div>}
-        {rest.length > 0 && (
-          <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
-            {rest.map((c) => (
-              <div key={c.id} className="contents">
-                <dt className="truncate text-muted-foreground">{headerLabel(c.column.columnDef as ColumnDef<TData, unknown>)}</dt>
-                <dd className="min-w-0">{renderCell(c, undefined, true)}</dd>
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            {titles.length > 0 && (
+              <div className="text-sm leading-snug font-semibold break-words">
+                {href ? (
+                  <Link to={href} className="hover:underline">
+                    {title}
+                  </Link>
+                ) : (
+                  title
+                )}
+              </div>
+            )}
+            {subtitles.length > 0 && (
+              <div className="mt-0.5 flex flex-wrap gap-x-1.5 text-xs text-muted-foreground">
+                {subtitles.map((p, i) => (
+                  <span key={p.cell.id} className="min-w-0 truncate" title={p.label}>
+                    {i > 0 && <span aria-hidden className="mr-1.5">·</span>}
+                    {p.content}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          {badges.length > 0 && (
+            <div className="flex max-w-[50%] flex-wrap justify-end gap-1 pt-px">
+              {badges.map((p) =>
+                typeof p.content === "string" || typeof p.content === "number" ? (
+                  <Badge key={p.cell.id} variant="secondary" title={p.label}>
+                    {p.content}
+                  </Badge>
+                ) : (
+                  <span key={p.cell.id} className="contents">
+                    {p.content}
+                  </span>
+                )
+              )}
+            </div>
+          )}
+          {actions ? (
+            <div className="-my-1 -mr-1">{flexRender(actions.column.columnDef.cell, actions.getContext())}</div>
+          ) : (
+            href && <ChevronRight aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          )}
+        </div>
+        {metas.length > 0 && (
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {metas.map(({ cell, content, label, Icon }) => (
+              <li key={cell.id} className="flex min-w-0 items-center gap-1.5" title={label}>
+                {Icon ? <Icon aria-hidden className="size-3.5 shrink-0" /> : <span>{label}:</span>}
+                {Icon && <span className="sr-only">{label}: </span>}
+                <span className="truncate text-foreground/80">{content}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {bodies.map((p) => (
+          <p key={p.cell.id} className="line-clamp-3 text-xs break-words text-muted-foreground">
+            {p.content}
+          </p>
+        ))}
+        {stats.length > 0 && (
+          <dl
+            className={cn(
+              "grid gap-px overflow-hidden rounded-lg border bg-border",
+              STAT_COLUMNS[stats.length] ?? "grid-cols-3"
+            )}
+          >
+            {stats.map(({ cell, content, label, Icon }) => (
+              <div key={cell.id} className="min-w-0 bg-muted/40 px-2.5 py-1.5">
+                <dt className="flex items-center gap-1 truncate text-[0.6875rem] text-muted-foreground">
+                  {Icon && <Icon aria-hidden className="size-3 shrink-0" />}
+                  {label}
+                </dt>
+                <dd className="text-sm font-semibold break-words tabular-nums">{content}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {fields.length > 0 && (
+          <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+            {fields.map(({ cell, content, label }) => (
+              <div key={cell.id} className="min-w-0">
+                <dt className="truncate text-muted-foreground">{label}</dt>
+                <dd className="truncate font-medium">{content}</dd>
               </div>
             ))}
           </dl>
         )}
       </div>
-      {actions && <div className="-my-1">{flexRender(actions.column.columnDef.cell, actions.getContext())}</div>}
     </li>
   );
 }

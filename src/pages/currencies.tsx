@@ -34,10 +34,12 @@ function CurrencyTable({ enabled }: { enabled: boolean }) {
     return [
       columnHelper.accessor("code", {
         header: translate("currencies.fields.code"),
+        meta: { card: "title" },
         enableSorting: false,
       }),
       columnHelper.accessor("label", {
         header: translate("common.fields.label"),
+        meta: { card: "subtitle" },
         enableSorting: false,
       }),
       columnHelper.display({

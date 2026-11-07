@@ -34,6 +34,7 @@ export function CompanyProcessingActions() {
       {
         id: "type",
         header: translate("common.fields.type"),
+        meta: { card: "badge" },
         enableSorting: false,
         cell: ({ row }) => typeLabel(row.original.type),
       },

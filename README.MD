@@ -294,8 +294,13 @@ Deliberate differences from the original Angular frontend:
   Quantities and amounts are right-aligned.
 - Deliveries, payments, orders and all-stock filters are kept in the URL, so they survive a reload or the back
   button from a record (Angular kept them in memory).
-- On phones, lists show each row as a card (its name, then label / value pairs) with the sort options above,
-  instead of a table that scrolls sideways.
+- On phones, lists show each row as a card instead of a table that scrolls sideways: the record's name (a
+  delivery's farmer, a stock order's lot) with a subtitle and status badges, dates and places behind icons,
+  quantities and amounts in a stat strip (an open delivery balance in amber), with the sort options above.
+  Columns choose their place in the card with `meta.card` / `meta.icon` (see `CardRole` in `data-table.tsx`).
+- A farmer's or collector's page has tabs: Profile (the form), Deliveries and Payments (with counts), each its
+  own URL (`/my-farmers/edit/:id/deliveries`, `…/payments`). Angular put both tables under the form. A
+  farmer's own deliveries leave out the Farmer column.
 - Wide stock tables (deliveries, processing, payments, all stock) have a Columns menu to hide columns, remembered
   in the browser. Combined values are split into their own columns (Payable, Balance; Quantity, Filled,
   Available).

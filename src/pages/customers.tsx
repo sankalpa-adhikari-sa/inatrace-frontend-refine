@@ -2,7 +2,7 @@ import { useDelete, useOne, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Mail, Plus, UserRound } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 import type { ApiCompanyCustomer } from "@/client/types.gen";
@@ -45,12 +45,14 @@ function CustomerTable({ companyId }: { companyId: number }) {
         id: "contact",
         accessorKey: "contact",
         header: translate("customers.fields.contact"),
+        meta: { card: "meta", icon: UserRound },
         enableSorting: false,
       },
       {
         id: "email",
         accessorKey: "email",
         header: translate("common.fields.eMail"),
+        meta: { card: "meta", icon: Mail },
         enableSorting: false,
       },
       {

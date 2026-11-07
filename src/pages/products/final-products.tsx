@@ -1,7 +1,7 @@
 import { useCreate, useDelete, useList, useOne, useUpdate, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Plus, Ruler } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router";
@@ -35,17 +35,19 @@ export function FinalProducts() {
 
   const columns = useMemo<ColumnDef<ApiFinalProduct>[]>(
     () => [
-      { id: "name", accessorKey: "name", header: translate("common.fields.name") },
+      { id: "name", accessorKey: "name", header: translate("common.fields.name"), meta: { card: "title" } },
       {
         id: "description",
         accessorKey: "description",
         header: translate("common.fields.description"),
+        meta: { card: "body" },
         enableSorting: false,
       },
       {
         id: "unitLabel",
         accessorFn: (f) => f.measurementUnitType?.label,
         header: translate("products.fields.unitLabel"),
+        meta: { card: "meta", icon: Ruler },
         enableSorting: false,
       },
       {

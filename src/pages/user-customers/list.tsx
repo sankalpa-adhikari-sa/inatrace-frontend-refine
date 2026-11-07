@@ -1,7 +1,7 @@
 import { useDelete, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, Hash, MapPin, Plus, Upload, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type { ApiUserCustomer } from "@/client/types.gen";
@@ -70,21 +70,23 @@ function UserCustomerTable({ type, companyId }: { type: UserCustomerType; compan
     () => [
       // Column ids are the backend's sortBy keys.
       { id: "BY_NAME", accessorKey: "name", header: sortable(translate("common.fields.firstName")), meta: { primary: true } },
-      { id: "BY_SURNAME", accessorKey: "surname", header: sortable(translate("common.fields.lastName")) },
+      { id: "BY_SURNAME", accessorKey: "surname", header: sortable(translate("common.fields.lastName")), meta: { card: "title" } },
       {
         id: "gender",
         accessorKey: "gender",
         header: translate("userCustomers.fields.gender"),
+        meta: { card: "meta", icon: UserRound },
         enableSorting: false,
         cell: ({ getValue }) => {
           const gender = getValue<string>();
           return GENDERS.find((g) => g.value === gender)?.label ?? humanize(gender);
         },
       },
-      { id: "BY_ID", accessorKey: "id", header: sortable(translate("userCustomers.fields.userId")) },
+      { id: "BY_ID", accessorKey: "id", header: sortable(translate("userCustomers.fields.userId")), meta: { card: "meta", icon: Hash } },
       {
         id: "location",
         header: translate("userCustomers.fields.location"),
+        meta: { card: "meta", icon: MapPin },
         enableSorting: false,
         cell: ({ row }) => formatLocation(row.original),
       },

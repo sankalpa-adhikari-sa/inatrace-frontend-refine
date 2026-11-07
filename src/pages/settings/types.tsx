@@ -96,8 +96,8 @@ const TYPES: TypeConfig[] = [
     translations: "nameDescription",
     displayName: (t) => t.name,
     columns: [
-      { accessorKey: "name", header: () => t("common.fields.name") },
-      { accessorKey: "description", header: () => t("common.fields.description") },
+      { accessorKey: "name", header: () => t("common.fields.name"), meta: { card: "title" } },
+      { accessorKey: "description", header: () => t("common.fields.description"), meta: { card: "body" } },
       {
         accessorKey: "buyable",
         header: () => t("settings.fields.buyable"),
@@ -122,8 +122,8 @@ const TYPES: TypeConfig[] = [
     get editTitle() { return t("settings.titles.editFacilityType"); },
     displayName: (t) => t.label,
     columns: [
-      { accessorKey: "code", header: () => t("settings.fields.id") },
-      { accessorKey: "label", header: () => t("common.fields.label") },
+      { accessorKey: "code", header: () => t("settings.fields.id"), meta: { card: "subtitle" } },
+      { accessorKey: "label", header: () => t("common.fields.label"), meta: { card: "title" } },
     ],
   },
   {
@@ -133,8 +133,8 @@ const TYPES: TypeConfig[] = [
     get editTitle() { return t("settings.titles.editMeasurementUnitType"); },
     displayName: (t) => t.label,
     columns: [
-      { accessorKey: "code", header: () => t("settings.fields.id") },
-      { accessorKey: "label", header: () => t("common.fields.label") },
+      { accessorKey: "code", header: () => t("settings.fields.id"), meta: { card: "subtitle" } },
+      { accessorKey: "label", header: () => t("common.fields.label"), meta: { card: "title" } },
     ],
   },
   {
@@ -145,11 +145,12 @@ const TYPES: TypeConfig[] = [
     translations: "label",
     displayName: (t) => t.label,
     columns: [
-      { accessorKey: "code", header: () => t("settings.fields.id") },
-      { accessorKey: "label", header: () => t("common.fields.label") },
+      { accessorKey: "code", header: () => t("settings.fields.id"), meta: { card: "subtitle" } },
+      { accessorKey: "label", header: () => t("common.fields.label"), meta: { card: "title" } },
       {
         accessorKey: "type",
         header: () => t("common.fields.type"),
+        meta: { card: "badge" },
         cell: ({ getValue }) => humanize(getValue<string>()),
       },
       {
@@ -177,11 +178,12 @@ const TYPES: TypeConfig[] = [
     translations: "label",
     displayName: (t) => t.label,
     columns: [
-      { accessorKey: "fieldName", header: () => t("settings.fields.fieldName") },
-      { accessorKey: "label", header: () => t("common.fields.label") },
+      { accessorKey: "fieldName", header: () => t("settings.fields.fieldName"), meta: { card: "subtitle" } },
+      { accessorKey: "label", header: () => t("common.fields.label"), meta: { card: "title" } },
       {
         accessorKey: "type",
         header: () => t("common.fields.type"),
+        meta: { card: "badge" },
         cell: ({ getValue }) => humanize(getValue<string>()),
       },
     ],
@@ -194,9 +196,9 @@ const TYPES: TypeConfig[] = [
     translations: "nameDescription",
     displayName: (t) => t.name,
     columns: [
-      { accessorKey: "code", header: () => t("settings.fields.code") },
-      { accessorKey: "name", header: () => t("common.fields.name") },
-      { accessorKey: "description", header: () => t("common.fields.description") },
+      { accessorKey: "code", header: () => t("settings.fields.code"), meta: { card: "subtitle" } },
+      { accessorKey: "name", header: () => t("common.fields.name"), meta: { card: "title" } },
+      { accessorKey: "description", header: () => t("common.fields.description"), meta: { card: "body" } },
     ],
   },
 ];
